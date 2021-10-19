@@ -1,1 +1,1 @@
-# substrate-indexer
+# Substrate Indexer
