@@ -12,7 +12,7 @@ import {camelCaseObjectKey} from '../utils/object';
 import {commentConstraintQuery, createUniqueIndexQuery, getFkConstraint, smartTags} from '../utils/sync-helper';
 import {MetadataFactory, MetadataRepo} from './entities/metadata.entity';
 import {StoreOperations} from './store-operations';
-import {OperationType} from './types';
+
 const logger = getLogger('store');
 const NULL_MERKEL_ROOT = hexToU8a('0x00');
 

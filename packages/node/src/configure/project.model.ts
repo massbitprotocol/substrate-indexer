@@ -1,5 +1,4 @@
 import path from 'path';
-import {RegisteredTypes} from '@polkadot/types/types';
 import {
   loadProjectManifest,
   parseChainTypes,
@@ -10,20 +9,21 @@ import {
   loadFromJsonOrYaml,
 } from '@massbit/common';
 import {SubstrateDatasource} from '@massbit/types';
+import {RegisteredTypes} from '@polkadot/types/types';
 import {pick} from 'lodash';
 import {getLogger} from '../utils/logger';
 import {prepareProjectDir} from '../utils/project';
 
 const logger = getLogger('configure');
 
-export class SubqueryProject {
+export class SubIndexProject {
   private _path: string;
   private _projectManifest: ProjectManifestVersioned;
 
-  static async create(path: string, networkOverrides?: Partial<ProjectNetworkConfig>): Promise<SubqueryProject> {
+  static async create(path: string, networkOverrides?: Partial<ProjectNetworkConfig>): Promise<SubIndexProject> {
     const projectPath = await prepareProjectDir(path);
     const projectManifest = loadProjectManifest(projectPath);
-    return new SubqueryProject(projectManifest, projectPath, networkOverrides);
+    return new SubIndexProject(projectManifest, projectPath, networkOverrides);
   }
 
   constructor(

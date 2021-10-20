@@ -6,7 +6,7 @@ import {camelCase, last, omitBy, isNil} from 'lodash';
 import {getLogger, setLevel} from '../utils/logger';
 import {getYargsOption} from '../yargs';
 import {IConfig, MinConfig, NodeConfig} from './node-config';
-import {SubqueryProject} from './project.model';
+import {SubIndexProject} from './project.model';
 
 const YargsNameMapping = {
   local: 'localMode',
@@ -65,7 +65,7 @@ export class ConfigureModule {
     const projectPath = path.resolve(config.configDir && !argv.subquery ? config.configDir : '.', config.subquery);
 
     const project = async () => {
-      const p = await SubqueryProject.create(
+      const p = await SubIndexProject.create(
         projectPath,
         omitBy<ProjectNetworkConfig>(
           {
@@ -90,11 +90,11 @@ export class ConfigureModule {
           useValue: config,
         },
         {
-          provide: SubqueryProject,
+          provide: SubIndexProject,
           useFactory: project,
         },
       ],
-      exports: [NodeConfig, SubqueryProject],
+      exports: [NodeConfig, SubIndexProject],
     };
   }
 }

@@ -1,12 +1,12 @@
 import path from 'path';
-import {Injectable} from '@nestjs/common';
-import {ApiPromise} from '@polkadot/api';
 import {isRuntimeDataSourceV0_2_0, levelFilter} from '@massbit/common';
 import {Store, SubstrateDatasource} from '@massbit/types';
+import {Injectable} from '@nestjs/common';
+import {ApiPromise} from '@polkadot/api';
 import {NodeVM, NodeVMOptions, VMScript} from '@subql/x-vm2';
 import {merge} from 'lodash';
 import {NodeConfig} from '../configure/node-config';
-import {SubqueryProject} from '../configure/project.model';
+import {SubIndexProject} from '../configure/project.model';
 import {getLogger} from '../utils/logger';
 import {getProjectEntry} from '../utils/project';
 import {timeout} from '../utils/promise';
@@ -105,7 +105,7 @@ export class SandboxService {
     private readonly apiService: ApiService,
     private readonly storeService: StoreService,
     private readonly nodeConfig: NodeConfig,
-    private readonly project: SubqueryProject
+    private readonly project: SubIndexProject
   ) {}
 
   async getDsProcessor(ds: SubstrateDatasource): Promise<IndexerSandbox> {

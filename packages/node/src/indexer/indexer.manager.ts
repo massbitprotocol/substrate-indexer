@@ -8,12 +8,14 @@ import {
   SubstrateNetworkFilter,
   SubstrateRuntimeHandler,
 } from '@massbit/types';
+import {Process, Processor} from '@nestjs/bull';
 import {Inject, Injectable} from '@nestjs/common';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {ApiPromise} from '@polkadot/api';
+import {Job} from 'bull';
 import {QueryTypes, Sequelize} from 'sequelize';
 import {NodeConfig} from '../configure/node-config';
-import {SubqueryProject} from '../configure/project.model';
+import {SubIndexProject} from '../configure/project.model';
 import {IndexerModel, IndexerRepo} from '../entities';
 import {getLogger} from '../utils/logger';
 import {profiler} from '../utils/profiler';
@@ -34,6 +36,7 @@ const DEFAULT_DB_SCHEMA = 'public';
 const logger = getLogger('indexer');
 const {argv} = getYargsOption();
 
+@Processor('indexer')
 @Injectable()
 export class IndexerManager {
   private api: ApiPromise;
@@ -46,13 +49,18 @@ export class IndexerManager {
     private storeService: StoreService,
     private fetchService: FetchService,
     private sequelize: Sequelize,
-    private project: SubqueryProject,
+    private project: SubIndexProject,
     private nodeConfig: NodeConfig,
     private sandboxService: SandboxService,
     private dsProcessorService: DsProcessorService,
     @Inject('Indexer') protected indexerRepo: IndexerRepo,
     private eventEmitter: EventEmitter2
   ) {}
+
+  @Process()
+  handleIndexer(job: Job) {
+    this.start();
+  }
 
   @profiler(argv.profiler)
   async indexBlock(blockContent: BlockContent): Promise<void> {
@@ -120,8 +128,8 @@ export class IndexerManager {
 
   private async ensureMetadata(schema: string) {
     const metadataRepo = MetadataFactory(this.sequelize, schema);
-    //block offset should only been create once, never update.
-    //if change offset will require re-index
+    // block offset should only been create once, never update.
+    // if change offset will require re-index
     const blockOffset = await metadataRepo.findOne({
       where: {key: 'blockOffset'},
     });
@@ -145,8 +153,8 @@ export class IndexerManager {
         // create tables in default schema if local mode is enabled
         projectSchema = DEFAULT_DB_SCHEMA;
       } else {
-        const suffix = await this.nextSubquerySchemaSuffix();
-        projectSchema = `subquery_${suffix}`;
+        const suffix = await this.nextIndexerSchemaSuffix();
+        projectSchema = `indexer_${suffix}`;
         const schemas = await this.sequelize.showAllSchemas(undefined);
         if (!(schemas as unknown as string[]).includes(projectSchema)) {
           await this.sequelize.createSchema(projectSchema, undefined);
@@ -181,20 +189,20 @@ export class IndexerManager {
     await this.storeService.init(modelsRelations, schema);
   }
 
-  private async nextSubquerySchemaSuffix(): Promise<number> {
+  private async nextIndexerSchemaSuffix(): Promise<number> {
     const seqExists = await this.sequelize.query(
       `SELECT 1
        FROM information_schema.sequences
        where sequence_schema = 'public'
-         and sequence_name = 'subquery_schema_seq'`,
+         and sequence_name = 'indexer_schema_seq'`,
       {
         type: QueryTypes.SELECT,
       }
     );
     if (!seqExists.length) {
-      await this.sequelize.query(`CREATE SEQUENCE subquery_schema_seq as integer START 1;`, {type: QueryTypes.RAW});
+      await this.sequelize.query(`CREATE SEQUENCE indexer_schema_seq as integer START 1;`, {type: QueryTypes.RAW});
     }
-    const [{nextval}] = await this.sequelize.query(`SELECT nextval('subquery_schema_seq')`, {
+    const [{nextval}] = await this.sequelize.query(`SELECT nextval('indexer_schema_seq')`, {
       type: QueryTypes.SELECT,
     });
     return Number(nextval);

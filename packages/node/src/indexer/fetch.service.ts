@@ -1,7 +1,3 @@
-import {Injectable, OnApplicationShutdown} from '@nestjs/common';
-import {EventEmitter2} from '@nestjs/event-emitter';
-import {Interval} from '@nestjs/schedule';
-import {ApiPromise} from '@polkadot/api';
 import {isRuntimeDataSourceV0_2_0, RuntimeDataSourceV0_0_1} from '@massbit/common';
 import {
   SubstrateCallFilter,
@@ -11,9 +7,13 @@ import {
   SubstrateDatasource,
   SubstrateHandlerFilter,
 } from '@massbit/types';
+import {Injectable, OnApplicationShutdown} from '@nestjs/common';
+import {EventEmitter2} from '@nestjs/event-emitter';
+import {Interval} from '@nestjs/schedule';
+import {ApiPromise} from '@polkadot/api';
 import {isUndefined, range} from 'lodash';
 import {NodeConfig} from '../configure/node-config';
-import {SubqueryProject} from '../configure/project.model';
+import {SubIndexProject} from '../configure/project.model';
 import {getLogger} from '../utils/logger';
 import {profiler, profilerWrap} from '../utils/profiler';
 import {isBaseHandler, isCustomDs, isCustomHandler, isRuntimeDs} from '../utils/project';
@@ -52,7 +52,7 @@ export class FetchService implements OnApplicationShutdown {
   constructor(
     private apiService: ApiService,
     private nodeConfig: NodeConfig,
-    private project: SubqueryProject,
+    private project: SubIndexProject,
     private dictionaryService: DictionaryService,
     private dsProcessorService: DsProcessorService,
     private eventEmitter: EventEmitter2

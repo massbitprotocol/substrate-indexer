@@ -2,7 +2,7 @@ import path from 'path';
 import {SubstrateCustomDatasource, SubstrateDatasourceProcessor, SubstrateNetworkFilter} from '@massbit/types';
 import {Injectable} from '@nestjs/common';
 import {VMScript} from '@subql/x-vm2';
-import {SubqueryProject} from '../configure/project.model';
+import {SubIndexProject} from '../configure/project.model';
 import {getLogger} from '../utils/logger';
 import {isCustomDs} from '../utils/project';
 import {Sandbox} from './sandbox.service';
@@ -33,7 +33,7 @@ export class DsProcessorService {
   private processorCache: {
     [entry: string]: SubstrateDatasourceProcessor<string, SubstrateNetworkFilter>;
   } = {};
-  constructor(private project: SubqueryProject) {}
+  constructor(private project: SubIndexProject) {}
 
   validateCustomDs(): void {
     for (const ds of this.project.dataSources.filter(isCustomDs)) {
