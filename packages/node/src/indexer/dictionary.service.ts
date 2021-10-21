@@ -1,7 +1,7 @@
 import {ApolloClient, HttpLink, InMemoryCache, gql} from '@apollo/client/core';
 import {MetaData} from '@massbit/common';
 import {SubstrateCallFilter, SubstrateEventFilter} from '@massbit/types';
-import {Injectable, OnApplicationShutdown} from '@nestjs/common';
+import {Injectable, OnApplicationShutdown, Scope} from '@nestjs/common';
 import fetch from 'node-fetch';
 import {SubIndexProject} from '../configure/project.model';
 import {getLogger} from '../utils/logger';
@@ -18,7 +18,6 @@ export type Dictionary = {
 const logger = getLogger('dictionary');
 const {argv} = getYargsOption();
 
-@Injectable()
 export class DictionaryService implements OnApplicationShutdown {
   protected project: SubIndexProject;
   private isShutdown = false;
@@ -27,7 +26,7 @@ export class DictionaryService implements OnApplicationShutdown {
     this.isShutdown = true;
   }
 
-  init(project: SubIndexProject): void {
+  constructor(project: SubIndexProject) {
     this.project = project;
   }
 

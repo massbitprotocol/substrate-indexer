@@ -1,7 +1,7 @@
 import path from 'path';
 import {isRuntimeDataSourceV0_2_0, levelFilter} from '@massbit/common';
 import {Store, SubstrateDatasource} from '@massbit/types';
-import {Injectable} from '@nestjs/common';
+import {Injectable, Scope} from '@nestjs/common';
 import {ApiPromise} from '@polkadot/api';
 import {NodeVM, NodeVMOptions, VMScript} from '@subql/x-vm2';
 import {merge} from 'lodash';
@@ -97,18 +97,17 @@ export class IndexerSandbox extends Sandbox {
   }
 }
 
-@Injectable()
 export class SandboxService {
   private processorCache: Record<string, IndexerSandbox> = {};
+  private apiService: ApiService;
+  private storeService: StoreService;
   private project: SubIndexProject;
 
-  constructor(
-    private readonly apiService: ApiService,
-    private readonly storeService: StoreService,
-    private readonly nodeConfig: NodeConfig
-  ) {}
+  constructor(private readonly nodeConfig: NodeConfig) {}
 
-  init(project: SubIndexProject): void {
+  init(apiService: ApiService, storeService: StoreService, project: SubIndexProject): void {
+    this.apiService = apiService;
+    this.storeService = storeService;
     this.project = project;
   }
 

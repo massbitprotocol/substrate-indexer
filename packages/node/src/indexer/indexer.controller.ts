@@ -1,7 +1,6 @@
 import {InjectQueue} from '@nestjs/bull';
-import {Controller, HttpCode, HttpStatus, Post} from '@nestjs/common';
+import {Body, Controller, HttpCode, HttpStatus, Post} from '@nestjs/common';
 import {Queue} from 'bull';
-import {IndexerManager} from './indexer.manager';
 
 @Controller('indexers')
 export class IndexerController {
@@ -9,7 +8,10 @@ export class IndexerController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createIndexer(): Promise<void> {
-    await this.indexerQueue.add({});
+  async createIndexer(
+    @Body('projectPath') projectPath: string,
+    @Body('indexerName') indexerName: string
+  ): Promise<void> {
+    await this.indexerQueue.add({projectPath, indexerName});
   }
 }

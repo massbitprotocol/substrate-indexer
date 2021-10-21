@@ -1,14 +1,10 @@
-import assert from 'assert';
 import path from 'path';
 import {loadFromJsonOrYaml} from '@massbit/common';
-import {last} from 'lodash';
 import {LevelWithSilent} from 'pino';
 import {assign} from '../utils/object';
 
 export interface IConfig {
   readonly configDir?: string;
-  readonly subquery: string;
-  readonly subqueryName: string;
   readonly localMode: boolean;
   readonly batchSize: number;
   readonly timeout: number;
@@ -22,9 +18,6 @@ export interface IConfig {
   readonly indexCountLimit: number;
   readonly timestampField: boolean;
 }
-
-export type MinConfig = Partial<Omit<IConfig, 'subqueryName' | 'subquery'>> &
-  Pick<IConfig, 'subqueryName' | 'subquery'>;
 
 const DEFAULT_CONFIG = {
   localMode: false,
@@ -49,18 +42,8 @@ export class NodeConfig implements IConfig {
     return new NodeConfig(config);
   }
 
-  constructor(config: MinConfig) {
+  constructor(config: IConfig) {
     this._config = assign({}, DEFAULT_CONFIG, config);
-  }
-
-  get subquery(): string {
-    assert(this._config.subquery);
-    return this._config.subquery;
-  }
-
-  get subqueryName(): string {
-    assert(this._config.subquery);
-    return this._config.subqueryName ?? last(this.subquery.split(path.sep));
   }
 
   get configDir(): string {

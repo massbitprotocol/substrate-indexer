@@ -1,7 +1,7 @@
 import assert from 'assert';
 import {GraphQLModelsRelations} from '@massbit/common/graphql/types';
 import {Entity, Store} from '@massbit/types';
-import {Injectable} from '@nestjs/common';
+import {Injectable, Scope} from '@nestjs/common';
 import {hexToU8a} from '@polkadot/util';
 import {camelCase, flatten, upperFirst} from 'lodash';
 import {QueryTypes, Sequelize, Transaction, Utils} from 'sequelize';
@@ -23,7 +23,6 @@ interface IndexField {
   type: string;
 }
 
-@Injectable()
 export class StoreService {
   private tx?: Transaction;
   private modelIndexedFields: IndexField[];

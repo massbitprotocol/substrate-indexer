@@ -1,4 +1,4 @@
-import {Injectable, OnApplicationShutdown} from '@nestjs/common';
+import {OnApplicationShutdown} from '@nestjs/common';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {ApiPromise, HttpProvider, WsProvider} from '@polkadot/api';
 import {
@@ -20,23 +20,25 @@ const NOT_SUPPORT = (name: string) => () => {
   throw new Error(`${name}() is not supported`);
 };
 
-@Injectable()
 export class ApiService implements OnApplicationShutdown {
   private api: ApiPromise;
   private patchedApi: ApiPromise;
   private currentBlockHash: BlockHash;
   private apiOption: ApiOptions;
   protected project: SubIndexProject;
+  private eventEmitter: EventEmitter2;
   networkMeta: NetworkMetadataPayload;
 
-  constructor(private eventEmitter: EventEmitter2) {}
+  constructor(project: SubIndexProject, eventEmitter: EventEmitter2) {
+    this.project = project;
+    this.eventEmitter = eventEmitter;
+  }
 
   async onApplicationShutdown(): Promise<void> {
     await Promise.all([this.api?.disconnect(), this.patchedApi?.disconnect()]);
   }
 
-  async init(project: SubIndexProject): Promise<ApiService> {
-    this.project = project;
+  async init(): Promise<ApiService> {
     const {chainTypes, network} = this.project;
     let provider: WsProvider | HttpProvider;
     let throwOnConnect = false;

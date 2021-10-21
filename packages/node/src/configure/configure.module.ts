@@ -1,12 +1,8 @@
-import assert from 'assert';
-import path from 'path';
-import {ProjectNetworkConfig} from '@massbit/common';
 import {DynamicModule, Global, Module} from '@nestjs/common';
-import {camelCase, last, omitBy, isNil} from 'lodash';
+import {camelCase} from 'lodash';
 import {getLogger, setLevel} from '../utils/logger';
 import {getYargsOption} from '../yargs';
-import {IConfig, MinConfig, NodeConfig} from './node-config';
-import {SubIndexProject} from './project.model';
+import {IConfig, NodeConfig} from './node-config';
 
 const YargsNameMapping = {
   local: 'localMode',
@@ -30,11 +26,10 @@ function yargsToIConfig(yargs: Args): Partial<IConfig> {
   }, {});
 }
 
-function defaultSubqueryName(config: Partial<IConfig>): MinConfig {
+function defaultSubqueryName(config: Partial<IConfig>): IConfig {
   return {
     ...config,
-    subqueryName: config.subqueryName ?? last(path.resolve(config.subquery).split(path.sep)),
-  } as MinConfig;
+  } as IConfig;
 }
 
 const logger = getLogger('configure');
@@ -49,38 +44,12 @@ export class ConfigureModule {
     if (argv.config) {
       config = NodeConfig.fromFile(argv.config, yargsToIConfig(argv));
     } else {
-      if (!argv.subquery) {
-        logger.error('subquery path is missing neither in cli options nor in config file');
-        yargsOptions.showHelp();
-        process.exit(1);
-      }
-      assert(argv.subquery, 'subquery path is missing');
       config = new NodeConfig(defaultSubqueryName(yargsToIConfig(argv)));
     }
 
     if (config.debug) {
       setLevel('debug');
     }
-
-    const projectPath = path.resolve(config.configDir && !argv.subquery ? config.configDir : '.', config.subquery);
-
-    const project = async () => {
-      const p = await SubIndexProject.create(
-        projectPath,
-        omitBy<ProjectNetworkConfig>(
-          {
-            endpoint: config.networkEndpoint,
-            dictionary: config.networkDictionary,
-          },
-          isNil
-        )
-      ).catch((err) => {
-        logger.error(err, 'Create Subquery project from given path failed!');
-        process.exit(1);
-      });
-
-      return p;
-    };
 
     return {
       module: ConfigureModule,
@@ -89,12 +58,8 @@ export class ConfigureModule {
           provide: NodeConfig,
           useValue: config,
         },
-        {
-          provide: SubIndexProject,
-          useFactory: project,
-        },
       ],
-      exports: [NodeConfig, SubIndexProject],
+      exports: [NodeConfig],
     };
   }
 }
