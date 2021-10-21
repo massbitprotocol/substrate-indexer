@@ -20,12 +20,15 @@ const {argv} = getYargsOption();
 
 @Injectable()
 export class DictionaryService implements OnApplicationShutdown {
+  protected project: SubIndexProject;
   private isShutdown = false;
-
-  constructor(protected project: SubIndexProject) {}
 
   onApplicationShutdown(): void {
     this.isShutdown = true;
+  }
+
+  init(project: SubIndexProject): void {
+    this.project = project;
   }
 
   /**

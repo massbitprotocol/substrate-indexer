@@ -100,13 +100,17 @@ export class IndexerSandbox extends Sandbox {
 @Injectable()
 export class SandboxService {
   private processorCache: Record<string, IndexerSandbox> = {};
+  private project: SubIndexProject;
 
   constructor(
     private readonly apiService: ApiService,
     private readonly storeService: StoreService,
-    private readonly nodeConfig: NodeConfig,
-    private readonly project: SubIndexProject
+    private readonly nodeConfig: NodeConfig
   ) {}
+
+  init(project: SubIndexProject): void {
+    this.project = project;
+  }
 
   async getDsProcessor(ds: SubstrateDatasource): Promise<IndexerSandbox> {
     const entry = this.getDataSourceEntry(ds);

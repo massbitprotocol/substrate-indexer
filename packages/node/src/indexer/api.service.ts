@@ -26,15 +26,17 @@ export class ApiService implements OnApplicationShutdown {
   private patchedApi: ApiPromise;
   private currentBlockHash: BlockHash;
   private apiOption: ApiOptions;
+  protected project: SubIndexProject;
   networkMeta: NetworkMetadataPayload;
 
-  constructor(protected project: SubIndexProject, private eventEmitter: EventEmitter2) {}
+  constructor(private eventEmitter: EventEmitter2) {}
 
   async onApplicationShutdown(): Promise<void> {
     await Promise.all([this.api?.disconnect(), this.patchedApi?.disconnect()]);
   }
 
-  async init(): Promise<ApiService> {
+  async init(project: SubIndexProject): Promise<ApiService> {
+    this.project = project;
     const {chainTypes, network} = this.project;
     let provider: WsProvider | HttpProvider;
     let throwOnConnect = false;

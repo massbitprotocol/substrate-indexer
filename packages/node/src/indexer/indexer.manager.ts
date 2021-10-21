@@ -9,7 +9,7 @@ import {
   SubstrateRuntimeHandler,
 } from '@massbit/types';
 import {Process, Processor} from '@nestjs/bull';
-import {Inject, Injectable} from '@nestjs/common';
+import {Inject, Injectable, Scope} from '@nestjs/common';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {ApiPromise} from '@polkadot/api';
 import {Job} from 'bull';
@@ -37,7 +37,7 @@ const logger = getLogger('indexer');
 const {argv} = getYargsOption();
 
 @Processor('indexer')
-@Injectable()
+@Injectable({scope: Scope.TRANSIENT})
 export class IndexerManager {
   private api: ApiPromise;
   private indexerState: IndexerModel;
@@ -99,13 +99,17 @@ export class IndexerManager {
   }
 
   async start(): Promise<void> {
+    this.dsProcessorService.init(this.project);
     this.dsProcessorService.validateCustomDs();
-    await this.apiService.init();
-    await this.fetchService.init();
+
+    await this.apiService.init(this.project);
+    await this.fetchService.init(this.project);
     this.api = this.apiService.getApi();
     this.indexerState = await this.ensureProject(this.nodeConfig.subqueryName);
     await this.initDbSchema();
     await this.ensureMetadata(this.indexerState.dbSchema);
+
+    this.sandboxService.init(this.project);
 
     void this.fetchService.startLoop(this.indexerState.nextBlockHeight).catch((err) => {
       logger.error(err, 'failed to fetch block');

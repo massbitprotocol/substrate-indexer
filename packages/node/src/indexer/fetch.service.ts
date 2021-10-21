@@ -48,11 +48,11 @@ export class FetchService implements OnApplicationShutdown {
   private parentSpecVersion: number;
   private useDictionary: boolean;
   private projectIndexFilters: ProjectIndexFilters;
+  private project: SubIndexProject;
 
   constructor(
     private apiService: ApiService,
     private nodeConfig: NodeConfig,
-    private project: SubIndexProject,
     private dictionaryService: DictionaryService,
     private dsProcessorService: DsProcessorService,
     private eventEmitter: EventEmitter2
@@ -153,7 +153,8 @@ export class FetchService implements OnApplicationShutdown {
     return () => (stopper = true);
   }
 
-  async init(): Promise<void> {
+  async init(project: SubIndexProject): Promise<void> {
+    this.project = project;
     this.projectIndexFilters = this.getIndexFilters();
     this.useDictionary = !!this.projectIndexFilters && !!this.project.network.dictionary;
 
@@ -233,6 +234,7 @@ export class FetchService implements OnApplicationShutdown {
       if (this.useDictionary) {
         const queryEndBlock = startBlockHeight + DICTIONARY_MAX_QUERY_SIZE;
         try {
+          this.dictionaryService.init(this.project);
           const dictionary = await this.dictionaryService.getDictionary(
             startBlockHeight,
             queryEndBlock,

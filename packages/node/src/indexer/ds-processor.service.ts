@@ -33,7 +33,11 @@ export class DsProcessorService {
   private processorCache: {
     [entry: string]: SubstrateDatasourceProcessor<string, SubstrateNetworkFilter>;
   } = {};
-  constructor(private project: SubIndexProject) {}
+  private project: SubIndexProject;
+
+  init(project: SubIndexProject): void {
+    this.project = project;
+  }
 
   validateCustomDs(): void {
     for (const ds of this.project.dataSources.filter(isCustomDs)) {

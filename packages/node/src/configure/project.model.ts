@@ -17,8 +17,8 @@ import {prepareProjectDir} from '../utils/project';
 const logger = getLogger('configure');
 
 export class SubIndexProject {
-  private _path: string;
-  private _projectManifest: ProjectManifestVersioned;
+  private readonly _path: string;
+  private readonly _projectManifest: ProjectManifestVersioned;
 
   static async create(path: string, networkOverrides?: Partial<ProjectNetworkConfig>): Promise<SubIndexProject> {
     const projectPath = await prepareProjectDir(path);

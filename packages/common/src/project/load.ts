@@ -39,8 +39,8 @@ export function parseChainTypes(raw: unknown): ChainTypes {
   const errors = validateSync(chainTypes, {whitelist: true, forbidNonWhitelisted: true});
   if (errors?.length) {
     // TODO: print error details
-    const errorMsgs = errors.map((e) => e.toString()).join('\n');
-    throw new Error(`failed to parse chain types.\n${errorMsgs}`);
+    const errorMessages = errors.map((e) => e.toString()).join('\n');
+    throw new Error(`failed to parse chain types.\n${errorMessages}`);
   }
 
   return chainTypes;
