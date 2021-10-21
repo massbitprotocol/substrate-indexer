@@ -1,7 +1,7 @@
-import { LoggerService } from '@nestjs/common';
-import { Logger } from '@massbit/common';
+import {Logger} from '@massbit/common';
+import {LoggerService} from '@nestjs/common';
 import Pino from 'pino';
-import { argv } from '../yargs';
+import {argv} from '../yargs';
 
 const outputFmt = argv('output-fmt') as 'json' | 'colored';
 const debug = argv('debug');
@@ -26,7 +26,7 @@ export class NestLogger implements LoggerService {
 
   error(message: any, trace?: string) {
     if (trace) {
-      this.logger.error({ trace }, message);
+      this.logger.error({trace}, message);
     } else {
       this.logger.error(message);
     }

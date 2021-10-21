@@ -1,7 +1,3 @@
-import {Injectable, OnApplicationShutdown} from '@nestjs/common';
-import {EventEmitter2} from '@nestjs/event-emitter';
-import {Interval} from '@nestjs/schedule';
-import {ApiPromise} from '@polkadot/api';
 import {isRuntimeDataSourceV0_2_0, RuntimeDataSourceV0_0_1} from '@massbit/common';
 import {
   SubstrateCallFilter,
@@ -11,9 +7,13 @@ import {
   SubstrateDatasource,
   SubstrateHandlerFilter,
 } from '@massbit/types';
+import {OnApplicationShutdown} from '@nestjs/common';
+import {EventEmitter2} from '@nestjs/event-emitter';
+import {Interval} from '@nestjs/schedule';
+import {ApiPromise} from '@polkadot/api';
 import {isUndefined, range} from 'lodash';
 import {NodeConfig} from '../configure/node-config';
-import {SubqueryProject} from '../configure/project.model';
+import {SubIndexProject} from '../configure/project.model';
 import {getLogger} from '../utils/logger';
 import {profiler, profilerWrap} from '../utils/profiler';
 import {isBaseHandler, isCustomDs, isCustomHandler, isRuntimeDs} from '../utils/project';
@@ -36,7 +36,6 @@ const fetchBlocksBatches = argv.profiler
   ? profilerWrap(SubstrateUtil.fetchBlocksBatches, 'SubstrateUtil', 'fetchBlocksBatches')
   : SubstrateUtil.fetchBlocksBatches;
 
-@Injectable()
 export class FetchService implements OnApplicationShutdown {
   private latestBestHeight: number;
   private latestFinalizedHeight: number;
@@ -48,17 +47,40 @@ export class FetchService implements OnApplicationShutdown {
   private parentSpecVersion: number;
   private useDictionary: boolean;
   private projectIndexFilters: ProjectIndexFilters;
+  private readonly project: SubIndexProject;
+  private apiService: ApiService;
+  private dsProcessorService: DsProcessorService;
+  private nodeConfig: NodeConfig;
+  private dictionaryService: DictionaryService;
+  private eventEmitter: EventEmitter2;
 
   constructor(
-    private apiService: ApiService,
-    private nodeConfig: NodeConfig,
-    private project: SubqueryProject,
-    private dictionaryService: DictionaryService,
-    private dsProcessorService: DsProcessorService,
-    private eventEmitter: EventEmitter2
+    project: SubIndexProject,
+    nodeConfig: NodeConfig,
+    apiService: ApiService,
+    dsProcessorService: DsProcessorService,
+    dictionaryService: DictionaryService,
+    eventEmitter: EventEmitter2
   ) {
+    this.nodeConfig = nodeConfig;
+    this.project = project;
+    this.eventEmitter = eventEmitter;
+    this.apiService = apiService;
+    this.dictionaryService = dictionaryService;
+    this.dsProcessorService = dsProcessorService;
     this.blockBuffer = new BlockedQueue<BlockContent>(this.nodeConfig.batchSize * 3);
     this.blockNumberBuffer = new BlockedQueue<number>(this.nodeConfig.batchSize * 3);
+  }
+
+  async init(): Promise<void> {
+    this.projectIndexFilters = this.getIndexFilters();
+    this.useDictionary = !!this.projectIndexFilters && !!this.project.network.dictionary;
+
+    this.eventEmitter.emit(IndexerEvent.UsingDictionary, {
+      value: Number(this.useDictionary),
+    });
+    await this.getFinalizedBlockHead();
+    await this.getBestBlockHead();
   }
 
   onApplicationShutdown(): void {
@@ -151,17 +173,6 @@ export class FetchService implements OnApplicationShutdown {
       }
     })();
     return () => (stopper = true);
-  }
-
-  async init(): Promise<void> {
-    this.projectIndexFilters = this.getIndexFilters();
-    this.useDictionary = !!this.projectIndexFilters && !!this.project.network.dictionary;
-
-    this.eventEmitter.emit(IndexerEvent.UsingDictionary, {
-      value: Number(this.useDictionary),
-    });
-    await this.getFinalizedBlockHead();
-    await this.getBestBlockHead();
   }
 
   @Interval(BLOCK_TIME_VARIANCE * 1000)

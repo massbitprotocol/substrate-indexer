@@ -1,5 +1,5 @@
-import { argv as yargv } from 'yargs';
-import { hideBin } from 'yargs/helpers';
+import {argv as yargv} from 'yargs';
+import {hideBin} from 'yargs/helpers';
 import yargs from 'yargs/yargs';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -39,8 +39,7 @@ export function getYargsOption() {
     },
     debug: {
       demandOption: false,
-      describe:
-        'Show debug information to console output. will forcefully set log level to debug',
+      describe: 'Show debug information to console output. will forcefully set log level to debug',
       type: 'boolean',
       default: false,
     },
@@ -84,18 +83,6 @@ export function getYargsOption() {
       demandOption: false,
       describe: 'Specify the dictionary api for this network',
       type: 'string',
-    },
-    'mmr-path': {
-      alias: 'm',
-      demandOption: false,
-      describe: 'Local path of the merkle mountain range (.mmr) file',
-      type: 'string',
-    },
-    'proof-of-index': {
-      demandOption: false,
-      describe: 'Enable/disable proof of index',
-      type: 'boolean',
-      default: false,
     },
   });
 }

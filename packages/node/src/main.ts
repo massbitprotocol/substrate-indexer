@@ -11,9 +11,7 @@ async function bootstrap() {
       logger: debug ? new NestLogger() : false,
     });
     await app.init();
-    const indexerManager = app.get(IndexerManager);
-    await indexerManager.start();
-    await app.listen(3000);
+    await app.listen(parseInt(process.env.PORT, 10) || 3000);
     getLogger('massbit-node').info('node started');
   } catch (e) {
     getLogger('massbit-node').error(e, 'node failed to start');

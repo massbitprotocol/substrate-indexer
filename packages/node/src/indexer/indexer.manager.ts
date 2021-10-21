@@ -1,5 +1,5 @@
 import path from 'path';
-import {buildSchema, getAllEntitiesRelations} from '@massbit/common';
+import {buildSchema, getAllEntitiesRelations, ProjectNetworkConfig} from '@massbit/common';
 import {isBlockHandlerProcessor, isCallHandlerProcessor, isEventHandlerProcessor} from '@massbit/common/project/utils';
 import {
   SubstrateCustomDatasource,
@@ -8,12 +8,11 @@ import {
   SubstrateNetworkFilter,
   SubstrateRuntimeHandler,
 } from '@massbit/types';
-import {Inject, Injectable} from '@nestjs/common';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {ApiPromise} from '@polkadot/api';
 import {QueryTypes, Sequelize} from 'sequelize';
 import {NodeConfig} from '../configure/node-config';
-import {SubqueryProject} from '../configure/project.model';
+import {SubIndexProject} from '../configure/project.model';
 import {IndexerModel, IndexerRepo} from '../entities';
 import {getLogger} from '../utils/logger';
 import {profiler} from '../utils/profiler';
@@ -21,6 +20,7 @@ import {isCustomDs, isRuntimeDs} from '../utils/project';
 import * as SubstrateUtil from '../utils/substrate';
 import {getYargsOption} from '../yargs';
 import {ApiService} from './api.service';
+import {DictionaryService} from './dictionary.service';
 import {DsProcessorService} from './ds-processor.service';
 import {MetadataFactory} from './entities/metadata.entity';
 import {IndexerEvent} from './events';
@@ -34,25 +34,51 @@ const DEFAULT_DB_SCHEMA = 'public';
 const logger = getLogger('indexer');
 const {argv} = getYargsOption();
 
-@Injectable()
 export class IndexerManager {
+  private readonly apiService: ApiService;
+  private fetchService: FetchService;
+  private sandboxService: SandboxService;
+  private readonly storeService: StoreService;
+  private readonly sequelize: Sequelize;
+  private readonly nodeConfig: NodeConfig;
+  private readonly dsProcessorService: DsProcessorService;
+  private readonly eventEmitter: EventEmitter2;
+  private readonly dictionaryService: DictionaryService;
+  protected indexerRepo: IndexerRepo;
+
   private api: ApiPromise;
   private indexerState: IndexerModel;
   private prevSpecVersion?: number;
   private filteredDataSources: SubstrateDatasource[];
+  private readonly project: SubIndexProject;
 
   constructor(
-    private apiService: ApiService,
-    private storeService: StoreService,
-    private fetchService: FetchService,
-    private sequelize: Sequelize,
-    private project: SubqueryProject,
-    private nodeConfig: NodeConfig,
-    private sandboxService: SandboxService,
-    private dsProcessorService: DsProcessorService,
-    @Inject('Indexer') protected indexerRepo: IndexerRepo,
-    private eventEmitter: EventEmitter2
-  ) {}
+    project: SubIndexProject,
+    sequelize: Sequelize,
+    nodeConfig: NodeConfig,
+    indexerRepo: IndexerRepo,
+    eventEmitter: EventEmitter2
+  ) {
+    this.project = project;
+    this.sequelize = sequelize;
+    this.nodeConfig = nodeConfig;
+    this.indexerRepo = indexerRepo;
+    this.eventEmitter = eventEmitter;
+
+    this.dictionaryService = new DictionaryService(this.project);
+    this.apiService = new ApiService(this.project, this.eventEmitter);
+    this.dsProcessorService = new DsProcessorService(this.project);
+    this.fetchService = new FetchService(
+      this.project,
+      this.nodeConfig,
+      this.apiService,
+      this.dsProcessorService,
+      this.dictionaryService,
+      this.eventEmitter
+    );
+    this.storeService = new StoreService(this.sequelize, this.nodeConfig);
+    this.sandboxService = new SandboxService(this.nodeConfig);
+  }
 
   @profiler(argv.profiler)
   async indexBlock(blockContent: BlockContent): Promise<void> {
@@ -90,14 +116,16 @@ export class IndexerManager {
     });
   }
 
-  async start(): Promise<void> {
+  async start(indexerName: string): Promise<void> {
     this.dsProcessorService.validateCustomDs();
     await this.apiService.init();
     await this.fetchService.init();
     this.api = this.apiService.getApi();
-    this.indexerState = await this.ensureProject(this.nodeConfig.subqueryName);
+    this.indexerState = await this.ensureProject(indexerName);
     await this.initDbSchema();
     await this.ensureMetadata(this.indexerState.dbSchema);
+
+    this.sandboxService.init(this.apiService, this.storeService, this.project);
 
     void this.fetchService.startLoop(this.indexerState.nextBlockHeight).catch((err) => {
       logger.error(err, 'failed to fetch block');
@@ -120,8 +148,8 @@ export class IndexerManager {
 
   private async ensureMetadata(schema: string) {
     const metadataRepo = MetadataFactory(this.sequelize, schema);
-    //block offset should only been create once, never update.
-    //if change offset will require re-index
+    // block offset should only been create once, never update.
+    // if change offset will require re-index
     const blockOffset = await metadataRepo.findOne({
       where: {key: 'blockOffset'},
     });
@@ -136,7 +164,7 @@ export class IndexerManager {
 
   private async ensureProject(name: string): Promise<IndexerModel> {
     let project = await this.indexerRepo.findOne({
-      where: {name: this.nodeConfig.subqueryName},
+      where: {name},
     });
     const {chain, genesisHash} = this.apiService.networkMeta;
     if (!project) {
@@ -145,8 +173,8 @@ export class IndexerManager {
         // create tables in default schema if local mode is enabled
         projectSchema = DEFAULT_DB_SCHEMA;
       } else {
-        const suffix = await this.nextSubquerySchemaSuffix();
-        projectSchema = `subquery_${suffix}`;
+        const suffix = await this.nextIndexerSchemaSuffix();
+        projectSchema = `indexer_${suffix}`;
         const schemas = await this.sequelize.showAllSchemas(undefined);
         if (!(schemas as unknown as string[]).includes(projectSchema)) {
           await this.sequelize.createSchema(projectSchema, undefined);
@@ -181,20 +209,20 @@ export class IndexerManager {
     await this.storeService.init(modelsRelations, schema);
   }
 
-  private async nextSubquerySchemaSuffix(): Promise<number> {
+  private async nextIndexerSchemaSuffix(): Promise<number> {
     const seqExists = await this.sequelize.query(
       `SELECT 1
        FROM information_schema.sequences
        where sequence_schema = 'public'
-         and sequence_name = 'subquery_schema_seq'`,
+         and sequence_name = 'indexer_schema_seq'`,
       {
         type: QueryTypes.SELECT,
       }
     );
     if (!seqExists.length) {
-      await this.sequelize.query(`CREATE SEQUENCE subquery_schema_seq as integer START 1;`, {type: QueryTypes.RAW});
+      await this.sequelize.query(`CREATE SEQUENCE indexer_schema_seq as integer START 1;`, {type: QueryTypes.RAW});
     }
-    const [{nextval}] = await this.sequelize.query(`SELECT nextval('subquery_schema_seq')`, {
+    const [{nextval}] = await this.sequelize.query(`SELECT nextval('indexer_schema_seq')`, {
       type: QueryTypes.SELECT,
     });
     return Number(nextval);
