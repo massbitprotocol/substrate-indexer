@@ -1702,17 +1702,20 @@ __metadata:
     "@polkadot/api": 6.3.1
     "@subql/x-merkle-mountain-range": 2.0.0-0.1.1
     "@subql/x-vm2": latest
+    "@types/adm-zip": ^0.4.34
     "@types/app-module-path": ^2.2.0
     "@types/bull": ^3.15.5
     "@types/express": ^4.17.12
     "@types/jest": ^26.0.23
     "@types/lodash": ^4.14.170
+    "@types/multer": ^1.4.7
     "@types/pino": ^6.3.8
     "@types/sequelize": ^4.28.9
     "@types/supertest": ^2.0.10
     "@types/tar": ^4.0.4
     "@types/yargs": ^16.0.4
     "@willsoto/nestjs-prometheus": ^3.0.0
+    adm-zip: ^0.5.9
     app-module-path: ^2.2.0
     bull: ^3.29.3
     dayjs: ^1.10.5
@@ -2294,6 +2297,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/adm-zip@npm:^0.4.34":
+  version: 0.4.34
+  resolution: "@types/adm-zip@npm:0.4.34"
+  dependencies:
+    "@types/node": "*"
+  checksum: da295cb428029c67db9eddfa33c41fd0835493e847781e044d3502270e801ab19b263400e773971e28f620099e9a2900e3e92f5bbea3908501aea60069dd7908
+  languageName: node
+  linkType: hard
+
 "@types/app-module-path@npm:^2.2.0":
   version: 2.2.0
   resolution: "@types/app-module-path@npm:2.2.0"
@@ -2426,6 +2438,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/express@npm:*":
+  version: 4.17.13
+  resolution: "@types/express@npm:4.17.13"
+  dependencies:
+    "@types/body-parser": "*"
+    "@types/express-serve-static-core": ^4.17.18
+    "@types/qs": "*"
+    "@types/serve-static": "*"
+  checksum: 9f17da703df21e3f1cee2fe1864b9fcac2ab07c37382b972a194a3a484b41c1fbe4022b6cfe546f0171fd2d93b324dd3839512494f4cba639c2afa021e6dbb12
+  languageName: node
+  linkType: hard
+
 "@types/express@npm:^4.17.12":
   version: 4.17.12
   resolution: "@types/express@npm:4.17.12"
@@ -2555,6 +2579,15 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: 378ca1b93f5761eddbdca13f1870b439a2ecd0e05284f2138b9cf6880bb857d5783f3838439440aca78fcd74460c28a868b35e2ec8109695a22e95c384344f02
+  languageName: node
+  linkType: hard
+
+"@types/multer@npm:^1.4.7":
+  version: 1.4.7
+  resolution: "@types/multer@npm:1.4.7"
+  dependencies:
+    "@types/express": "*"
+  checksum: f20bc141e3f8fee16e8cf36a213dca7285f4af0ac5960ca8b17076f26f2dfd77d6518da3908de32482cc8d799cd8ae82af17cbe85c4f9829b70918e6420dd330
   languageName: node
   linkType: hard
 
@@ -3030,6 +3063,13 @@ __metadata:
   bin:
     acorn: bin/acorn
   checksum: 37720df0ecd48baf87506aff228aedc7e73379df9e9309f0b89aaff18bb3d08af892d47c0f19d5ef1723066ca74157b00adcfea9a62b21a493c91babb7d22bc3
+  languageName: node
+  linkType: hard
+
+"adm-zip@npm:^0.5.9":
+  version: 0.5.9
+  resolution: "adm-zip@npm:0.5.9"
+  checksum: a14e91e717e53d734ec5408fc0199cfd8c6fe20bf4493c3f10b6eebcdfb054517d50b07b3ca43b2e112fd55bfac96065e08c0abcce3e73d6b752e0ed1756564c
   languageName: node
   linkType: hard
 
