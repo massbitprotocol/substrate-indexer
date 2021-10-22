@@ -7,10 +7,10 @@ import {Job} from 'bull';
 import {isNil, omitBy} from 'lodash';
 import {Sequelize} from 'sequelize';
 import {NodeConfig} from '../configure/node-config';
-import {SubIndexProject} from '../configure/project.model';
 import {IndexerRepo} from '../entities';
 import {getLogger} from '../utils/logger';
 import {IndexerManager} from './indexer.manager';
+import {Project} from './project.model';
 
 const logger = getLogger('indexer-processor');
 
@@ -27,7 +27,7 @@ export class IndexerProcessor {
   @Process()
   async handleIndexer(job: Job): Promise<void> {
     const projectPath = path.resolve('.', job.data.projectPath);
-    const project = await SubIndexProject.create(
+    const project = await Project.create(
       projectPath,
       omitBy<ProjectNetworkConfig>(
         {
@@ -42,6 +42,6 @@ export class IndexerProcessor {
     });
 
     const indexer = new IndexerManager(project, this.sequelize, this.nodeConfig, this.indexerRepo, this.eventEmitter);
-    await indexer.start(job.data.indexerName);
+    await indexer.start();
   }
 }

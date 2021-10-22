@@ -12,7 +12,6 @@ import {EventEmitter2} from '@nestjs/event-emitter';
 import {ApiPromise} from '@polkadot/api';
 import {QueryTypes, Sequelize} from 'sequelize';
 import {NodeConfig} from '../configure/node-config';
-import {SubIndexProject} from '../configure/project.model';
 import {IndexerModel, IndexerRepo} from '../entities';
 import {getLogger} from '../utils/logger';
 import {profiler} from '../utils/profiler';
@@ -25,6 +24,7 @@ import {DsProcessorService} from './ds-processor.service';
 import {MetadataFactory} from './entities/metadata.entity';
 import {IndexerEvent} from './events';
 import {FetchService} from './fetch.service';
+import {Project} from './project.model';
 import {IndexerSandbox, SandboxService} from './sandbox.service';
 import {StoreService} from './store.service';
 import {BlockContent} from './types';
@@ -50,10 +50,10 @@ export class IndexerManager {
   private indexerState: IndexerModel;
   private prevSpecVersion?: number;
   private filteredDataSources: SubstrateDatasource[];
-  private readonly project: SubIndexProject;
+  private readonly project: Project;
 
   constructor(
-    project: SubIndexProject,
+    project: Project,
     sequelize: Sequelize,
     nodeConfig: NodeConfig,
     indexerRepo: IndexerRepo,
@@ -116,12 +116,12 @@ export class IndexerManager {
     });
   }
 
-  async start(indexerName: string): Promise<void> {
+  async start(): Promise<void> {
     this.dsProcessorService.validateCustomDs();
     await this.apiService.init();
     await this.fetchService.init();
     this.api = this.apiService.getApi();
-    this.indexerState = await this.ensureProject(indexerName);
+    this.indexerState = await this.ensureProject(this.project.projectManifest.name);
     await this.initDbSchema();
     await this.ensureMetadata(this.indexerState.dbSchema);
 

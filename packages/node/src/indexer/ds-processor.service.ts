@@ -2,9 +2,9 @@ import path from 'path';
 import {SubstrateCustomDatasource, SubstrateDatasourceProcessor, SubstrateNetworkFilter} from '@massbit/types';
 import {Injectable, Scope} from '@nestjs/common';
 import {VMScript} from '@subql/x-vm2';
-import {SubIndexProject} from '../configure/project.model';
 import {getLogger} from '../utils/logger';
 import {isCustomDs} from '../utils/project';
+import {Project} from './project.model';
 import {Sandbox} from './sandbox.service';
 
 export interface DsPluginSandboxOption {
@@ -32,9 +32,9 @@ export class DsProcessorService {
   private processorCache: {
     [entry: string]: SubstrateDatasourceProcessor<string, SubstrateNetworkFilter>;
   } = {};
-  private project: SubIndexProject;
+  private project: Project;
 
-  constructor(project: SubIndexProject) {
+  constructor(project: Project) {
     this.project = project;
   }
 

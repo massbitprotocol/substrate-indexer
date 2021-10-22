@@ -32,8 +32,6 @@ function defaultSubqueryName(config: Partial<IConfig>): IConfig {
   } as IConfig;
 }
 
-const logger = getLogger('configure');
-
 @Global()
 @Module({})
 export class ConfigureModule {

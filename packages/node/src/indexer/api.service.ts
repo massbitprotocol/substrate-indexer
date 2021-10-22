@@ -13,8 +13,8 @@ import {RpcInterface} from '@polkadot/rpc-core/types';
 import {BlockHash} from '@polkadot/types/interfaces';
 import {StorageEntry} from '@polkadot/types/primitive/types';
 import {AnyFunction, AnyTuple} from '@polkadot/types/types';
-import {SubIndexProject} from '../configure/project.model';
 import {IndexerEvent, NetworkMetadataPayload} from './events';
+import {Project} from './project.model';
 
 const NOT_SUPPORT = (name: string) => () => {
   throw new Error(`${name}() is not supported`);
@@ -25,11 +25,11 @@ export class ApiService implements OnApplicationShutdown {
   private patchedApi: ApiPromise;
   private currentBlockHash: BlockHash;
   private apiOption: ApiOptions;
-  protected project: SubIndexProject;
+  protected project: Project;
   private eventEmitter: EventEmitter2;
   networkMeta: NetworkMetadataPayload;
 
-  constructor(project: SubIndexProject, eventEmitter: EventEmitter2) {
+  constructor(project: Project, eventEmitter: EventEmitter2) {
     this.project = project;
     this.eventEmitter = eventEmitter;
   }

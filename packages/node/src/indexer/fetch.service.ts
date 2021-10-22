@@ -13,7 +13,6 @@ import {Interval} from '@nestjs/schedule';
 import {ApiPromise} from '@polkadot/api';
 import {isUndefined, range} from 'lodash';
 import {NodeConfig} from '../configure/node-config';
-import {SubIndexProject} from '../configure/project.model';
 import {getLogger} from '../utils/logger';
 import {profiler, profilerWrap} from '../utils/profiler';
 import {isBaseHandler, isCustomDs, isCustomHandler, isRuntimeDs} from '../utils/project';
@@ -25,6 +24,7 @@ import {BlockedQueue} from './blocked-queue';
 import {Dictionary, DictionaryService} from './dictionary.service';
 import {DsProcessorService} from './ds-processor.service';
 import {IndexerEvent} from './events';
+import {Project} from './project.model';
 import {BlockContent, ProjectIndexFilters} from './types';
 
 const logger = getLogger('fetch');
@@ -47,7 +47,7 @@ export class FetchService implements OnApplicationShutdown {
   private parentSpecVersion: number;
   private useDictionary: boolean;
   private projectIndexFilters: ProjectIndexFilters;
-  private readonly project: SubIndexProject;
+  private readonly project: Project;
   private apiService: ApiService;
   private dsProcessorService: DsProcessorService;
   private nodeConfig: NodeConfig;
@@ -55,7 +55,7 @@ export class FetchService implements OnApplicationShutdown {
   private eventEmitter: EventEmitter2;
 
   constructor(
-    project: SubIndexProject,
+    project: Project,
     nodeConfig: NodeConfig,
     apiService: ApiService,
     dsProcessorService: DsProcessorService,

@@ -14,16 +14,16 @@ import {pick} from 'lodash';
 import {getLogger} from '../utils/logger';
 import {prepareProjectDir} from '../utils/project';
 
-const logger = getLogger('configure');
+const logger = getLogger('project');
 
-export class SubIndexProject {
+export class Project {
   private readonly _path: string;
   private readonly _projectManifest: ProjectManifestVersioned;
 
-  static async create(path: string, networkOverrides?: Partial<ProjectNetworkConfig>): Promise<SubIndexProject> {
+  static async create(path: string, networkOverrides?: Partial<ProjectNetworkConfig>): Promise<Project> {
     const projectPath = await prepareProjectDir(path);
     const projectManifest = loadProjectManifest(projectPath);
-    return new SubIndexProject(projectManifest, projectPath, networkOverrides);
+    return new Project(projectManifest, projectPath, networkOverrides);
   }
 
   constructor(
@@ -75,11 +75,17 @@ export class SubIndexProject {
   get path(): string {
     return this._path;
   }
+
   get dataSources(): SubstrateDatasource[] {
     return this._projectManifest.dataSources;
   }
+
   get schema(): string {
     return this._projectManifest.schema;
+  }
+
+  get name(): string {
+    return this._projectManifest.name;
   }
 
   get chainTypes(): RegisteredTypes | undefined {

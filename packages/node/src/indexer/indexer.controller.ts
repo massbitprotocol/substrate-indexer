@@ -8,10 +8,7 @@ export class IndexerController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createIndexer(
-    @Body('projectPath') projectPath: string,
-    @Body('indexerName') indexerName: string
-  ): Promise<void> {
-    await this.indexerQueue.add({projectPath, indexerName});
+  async createIndexer(@Body('projectPath') projectPath: string): Promise<void> {
+    await this.indexerQueue.add({projectPath});
   }
 }
