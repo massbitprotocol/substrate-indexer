@@ -12,8 +12,8 @@ import {EventEmitter2} from '@nestjs/event-emitter';
 import {Interval} from '@nestjs/schedule';
 import {ApiPromise} from '@polkadot/api';
 import {isUndefined, range} from 'lodash';
+import Pino from 'pino';
 import {NodeConfig} from '../configure/node-config';
-import {SubIndexProject} from '../configure/project.model';
 import {getLogger} from '../utils/logger';
 import {profiler, profilerWrap} from '../utils/profiler';
 import {isBaseHandler, isCustomDs, isCustomHandler, isRuntimeDs} from '../utils/project';
@@ -25,9 +25,9 @@ import {BlockedQueue} from './blocked-queue';
 import {Dictionary, DictionaryService} from './dictionary.service';
 import {DsProcessorService} from './ds-processor.service';
 import {IndexerEvent} from './events';
+import {Project} from './project.model';
 import {BlockContent, ProjectIndexFilters} from './types';
 
-const logger = getLogger('fetch');
 const BLOCK_TIME_VARIANCE = 5;
 const DICTIONARY_MAX_QUERY_SIZE = 10000;
 const {argv} = getYargsOption();
@@ -47,15 +47,16 @@ export class FetchService implements OnApplicationShutdown {
   private parentSpecVersion: number;
   private useDictionary: boolean;
   private projectIndexFilters: ProjectIndexFilters;
-  private readonly project: SubIndexProject;
+  private readonly project: Project;
   private apiService: ApiService;
   private dsProcessorService: DsProcessorService;
   private nodeConfig: NodeConfig;
   private dictionaryService: DictionaryService;
   private eventEmitter: EventEmitter2;
+  private logger: Pino.Logger;
 
   constructor(
-    project: SubIndexProject,
+    project: Project,
     nodeConfig: NodeConfig,
     apiService: ApiService,
     dsProcessorService: DsProcessorService,
@@ -70,6 +71,7 @@ export class FetchService implements OnApplicationShutdown {
     this.dsProcessorService = dsProcessorService;
     this.blockBuffer = new BlockedQueue<BlockContent>(this.nodeConfig.batchSize * 3);
     this.blockNumberBuffer = new BlockedQueue<number>(this.nodeConfig.batchSize * 3);
+    this.logger = getLogger(`[fetch] [${project.projectManifest.name}]`);
   }
 
   async init(): Promise<void> {
@@ -161,7 +163,7 @@ export class FetchService implements OnApplicationShutdown {
             await next(block);
             success = true;
           } catch (e) {
-            logger.error(
+            this.logger.error(
               e,
               `failed to index block at height ${block.block.block.header.number.toString()} ${
                 e.handler ? `${e.handler}(${e.handlerArgs ?? ''})` : ''
@@ -178,7 +180,7 @@ export class FetchService implements OnApplicationShutdown {
   @Interval(BLOCK_TIME_VARIANCE * 1000)
   async getFinalizedBlockHead() {
     if (!this.api) {
-      logger.debug(`Skip fetch finalized block until API is ready`);
+      this.logger.debug(`Skip fetch finalized block until API is ready`);
       return;
     }
     try {
@@ -192,14 +194,14 @@ export class FetchService implements OnApplicationShutdown {
         });
       }
     } catch (e) {
-      logger.error(e, `Having a problem when get finalized block`);
+      this.logger.error(e, `Having a problem when get finalized block`);
     }
   }
 
   @Interval(BLOCK_TIME_VARIANCE * 1000)
   async getBestBlockHead() {
     if (!this.api) {
-      logger.debug(`Skip fetch best block until API is ready`);
+      this.logger.debug(`Skip fetch best block until API is ready`);
       return;
     }
     try {
@@ -212,7 +214,7 @@ export class FetchService implements OnApplicationShutdown {
         });
       }
     } catch (e) {
-      logger.error(e, `Having a problem when get best block`);
+      this.logger.error(e, `Having a problem when get best block`);
     }
   }
 
@@ -267,7 +269,7 @@ export class FetchService implements OnApplicationShutdown {
           }
           // else use this.nextBlockRange()
         } catch (e) {
-          logger.debug(`Fetch dictionary stopped: ${e.message}`);
+          this.logger.debug(`Fetch dictionary stopped: ${e.message}`);
           this.eventEmitter.emit(IndexerEvent.SkipDictionary);
         }
       }
@@ -294,7 +296,7 @@ export class FetchService implements OnApplicationShutdown {
         bufferBlocks,
         metadataChanged ? undefined : this.parentSpecVersion
       );
-      logger.info(
+      this.logger.info(
         `fetch block [${bufferBlocks[0]},${bufferBlocks[bufferBlocks.length - 1]}], total ${bufferBlocks.length} blocks`
       );
       this.blockBuffer.putAll(blocks);
@@ -328,7 +330,7 @@ export class FetchService implements OnApplicationShutdown {
 
   private dictionaryValidation({_metadata: metaData}: Dictionary, startBlockHeight: number): boolean {
     if (metaData.genesisHash !== this.api.genesisHash.toString()) {
-      logger.warn(`Dictionary is disabled since now`);
+      this.logger.warn(`Dictionary is disabled since now`);
       this.useDictionary = false;
       this.eventEmitter.emit(IndexerEvent.UsingDictionary, {
         value: Number(this.useDictionary),
@@ -337,7 +339,7 @@ export class FetchService implements OnApplicationShutdown {
       return false;
     }
     if (metaData.lastProcessedHeight < startBlockHeight) {
-      logger.warn(`Dictionary indexed block is behind current indexing block height`);
+      this.logger.warn(`Dictionary indexed block is behind current indexing block height`);
       this.eventEmitter.emit(IndexerEvent.SkipDictionary);
       return false;
     }

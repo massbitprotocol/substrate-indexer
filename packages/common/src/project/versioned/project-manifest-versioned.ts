@@ -25,7 +25,7 @@ export function manifestIsV0_2_0(manifest: IProjectManifest): manifest is Projec
 }
 
 export class ProjectManifestVersioned implements IProjectManifest {
-  private _impl: ProjectManifestImpls;
+  private readonly _impl: ProjectManifestImpls;
 
   constructor(projectManifest: VersionedProjectManifest) {
     const klass = SUPPORTED_VERSIONS[projectManifest.specVersion as Versions];
@@ -62,6 +62,10 @@ export class ProjectManifestVersioned implements IProjectManifest {
       const errorMsgs = errors.map((e) => e.toString()).join('\n');
       throw new Error(`failed to parse project.yaml.\n${errorMsgs}`);
     }
+  }
+
+  get name(): string {
+    return this._impl.name;
   }
 
   get dataSources(): SubstrateDatasource[] {

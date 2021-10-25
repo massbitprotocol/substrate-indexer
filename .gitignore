@@ -178,3 +178,6 @@ package-lock.json
 lib
 
 .DS_Store
+
+# Upload indexer code
+packages/node/projects

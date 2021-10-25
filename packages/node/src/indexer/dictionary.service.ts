@@ -3,10 +3,10 @@ import {MetaData} from '@massbit/common';
 import {SubstrateCallFilter, SubstrateEventFilter} from '@massbit/types';
 import {Injectable, OnApplicationShutdown, Scope} from '@nestjs/common';
 import fetch from 'node-fetch';
-import {SubIndexProject} from '../configure/project.model';
 import {getLogger} from '../utils/logger';
 import {profiler} from '../utils/profiler';
 import {getYargsOption} from '../yargs';
+import {Project} from './project.model';
 import {ProjectIndexFilters} from './types';
 
 export type Dictionary = {
@@ -19,14 +19,14 @@ const logger = getLogger('dictionary');
 const {argv} = getYargsOption();
 
 export class DictionaryService implements OnApplicationShutdown {
-  protected project: SubIndexProject;
+  protected project: Project;
   private isShutdown = false;
 
   onApplicationShutdown(): void {
     this.isShutdown = true;
   }
 
-  constructor(project: SubIndexProject) {
+  constructor(project: Project) {
     this.project = project;
   }
 

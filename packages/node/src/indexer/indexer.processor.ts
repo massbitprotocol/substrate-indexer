@@ -3,16 +3,20 @@ import {ProjectNetworkConfig} from '@massbit/common';
 import {Process, Processor} from '@nestjs/bull';
 import {Inject, Injectable} from '@nestjs/common';
 import {EventEmitter2} from '@nestjs/event-emitter';
+import admZip from 'adm-zip';
 import {Job} from 'bull';
+import {Express} from 'express';
 import {isNil, omitBy} from 'lodash';
 import {Sequelize} from 'sequelize';
 import {NodeConfig} from '../configure/node-config';
-import {SubIndexProject} from '../configure/project.model';
 import {IndexerRepo} from '../entities';
 import {getLogger} from '../utils/logger';
 import {IndexerManager} from './indexer.manager';
+import {Project} from './project.model';
+import 'multer';
 
 const logger = getLogger('indexer-processor');
+const projectsDir = './projects';
 
 @Injectable()
 @Processor('indexer')
@@ -26,8 +30,10 @@ export class IndexerProcessor {
 
   @Process()
   async handleIndexer(job: Job): Promise<void> {
-    const projectPath = path.resolve('.', job.data.projectPath);
-    const project = await SubIndexProject.create(
+    const {file} = job.data;
+    let projectPath = this.extractProject(file);
+    projectPath = path.resolve('.', projectPath);
+    const project = await Project.create(
       projectPath,
       omitBy<ProjectNetworkConfig>(
         {
@@ -42,6 +48,14 @@ export class IndexerProcessor {
     });
 
     const indexer = new IndexerManager(project, this.sequelize, this.nodeConfig, this.indexerRepo, this.eventEmitter);
-    await indexer.start(job.data.indexerName);
+    logger.info(`deploy indexer ${project.projectManifest.name}`);
+    await indexer.start();
+  }
+
+  extractProject(file: Express.Multer.File): string {
+    const unzip = new admZip(file.path);
+    unzip.extractAllTo(projectsDir, true);
+    const projectName = file.originalname.split('.')[0];
+    return `${projectsDir}/${projectName}`;
   }
 }

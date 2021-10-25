@@ -6,11 +6,11 @@ import {ApiPromise} from '@polkadot/api';
 import {NodeVM, NodeVMOptions, VMScript} from '@subql/x-vm2';
 import {merge} from 'lodash';
 import {NodeConfig} from '../configure/node-config';
-import {SubIndexProject} from '../configure/project.model';
 import {getLogger} from '../utils/logger';
 import {getProjectEntry} from '../utils/project';
 import {timeout} from '../utils/promise';
 import {ApiService} from './api.service';
+import {Project} from './project.model';
 import {StoreService} from './store.service';
 
 export interface SandboxOption {
@@ -101,11 +101,11 @@ export class SandboxService {
   private processorCache: Record<string, IndexerSandbox> = {};
   private apiService: ApiService;
   private storeService: StoreService;
-  private project: SubIndexProject;
+  private project: Project;
 
   constructor(private readonly nodeConfig: NodeConfig) {}
 
-  init(apiService: ApiService, storeService: StoreService, project: SubIndexProject): void {
+  init(apiService: ApiService, storeService: StoreService, project: Project): void {
     this.apiService = apiService;
     this.storeService = storeService;
     this.project = project;
