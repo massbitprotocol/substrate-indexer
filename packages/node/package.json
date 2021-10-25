@@ -22,7 +22,7 @@
     "@nestjs/event-emitter": "^0.0.2",
     "@nestjs/platform-express": "^7.6.1",
     "@nestjs/schedule": "^0.4.2",
-    "@polkadot/api": "6.3.1",
+    "@polkadot/api": "6.4.2",
     "@subql/x-merkle-mountain-range": "2.0.0-0.1.1",
     "@subql/x-vm2": "latest",
     "@willsoto/nestjs-prometheus": "^3.0.0",

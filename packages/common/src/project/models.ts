@@ -1,4 +1,3 @@
-import {RegisteredTypes, RegistryTypes, OverrideModuleType, OverrideBundleType} from '@polkadot/types/types';
 import {
   CustomDataSourceAsset,
   FileReference,
@@ -15,6 +14,7 @@ import {
   SubstrateRuntimeDatasource,
   SubstrateRuntimeHandler,
 } from '@massbit/types';
+import {RegisteredTypes, RegistryTypes, OverrideModuleType, OverrideBundleType} from '@polkadot/types/types';
 import {plainToClass, Transform, Type} from 'class-transformer';
 import {
   ArrayMaxSize,

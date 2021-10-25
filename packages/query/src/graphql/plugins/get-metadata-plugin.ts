@@ -1,6 +1,6 @@
 import {makeExtendSchemaPlugin, gql} from 'graphile-utils';
 import fetch from 'node-fetch';
-import {setAsyncInterval} from '../../utils/asyncInterval';
+import {setAsyncInterval} from '../../utils/async-interval';
 import {argv} from '../../yargs';
 const {version: packageVersion} = require('../../../package.json');
 
