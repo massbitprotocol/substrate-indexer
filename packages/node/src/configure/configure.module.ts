@@ -26,12 +26,6 @@ function yargsToIConfig(yargs: Args): Partial<IConfig> {
   }, {});
 }
 
-function defaultSubqueryName(config: Partial<IConfig>): IConfig {
-  return {
-    ...config,
-  } as IConfig;
-}
-
 @Global()
 @Module({})
 export class ConfigureModule {
@@ -42,7 +36,7 @@ export class ConfigureModule {
     if (argv.config) {
       config = NodeConfig.fromFile(argv.config, yargsToIConfig(argv));
     } else {
-      config = new NodeConfig(defaultSubqueryName(yargsToIConfig(argv)));
+      config = new NodeConfig({...yargsToIConfig(argv)} as IConfig);
     }
 
     if (config.debug) {

@@ -1,10 +1,10 @@
-import { DynamicModule, Global } from '@nestjs/common';
-import { Sequelize } from 'sequelize';
-import { Options as SequelizeOption } from 'sequelize/types';
+import {DynamicModule, Global} from '@nestjs/common';
+import {Sequelize} from 'sequelize';
+import {Options as SequelizeOption} from 'sequelize/types';
 import * as entities from '../entities';
-import { getLogger } from '../utils/logger';
-import { delay } from '../utils/promise';
-import { getYargsOption } from '../yargs';
+import {getLogger} from '../utils/logger';
+import {delay} from '../utils/promise';
+import {getYargsOption} from '../yargs';
 
 export interface DbOption {
   host: string;
@@ -16,10 +16,7 @@ export interface DbOption {
 
 const logger = getLogger('db');
 
-async function establishConnection(
-  sequelize: Sequelize,
-  numRetries: number,
-): Promise<void> {
+async function establishConnection(sequelize: Sequelize, numRetries: number): Promise<void> {
   try {
     await sequelize.authenticate();
   } catch (error) {
@@ -37,20 +34,18 @@ const sequelizeFactory = (option: SequelizeOption) => async () => {
   const sequelize = new Sequelize(option);
   const numRetries = 5;
   await establishConnection(sequelize, numRetries);
-  for (const factoryFn of Object.keys(entities).filter((k) =>
-    /Factory$/.exec(k),
-  )) {
+  for (const factoryFn of Object.keys(entities).filter((k) => /Factory$/.exec(k))) {
     entities[factoryFn](sequelize);
   }
-  const { migrate } = getYargsOption().argv;
-  await sequelize.sync({ alter: migrate });
+  const {migrate} = getYargsOption().argv;
+  await sequelize.sync({alter: migrate});
   return sequelize;
 };
 
 @Global()
 export class DbModule {
   static forRoot(option: DbOption): DynamicModule {
-    const { argv } = getYargsOption();
+    const {argv} = getYargsOption();
     const logger = getLogger('db');
     return {
       module: DbModule,
@@ -61,7 +56,7 @@ export class DbModule {
             ...option,
             dialect: 'postgres',
             logging: argv.debug
-              ? (sql: string, timing?: number) => {
+              ? (sql: string) => {
                   logger.debug(sql);
                 }
               : false,
