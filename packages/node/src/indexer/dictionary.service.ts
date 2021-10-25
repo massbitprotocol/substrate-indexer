@@ -1,7 +1,7 @@
 import {ApolloClient, HttpLink, InMemoryCache, gql} from '@apollo/client/core';
 import {MetaData} from '@massbit/common';
 import {SubstrateCallFilter, SubstrateEventFilter} from '@massbit/types';
-import {Injectable, OnApplicationShutdown, Scope} from '@nestjs/common';
+import {OnApplicationShutdown} from '@nestjs/common';
 import fetch from 'node-fetch';
 import {getLogger} from '../utils/logger';
 import {profiler} from '../utils/profiler';
@@ -12,9 +12,8 @@ import {ProjectIndexFilters} from './types';
 export type Dictionary = {
   _metadata: MetaData;
   batchBlocks: number[];
-  //TODO
-  // specVersions: number[];
 };
+
 const logger = getLogger('dictionary');
 const {argv} = getYargsOption();
 
@@ -52,6 +51,7 @@ export class DictionaryService implements OnApplicationShutdown {
       indexFilters.eventFilters,
       indexFilters.extrinsicFilters
     );
+
     const client = new ApolloClient({
       cache: new InMemoryCache({resultCaching: true}),
       link: new HttpLink({uri: this.project.network.dictionary, fetch}),
@@ -80,17 +80,20 @@ export class DictionaryService implements OnApplicationShutdown {
           eventEndBlock = Number(node.blockHeight); //last added event blockHeight
         }
       }
+
       if (resp.data.extrinsics && resp.data.extrinsics.nodes.length >= 0) {
         for (const node of resp.data.extrinsics.nodes) {
           blockHeightSet.add(Number(node.blockHeight));
           extrinsicEndBlock = Number(node.blockHeight); //last added extrinsic blockHeight
         }
       }
+
       if (resp.data.specVersions && resp.data.specVersions.nodes.length >= 0) {
         for (const node of resp.data.specVersions.nodes) {
           specVersionBlockHeightSet.add(Number(node.blockHeight));
         }
       }
+
       const _metadata = resp.data._metadata;
       const endBlock = Math.min(
         isNaN(eventEndBlock) ? Infinity : eventEndBlock,
@@ -99,8 +102,7 @@ export class DictionaryService implements OnApplicationShutdown {
       const batchBlocks = Array.from(blockHeightSet)
         .filter((block) => block <= endBlock)
         .sort((n1, n2) => n1 - n2);
-      //TODO
-      // const specVersions = Array.from(specVersionBlockHeightSet);
+
       return {
         _metadata,
         batchBlocks,
@@ -111,7 +113,7 @@ export class DictionaryService implements OnApplicationShutdown {
     }
   }
 
-  //generate dictionary query
+  // generate dictionary query
   private dictionaryQuery(
     startBlock: number,
     queryEndBlock: number,
@@ -123,7 +125,7 @@ export class DictionaryService implements OnApplicationShutdown {
     let extrinsicFilter = ``;
     let baseQuery = ``;
     const metaQuery = `
-  _metadata {
+    _metadata {
     lastProcessedHeight
     lastProcessedTimestamp
     targetHeight

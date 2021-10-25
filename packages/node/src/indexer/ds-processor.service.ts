@@ -1,6 +1,5 @@
 import path from 'path';
 import {SubstrateCustomDatasource, SubstrateDatasourceProcessor, SubstrateNetworkFilter} from '@massbit/types';
-import {Injectable, Scope} from '@nestjs/common';
 import {VMScript} from '@subql/x-vm2';
 import {getLogger} from '../utils/logger';
 import {isCustomDs} from '../utils/project';
@@ -63,6 +62,7 @@ export class DsProcessorService {
     if (!isCustomDs(ds)) {
       throw new Error(`data source is not a custom data source`);
     }
+
     if (!this.processorCache[ds.processor.file]) {
       const sandbox = new DsPluginSandbox({
         root: this.project.path,

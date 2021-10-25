@@ -119,7 +119,7 @@ export class ApiService implements OnApplicationShutdown {
     (this.patchedApi as any).isPatched = true;
   }
 
-  async setBlockhash(blockHash: BlockHash): Promise<void> {
+  async setBlockHash(blockHash: BlockHash): Promise<void> {
     if (!this.patchedApi) {
       await this.getPatchedApi();
     }

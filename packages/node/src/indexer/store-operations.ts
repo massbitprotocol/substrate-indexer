@@ -16,7 +16,7 @@ export class StoreOperations {
   private operationEntityToUint8Array(operation: OperationEntity): Uint8Array {
     const dataBufferArray: Uint8Array[] = [];
     if (operation.operation === OperationType.Remove) {
-      //remove case
+      // remove case
       if (isString(operation.data)) {
         dataBufferArray.push(Buffer.from(operation.data));
       } else {

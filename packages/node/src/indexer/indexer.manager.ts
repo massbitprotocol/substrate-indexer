@@ -1,5 +1,5 @@
 import path from 'path';
-import {buildSchema, getAllEntitiesRelations, ProjectNetworkConfig} from '@massbit/common';
+import {buildSchema, getAllEntitiesRelations} from '@massbit/common';
 import {isBlockHandlerProcessor, isCallHandlerProcessor, isEventHandlerProcessor} from '@massbit/common/project/utils';
 import {
   SubstrateCustomDatasource,
@@ -31,7 +31,7 @@ import {BlockContent} from './types';
 
 const DEFAULT_DB_SCHEMA = 'public';
 
-const logger = getLogger('indexer');
+const logger = getLogger('indexer-manager');
 const {argv} = getYargsOption();
 
 export class IndexerManager {
@@ -77,7 +77,25 @@ export class IndexerManager {
       this.eventEmitter
     );
     this.storeService = new StoreService(this.sequelize, this.nodeConfig);
-    this.sandboxService = new SandboxService(this.nodeConfig);
+    this.sandboxService = new SandboxService(this.project, this.nodeConfig, this.apiService, this.storeService);
+  }
+
+  async start(): Promise<void> {
+    this.dsProcessorService.validateCustomDs();
+    await this.apiService.init();
+    await this.fetchService.init();
+    this.api = this.apiService.getApi();
+    this.indexerState = await this.ensureProject(this.project.projectManifest.name);
+    await this.initDbSchema();
+    await this.ensureMetadata(this.indexerState.dbSchema);
+
+    void this.fetchService.startLoop(this.indexerState.nextBlockHeight).catch((err) => {
+      logger.error(err, 'failed to fetch block');
+      // FIXME: retry before exit
+      process.exit(1);
+    });
+    this.filteredDataSources = this.filterDataSources();
+    this.fetchService.register((block) => this.indexBlock(block));
   }
 
   @profiler(argv.profiler)
@@ -92,7 +110,7 @@ export class IndexerManager {
     this.storeService.setTransaction(tx);
 
     try {
-      await this.apiService.setBlockhash(block.block.hash);
+      await this.apiService.setBlockHash(block.block.hash);
       for (const ds of this.filteredDataSources) {
         const vm = await this.sandboxService.getDsProcessor(ds);
         if (isRuntimeDs(ds)) {
@@ -114,26 +132,6 @@ export class IndexerManager {
       height: blockHeight,
       timestamp: Date.now(),
     });
-  }
-
-  async start(): Promise<void> {
-    this.dsProcessorService.validateCustomDs();
-    await this.apiService.init();
-    await this.fetchService.init();
-    this.api = this.apiService.getApi();
-    this.indexerState = await this.ensureProject(this.project.projectManifest.name);
-    await this.initDbSchema();
-    await this.ensureMetadata(this.indexerState.dbSchema);
-
-    this.sandboxService.init(this.apiService, this.storeService, this.project);
-
-    void this.fetchService.startLoop(this.indexerState.nextBlockHeight).catch((err) => {
-      logger.error(err, 'failed to fetch block');
-      // FIXME: retry before exit
-      process.exit(1);
-    });
-    this.filteredDataSources = this.filterDataSources();
-    this.fetchService.register((block) => this.indexBlock(block));
   }
 
   private getStartBlockFromDataSources() {
@@ -163,11 +161,11 @@ export class IndexerManager {
   }
 
   private async ensureProject(name: string): Promise<IndexerModel> {
-    let project = await this.indexerRepo.findOne({
+    let indexer = await this.indexerRepo.findOne({
       where: {name},
     });
     const {chain, genesisHash} = this.apiService.networkMeta;
-    if (!project) {
+    if (!indexer) {
       let projectSchema: string;
       if (this.nodeConfig.localMode) {
         // create tables in default schema if local mode is enabled
@@ -181,7 +179,7 @@ export class IndexerManager {
         }
       }
 
-      project = await this.indexerRepo.create({
+      indexer = await this.indexerRepo.create({
         name,
         dbSchema: projectSchema,
         hash: '0x',
@@ -190,16 +188,16 @@ export class IndexerManager {
         networkGenesis: genesisHash,
       });
     } else {
-      if (!project.networkGenesis || !project.network) {
-        project.network = chain;
-        project.networkGenesis = genesisHash;
-        await project.save();
-      } else if (project.networkGenesis !== genesisHash) {
-        logger.error(`Not same network: genesisHash different - ${project.networkGenesis} : ${genesisHash}`);
+      if (!indexer.networkGenesis || !indexer.network) {
+        indexer.network = chain;
+        indexer.networkGenesis = genesisHash;
+        await indexer.save();
+      } else if (indexer.networkGenesis !== genesisHash) {
+        logger.error(`Not same network: genesisHash different - ${indexer.networkGenesis} : ${genesisHash}`);
         process.exit(1);
       }
     }
-    return project;
+    return indexer;
   }
 
   private async initDbSchema(): Promise<void> {
