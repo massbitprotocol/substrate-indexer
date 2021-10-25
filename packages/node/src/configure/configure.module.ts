@@ -1,6 +1,6 @@
 import {DynamicModule, Global, Module} from '@nestjs/common';
 import {camelCase} from 'lodash';
-import {getLogger, setLevel} from '../utils/logger';
+import {setLevel} from '../utils/logger';
 import {getYargsOption} from '../yargs';
 import {IConfig, NodeConfig} from './node-config';
 

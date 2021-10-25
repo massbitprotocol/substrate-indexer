@@ -13,7 +13,7 @@ export class IndexerController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads',
+        destination: './projects',
       }),
     })
   )

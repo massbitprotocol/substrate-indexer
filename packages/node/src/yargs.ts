@@ -5,17 +5,6 @@ import yargs from 'yargs/yargs';
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function getYargsOption() {
   return yargs(hideBin(process.argv)).options({
-    subquery: {
-      alias: 'f',
-      demandOption: false,
-      describe: 'Local path of the subquery project',
-      type: 'string',
-    },
-    'subquery-name': {
-      demandOption: false,
-      describe: 'Name of the subquery project',
-      type: 'string',
-    },
     config: {
       alias: 'c',
       demandOption: false,
