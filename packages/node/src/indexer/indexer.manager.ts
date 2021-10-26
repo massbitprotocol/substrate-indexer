@@ -90,7 +90,7 @@ export class IndexerManager {
     await this.apiService.init();
     await this.fetchService.init();
     this.api = this.apiService.getApi();
-    this.indexerState = await this.ensureProject(this.project.projectManifest.name);
+    this.indexerState = await this.createIndexer(this.project.projectManifest.name);
     await this.initDbSchema();
     await this.ensureMetadata(this.indexerState.dbSchema);
 
@@ -165,28 +165,28 @@ export class IndexerManager {
     }
   }
 
-  private async ensureProject(name: string): Promise<IndexerModel> {
+  private async createIndexer(name: string): Promise<IndexerModel> {
     let indexer = await this.indexerRepo.findOne({
       where: {name},
     });
     const {chain, genesisHash} = this.apiService.networkMeta;
     if (!indexer) {
-      let projectSchema: string;
+      let indexerSchema: string;
       if (this.nodeConfig.localMode) {
         // create tables in default schema if local mode is enabled
-        projectSchema = DEFAULT_DB_SCHEMA;
+        indexerSchema = DEFAULT_DB_SCHEMA;
       } else {
         const suffix = await this.nextIndexerSchemaSuffix();
-        projectSchema = `indexer_${suffix}`;
+        indexerSchema = `indexer_${suffix}`;
         const schemas = await this.sequelize.showAllSchemas(undefined);
-        if (!(schemas as unknown as string[]).includes(projectSchema)) {
-          await this.sequelize.createSchema(projectSchema, undefined);
+        if (!(schemas as unknown as string[]).includes(indexerSchema)) {
+          await this.sequelize.createSchema(indexerSchema, undefined);
         }
       }
 
       indexer = await this.indexerRepo.create({
         name,
-        dbSchema: projectSchema,
+        dbSchema: indexerSchema,
         hash: '0x',
         nextBlockHeight: this.getStartBlockFromDataSources(),
         network: chain,
@@ -209,7 +209,7 @@ export class IndexerManager {
     const schema = this.indexerState.dbSchema;
     const graphqlSchema = buildSchema(path.join(this.project.path, this.project.schema));
     const modelsRelations = getAllEntitiesRelations(graphqlSchema);
-    await this.storeService.init(modelsRelations, schema);
+    await this.storeService.init(schema, modelsRelations);
   }
 
   private async nextIndexerSchemaSuffix(): Promise<number> {

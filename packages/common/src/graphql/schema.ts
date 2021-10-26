@@ -1,10 +1,10 @@
 import fs from 'fs';
 import {buildASTSchema, DocumentNode, extendSchema, GraphQLSchema, parse, Source} from 'graphql';
 import {directives} from './schema/directives';
-import {scalas} from './schema/scalas';
+import {scalars} from './schema/scalars';
 
 function loadBaseSchema(): GraphQLSchema {
-  const schema = buildASTSchema(scalas);
+  const schema = buildASTSchema(scalars);
   return extendSchema(schema, directives);
 }
 

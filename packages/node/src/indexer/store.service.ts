@@ -33,7 +33,7 @@ export class StoreService {
 
   constructor(private sequelize: Sequelize, private config: NodeConfig) {}
 
-  async init(modelsRelations: GraphQLModelsRelations, schema: string): Promise<void> {
+  async init(schema: string, modelsRelations: GraphQLModelsRelations): Promise<void> {
     this.schema = schema;
     this.modelsRelations = modelsRelations;
     try {
@@ -42,6 +42,7 @@ export class StoreService {
       logger.error(e, `Having a problem when syncing schema`);
       process.exit(1);
     }
+
     try {
       this.modelIndexedFields = await this.getAllIndexFields(this.schema);
     } catch (e) {
@@ -102,7 +103,6 @@ export class StoreService {
             foreignFieldName: relation.fieldName,
           });
           extraQueries.push(commentConstraintQuery(`${schema}.${rel.target.tableName}`, fkConstraint, tags));
-
           break;
         }
         default:
@@ -118,18 +118,9 @@ export class StoreService {
     }
   }
 
-  setTransaction(tx: Transaction) {
+  setTransaction(tx: Transaction): void {
     this.tx = tx;
     tx.afterCommit(() => (this.tx = undefined));
-  }
-
-  getOperationMerkleRoot(): Uint8Array {
-    this.operationStack.makeOperationMerkleTree();
-    const merkelRoot = this.operationStack.getOperationMerkleRoot();
-    if (merkelRoot === null) {
-      return NULL_MERKEL_ROOT;
-    }
-    return merkelRoot;
   }
 
   private async getAllIndexFields(schema: string) {
