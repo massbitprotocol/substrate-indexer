@@ -16,11 +16,11 @@ export class ConfigureModule {
     });
 
     const pgPool = new Pool({
-      user: config.get('DB_USER'),
-      password: config.get('DB_PASS'),
-      host: config.get('DB_HOST_READ') ?? config.get('DB_HOST'),
-      port: config.get('DB_PORT'),
-      database: config.get('DB_DATABASE'),
+      host: process.env.DB_HOST ?? '127.0.0.1',
+      port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
+      user: process.env.DB_USER ?? 'postgres',
+      password: process.env.DB_PASS ?? 'postgres',
+      database: process.env.DB_DATABASE ?? 'postgres',
     });
     pgPool.on('error', (err) => {
       // tslint:disable-next-line no-console

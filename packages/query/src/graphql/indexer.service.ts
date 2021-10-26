@@ -3,10 +3,10 @@ import {Pool} from 'pg';
 import {Config} from '../configure';
 
 @Injectable()
-export class ProjectService {
+export class IndexerService {
   constructor(private readonly pool: Pool, private readonly config: Config) {}
 
-  async getProjectSchema(name: string): Promise<string> {
+  async getIndexerSchema(name: string): Promise<string> {
     const {rows} = await this.pool.query(
       `select *
        from public.indexers
@@ -14,7 +14,7 @@ export class ProjectService {
       [name]
     );
     if (rows.length === 0) {
-      throw new Error(`unknown project name ${this.config.get('name')}`);
+      throw new Error(`unknown indexer name ${this.config.get('name')}`);
     }
     return rows[0].db_schema;
   }

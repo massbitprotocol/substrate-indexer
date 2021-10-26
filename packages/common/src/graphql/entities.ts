@@ -29,6 +29,7 @@ import {
 } from './types';
 import {isFieldScalar} from './utils';
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function getAllJsonObjects(_schema: GraphQLSchema | string) {
   const schema = typeof _schema === 'string' ? buildSchema(_schema) : _schema;
   return Object.values(schema.getTypeMap())
@@ -43,13 +44,12 @@ export function getAllEntitiesRelations(_schema: GraphQLSchema | string): GraphQ
     .filter((node) => node.astNode?.directives?.find(({name: {value}}) => value === DirectiveName.Entity))
     .map((node) => node)
     .filter(isObjectType);
+  const entityNameSet = entities.map((entity) => entity.name);
 
   const jsonObjects = getAllJsonObjects(schema);
 
-  const entityNameSet = entities.map((entity) => entity.name);
-
-  const modelRelations = {models: [], relations: []} as GraphQLModelsRelations;
-  const derivedFrom = schema.getDirective('derivedFrom');
+  const modelsRelations = {models: [], relations: []} as GraphQLModelsRelations;
+  const derivedFromDirective = schema.getDirective('derivedFrom');
   const indexDirective = schema.getDirective('index');
   for (const entity of entities) {
     const newModel: GraphQLModelsType = {
@@ -60,16 +60,16 @@ export function getAllEntitiesRelations(_schema: GraphQLSchema | string): GraphQ
 
     for (const field of Object.values(entity.getFields())) {
       const typeString = extractType(field.type).name;
-      const derivedFromDirectValues = getDirectiveValues(derivedFrom, field.astNode);
+      const derivedFromDirectVal = getDirectiveValues(derivedFromDirective, field.astNode);
       const indexDirectiveVal = getDirectiveValues(indexDirective, field.astNode);
-      //If is a basic scalar type
+      // If is a basic scalar type
       if (isFieldScalar(typeString)) {
         newModel.fields.push(packEntityField(typeString, field, false));
       }
       // If is a foreign key
-      else if (entityNameSet.includes(typeString) && !derivedFromDirectValues) {
+      else if (entityNameSet.includes(typeString) && !derivedFromDirectVal) {
         newModel.fields.push(packEntityField(typeString, field, true));
-        modelRelations.relations.push({
+        modelsRelations.relations.push({
           from: entity.name,
           type: 'belongsTo',
           to: typeString,
@@ -82,12 +82,12 @@ export function getAllEntitiesRelations(_schema: GraphQLSchema | string): GraphQ
         });
       }
       // If is derivedFrom
-      else if (entityNameSet.includes(typeString) && derivedFromDirectValues) {
-        modelRelations.relations.push({
+      else if (entityNameSet.includes(typeString) && derivedFromDirectVal) {
+        modelsRelations.relations.push({
           from: entity.name,
           type: isListType(isNonNullType(field.type) ? getNullableType(field.type) : field.type) ? 'hasMany' : 'hasOne',
           to: typeString,
-          foreignKey: `${derivedFromDirectValues.field}Id`,
+          foreignKey: `${derivedFromDirectVal.field}Id`,
           fieldName: field.name,
         } as GraphQLRelationsType);
       }
@@ -106,6 +106,7 @@ export function getAllEntitiesRelations(_schema: GraphQLSchema | string): GraphQ
       } else {
         throw new Error(`${typeString} is not an valid type`);
       }
+
       // handle indexes
       if (indexDirectiveVal) {
         if (typeString !== 'ID' && isFieldScalar(typeString)) {
@@ -127,10 +128,10 @@ export function getAllEntitiesRelations(_schema: GraphQLSchema | string): GraphQ
         }
       }
     }
-    modelRelations.models.push(newModel);
+    modelsRelations.models.push(newModel);
   }
-  validateRelations(modelRelations);
-  return modelRelations;
+  validateRelations(modelsRelations);
+  return modelsRelations;
 }
 
 function packEntityField(
@@ -189,7 +190,8 @@ export function setJsonObjectType(
 }
 
 type GraphQLNonListType = GraphQLScalarType | GraphQLObjectType<any, any>; // check | GraphQLInterfaceType | GraphQLUnionType | GraphQLEnumType;
-//Get the type, ready to be convert to string
+
+// Get the type, ready to be convert to string
 function extractType(type: GraphQLOutputType): GraphQLNonListType {
   if (isUnionType(type)) {
     throw new Error(`Not support Union type`);
@@ -205,10 +207,10 @@ function extractType(type: GraphQLOutputType): GraphQLNonListType {
   return isNonNullType(offListType) ? getNullableType(offListType) : offListType;
 }
 
-function validateRelations(modelRelations: GraphQLModelsRelations): void {
-  for (const r of modelRelations.relations.filter((model) => model.type === 'hasMany' || model.type === 'hasOne')) {
+function validateRelations(modelsRelations: GraphQLModelsRelations): void {
+  for (const r of modelsRelations.relations.filter((model) => model.type === 'hasMany' || model.type === 'hasOne')) {
     assert(
-      modelRelations.models.find(
+      modelsRelations.models.find(
         (model) => model.name === r.to && model.fields.find((field) => field.name === r.foreignKey)
       ),
       `Please check entity ${r.from} with field ${r.fieldName} has correct relation with entity ${r.to}`

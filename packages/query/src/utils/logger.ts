@@ -15,7 +15,7 @@ export function getLogger(category: string): Pino.Logger {
 export class NestLogger implements LoggerService {
   private logger = logger.getLogger('nestjs');
 
-  error(message: any, trace?: string) {
+  error(message: any, trace?: string): void {
     if (trace) {
       this.logger.error({trace}, message);
     } else {
@@ -23,11 +23,11 @@ export class NestLogger implements LoggerService {
     }
   }
 
-  log(message: any): any {
+  log(message: any): void {
     this.logger.info(message);
   }
 
-  warn(message: any): any {
+  warn(message: any): void {
     this.logger.warn(message);
   }
 }

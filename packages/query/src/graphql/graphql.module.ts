@@ -6,11 +6,11 @@ import {Pool} from 'pg';
 import {getPostGraphileBuilder} from 'postgraphile-core';
 import {Config} from '../configure';
 import {getLogger} from '../utils/logger';
+import {IndexerService} from './indexer.service';
 import {plugins} from './plugins';
-import {ProjectService} from './project.service';
 
 @Module({
-  providers: [ProjectService],
+  providers: [IndexerService],
 })
 export class GraphqlModule implements OnModuleInit, OnModuleDestroy {
   private apolloServer: ApolloServer;
@@ -19,7 +19,7 @@ export class GraphqlModule implements OnModuleInit, OnModuleDestroy {
     private readonly httpAdapterHost: HttpAdapterHost,
     private readonly config: Config,
     private readonly pgPool: Pool,
-    private readonly projectService: ProjectService
+    private readonly projectService: IndexerService
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -37,7 +37,7 @@ export class GraphqlModule implements OnModuleInit, OnModuleDestroy {
     const app = this.httpAdapterHost.httpAdapter.getInstance();
     const httpServer = this.httpAdapterHost.httpAdapter.getHttpServer();
 
-    const dbSchema = await this.projectService.getProjectSchema(this.config.get('name'));
+    const dbSchema = await this.projectService.getIndexerSchema(this.config.get('name'));
     const builder = await getPostGraphileBuilder(this.pgPool, [dbSchema], {
       replaceAllPlugins: plugins,
       subscriptions: true,
