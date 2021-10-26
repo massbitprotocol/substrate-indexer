@@ -1,6 +1,11 @@
 import path from 'path';
-import {buildSchema, getAllEntitiesRelations} from '@massbit/common';
-import {isBlockHandlerProcessor, isCallHandlerProcessor, isEventHandlerProcessor} from '@massbit/common/project/utils';
+import {
+  buildSchema,
+  getAllEntitiesRelations,
+  isBlockHandlerProcessor,
+  isCallHandlerProcessor,
+  isEventHandlerProcessor,
+} from '@massbit/common';
 import {
   SubstrateCustomDatasource,
   SubstrateDatasource,
