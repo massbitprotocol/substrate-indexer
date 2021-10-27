@@ -117,7 +117,7 @@ export class IndexerManager {
     try {
       await this.apiService.setBlockHash(block.block.hash);
       for (const ds of this.filteredDataSources) {
-        const vm = await this.sandboxService.getDsProcessor(ds);
+        const vm = await this.sandboxService.getDatasourceProcessor(ds);
         if (isRuntimeDs(ds)) {
           await this.indexBlockForRuntimeDs(vm, ds.mapping.handlers, blockContent);
         } else if (isCustomDs(ds)) {
