@@ -2,8 +2,8 @@ import path from 'path';
 import {isRuntimeDataSourceV0_2_0, levelFilter} from '@massbit/common';
 import {Store, SubstrateDatasource} from '@massbit/types';
 import {ApiPromise} from '@polkadot/api';
-import {NodeVM, NodeVMOptions, VMScript} from '@subql/x-vm2';
 import {merge} from 'lodash';
+import {NodeVM, NodeVMOptions, VMScript} from 'vm2';
 import {NodeConfig} from '../configure/node-config';
 import {getLogger} from '../utils/logger';
 import {getProjectEntry} from '../utils/project';
@@ -110,7 +110,7 @@ export class SandboxService {
     this.storeService = storeService;
   }
 
-  async getDsProcessor(ds: SubstrateDatasource): Promise<IndexerSandbox> {
+  async getDatasourceProcessor(ds: SubstrateDatasource): Promise<IndexerSandbox> {
     const entry = this.getDataSourceEntry(ds);
 
     if (!this.processorCache[entry]) {
