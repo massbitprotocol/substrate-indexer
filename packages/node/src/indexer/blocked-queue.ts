@@ -1,8 +1,8 @@
-import { delay } from '../utils/promise';
+import {delay} from '../utils/promise';
 
 export class BlockedQueue<T> {
   private _queue: T[] = [];
-  private _maxSize: number;
+  private readonly _maxSize: number;
 
   constructor(size: number) {
     this._maxSize = size;

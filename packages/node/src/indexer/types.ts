@@ -13,7 +13,7 @@ export interface BlockContent {
   events: SubstrateEvent[];
 }
 
-export interface ProjectIndexFilters {
+export interface IndexerFilters {
   eventFilters: SubstrateEventFilter[];
   extrinsicFilters: SubstrateCallFilter[];
 }
