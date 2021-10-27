@@ -7,7 +7,7 @@ import {getLogger} from '../utils/logger';
 import {profiler} from '../utils/profiler';
 import {getYargsOption} from '../yargs';
 import {Project} from './project.model';
-import {ProjectIndexFilters} from './types';
+import {IndexerFilters} from './types';
 
 export type Dictionary = {
   _metadata: MetaData;
@@ -36,13 +36,12 @@ export class DictionaryService implements OnApplicationShutdown {
    * @param batchSize
    * @param indexFilters
    */
-
   @profiler(argv.profiler)
   async getDictionary(
     startBlock: number,
     queryEndBlock: number,
     batchSize: number,
-    indexFilters: ProjectIndexFilters
+    indexFilters: IndexerFilters
   ): Promise<Dictionary> {
     const query = this.dictionaryQuery(
       startBlock,
@@ -126,23 +125,23 @@ export class DictionaryService implements OnApplicationShutdown {
     let baseQuery = ``;
     const metaQuery = `
     _metadata {
-    lastProcessedHeight
-    lastProcessedTimestamp
-    targetHeight
-    chain
-    specName
-    genesisHash
-    indexerHealthy
-    indexerNodeVersion
-    queryNodeVersion
-  }`;
+      lastProcessedHeight
+      lastProcessedTimestamp
+      targetHeight
+      chain
+      specName
+      genesisHash
+      indexerHealthy
+      indexerNodeVersion
+      queryNodeVersion
+    }`;
     const specVersionQuery = `
-     specVersions{
-        nodes{
-          id
-          blockHeight
-        }
-      }`;
+    specVersions {
+      nodes{
+        id
+        blockHeight
+      }
+    }`;
     baseQuery = baseQuery.concat(metaQuery, specVersionQuery);
     if (indexEvents.length > 0) {
       indexEvents.map((event) => {
@@ -153,18 +152,22 @@ export class DictionaryService implements OnApplicationShutdown {
           {event:{equalTo:"${event.method}"}}
         ]},`);
       });
-      const eventQuery = `events(filter:{
-    blockHeight:{greaterThanOrEqualTo:"${startBlock}",  lessThan: "${queryEndBlock}"},
-    or:[
-     ${eventFilter}
-    ]
-  }, orderBy:BLOCK_HEIGHT_ASC,first: ${batchSize}){
-    nodes{
-      blockHeight
-    }
-  }`;
+      const eventQuery = `
+      events(
+        filter: {
+          blockHeight:{greaterThanOrEqualTo:"${startBlock}", lessThan:"${queryEndBlock}"},
+          or:[${eventFilter}]
+        },
+        orderBy:BLOCK_HEIGHT_ASC,
+        first: ${batchSize}
+      ) {
+        nodes {
+          blockHeight
+        }
+      }`;
       baseQuery = baseQuery.concat(eventQuery);
     }
+
     if (indexExtrinsics.length > 0) {
       indexExtrinsics.map((extrinsic) => {
         extrinsicFilter = extrinsicFilter.concat(`
@@ -174,18 +177,22 @@ export class DictionaryService implements OnApplicationShutdown {
           {call:{equalTo:"${extrinsic.method}"}}
         ]},`);
       });
-      const extrinsicQueryQuery = `extrinsics(filter:{
-    blockHeight:{greaterThanOrEqualTo:"${startBlock}", lessThan: "${queryEndBlock}"},
-    or:[
-     ${extrinsicFilter}
-    ]
-  }, orderBy:BLOCK_HEIGHT_ASC,first: ${batchSize}){
-    nodes{
-      blockHeight
-    }
-  }`;
+      const extrinsicQueryQuery = `
+      extrinsics(
+        filter: {
+          blockHeight:{greaterThanOrEqualTo:"${startBlock}", lessThan: "${queryEndBlock}"},
+          or:[${extrinsicFilter}]
+        },
+        orderBy:BLOCK_HEIGHT_ASC,
+        first: ${batchSize}
+      ) {
+        nodes {
+          blockHeight
+        }
+      }`;
       baseQuery = baseQuery.concat(extrinsicQueryQuery);
     }
+
     return `query{${baseQuery}}`;
   }
 }

@@ -26,7 +26,7 @@ import {Dictionary, DictionaryService} from './dictionary.service';
 import {DsProcessorService} from './ds-processor.service';
 import {IndexerEvent} from './events';
 import {Project} from './project.model';
-import {BlockContent, ProjectIndexFilters} from './types';
+import {BlockContent, IndexerFilters} from './types';
 
 const BLOCK_TIME_VARIANCE = 5;
 const DICTIONARY_MAX_QUERY_SIZE = 10000;
@@ -46,7 +46,7 @@ export class FetchService implements OnApplicationShutdown {
   private isShutdown = false;
   private parentSpecVersion: number;
   private useDictionary: boolean;
-  private projectIndexFilters: ProjectIndexFilters;
+  private projectIndexFilters: IndexerFilters;
   private readonly project: Project;
   private apiService: ApiService;
   private dsProcessorService: DsProcessorService;
@@ -93,7 +93,7 @@ export class FetchService implements OnApplicationShutdown {
     return this.apiService.getApi();
   }
 
-  getIndexFilters(): ProjectIndexFilters | undefined {
+  getIndexFilters(): IndexerFilters | undefined {
     const eventFilters: SubstrateEventFilter[] = [];
     const extrinsicFilters: SubstrateCallFilter[] = [];
     const dataSources = this.project.dataSources.filter(

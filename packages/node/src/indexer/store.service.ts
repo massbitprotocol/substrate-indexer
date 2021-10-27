@@ -1,8 +1,6 @@
 import assert from 'assert';
 import {GraphQLModelsRelations} from '@massbit/common/graphql/types';
 import {Entity, Store} from '@massbit/types';
-import {Injectable, Scope} from '@nestjs/common';
-import {hexToU8a} from '@polkadot/util';
 import {camelCase, flatten, upperFirst} from 'lodash';
 import {QueryTypes, Sequelize, Transaction, Utils} from 'sequelize';
 import {NodeConfig} from '../configure/node-config';
@@ -11,10 +9,8 @@ import {getLogger} from '../utils/logger';
 import {camelCaseObjectKey} from '../utils/object';
 import {commentConstraintQuery, createUniqueIndexQuery, getFkConstraint, smartTags} from '../utils/sync-helper';
 import {MetadataFactory, MetadataRepo} from './entities/metadata.entity';
-import {StoreOperations} from './store-operations';
 
 const logger = getLogger('store');
-const NULL_MERKEL_ROOT = hexToU8a('0x00');
 
 interface IndexField {
   entityName: string;
@@ -29,7 +25,6 @@ export class StoreService {
   private schema: string;
   private modelsRelations: GraphQLModelsRelations;
   private metaDataRepo: MetadataRepo;
-  private operationStack: StoreOperations;
 
   constructor(private sequelize: Sequelize, private config: NodeConfig) {}
 

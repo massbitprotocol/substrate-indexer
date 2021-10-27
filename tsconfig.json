@@ -28,6 +28,8 @@
     {"path": "packages/common"},
     {"path": "packages/node"},
     {"path": "packages/types"},
+    {"path": "packages/query"},
+    {"path": "packages/chainreader"}
   ],
   "include": ["packages/**/*"],
   "exclude": ["**/node_modules/**"],
