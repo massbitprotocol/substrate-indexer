@@ -1,6 +1,6 @@
 import path from 'path';
 import {SubstrateCustomDatasource, SubstrateDatasourceProcessor, SubstrateNetworkFilter} from '@massbit/types';
-import {VMScript} from '@subql/x-vm2';
+import {VMScript} from 'vm2';
 import {getLogger} from '../utils/logger';
 import {isCustomDs} from '../utils/project';
 import {Project} from './project.model';
