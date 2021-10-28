@@ -29,7 +29,7 @@
     {"path": "packages/node"},
     {"path": "packages/types"},
     {"path": "packages/query"},
-    {"path": "packages/chainreader"}
+    {"path": "packages/chain-reader"}
   ],
   "include": ["packages/**/*"],
   "exclude": ["**/node_modules/**"],
