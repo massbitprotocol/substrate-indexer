@@ -46,7 +46,7 @@ export class FetchService implements OnApplicationShutdown {
   private isShutdown = false;
   private parentSpecVersion: number;
   private useDictionary: boolean;
-  private projectIndexFilters: IndexerFilters;
+  private indexerFilters: IndexerFilters;
   private readonly project: Project;
   private apiService: ApiService;
   private dsProcessorService: DsProcessorService;
@@ -75,8 +75,8 @@ export class FetchService implements OnApplicationShutdown {
   }
 
   async init(): Promise<void> {
-    this.projectIndexFilters = this.getIndexFilters();
-    this.useDictionary = !!this.projectIndexFilters && !!this.project.network.dictionary;
+    this.indexerFilters = this.getIndexFilters();
+    this.useDictionary = !!this.indexerFilters && !!this.project.network.dictionary;
 
     this.eventEmitter.emit(IndexerEvent.UsingDictionary, {
       value: Number(this.useDictionary),
@@ -250,7 +250,7 @@ export class FetchService implements OnApplicationShutdown {
             startBlockHeight,
             queryEndBlock,
             this.nodeConfig.batchSize,
-            this.projectIndexFilters
+            this.indexerFilters
           );
           //TODO
           // const specVersionMap = dictionary.specVersions;
