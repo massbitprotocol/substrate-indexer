@@ -34,21 +34,21 @@ export class DictionaryService implements OnApplicationShutdown {
    * @param startBlock
    * @param queryEndBlock this block number will limit the max query range, increase dictionary query speed
    * @param batchSize
-   * @param indexFilters
+   * @param filters
    */
   @profiler(argv.profiler)
   async getDictionary(
     startBlock: number,
     queryEndBlock: number,
     batchSize: number,
-    indexFilters: IndexerFilters
+    filters: IndexerFilters
   ): Promise<Dictionary> {
     const query = this.dictionaryQuery(
       startBlock,
       queryEndBlock,
       batchSize,
-      indexFilters.eventFilters,
-      indexFilters.extrinsicFilters
+      filters.eventFilters,
+      filters.extrinsicFilters
     );
 
     const client = new ApolloClient({
@@ -137,7 +137,7 @@ export class DictionaryService implements OnApplicationShutdown {
     }`;
     const specVersionQuery = `
     specVersions {
-      nodes{
+      nodes {
         id
         blockHeight
       }
@@ -147,18 +147,19 @@ export class DictionaryService implements OnApplicationShutdown {
       indexEvents.map((event) => {
         eventFilter = eventFilter.concat(`
         {
-          and:[
-          {module:{equalTo: "${event.module}"}},
-          {event:{equalTo:"${event.method}"}}
-        ]},`);
+          and: [
+            {module:{equalTo: "${event.module}"}},
+            {event:{equalTo:"${event.method}"}}
+          ]
+        },`);
       });
       const eventQuery = `
       events(
         filter: {
-          blockHeight:{greaterThanOrEqualTo:"${startBlock}", lessThan:"${queryEndBlock}"},
-          or:[${eventFilter}]
+          blockHeight: {greaterThanOrEqualTo:"${startBlock}", lessThan:"${queryEndBlock}"},
+          or: [${eventFilter}]
         },
-        orderBy:BLOCK_HEIGHT_ASC,
+        orderBy: BLOCK_HEIGHT_ASC,
         first: ${batchSize}
       ) {
         nodes {
@@ -173,17 +174,18 @@ export class DictionaryService implements OnApplicationShutdown {
         extrinsicFilter = extrinsicFilter.concat(`
         {
           and:[
-          {module:{equalTo: "${extrinsic.module}"}},
-          {call:{equalTo:"${extrinsic.method}"}}
-        ]},`);
+            {module:{equalTo: "${extrinsic.module}"}},
+            {call:{equalTo:"${extrinsic.method}"}}
+          ]
+        },`);
       });
       const extrinsicQueryQuery = `
       extrinsics(
         filter: {
-          blockHeight:{greaterThanOrEqualTo:"${startBlock}", lessThan: "${queryEndBlock}"},
-          or:[${extrinsicFilter}]
+          blockHeight: {greaterThanOrEqualTo:"${startBlock}", lessThan: "${queryEndBlock}"},
+          or: [${extrinsicFilter}]
         },
-        orderBy:BLOCK_HEIGHT_ASC,
+        orderBy: BLOCK_HEIGHT_ASC,
         first: ${batchSize}
       ) {
         nodes {
