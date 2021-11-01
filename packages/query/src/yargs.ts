@@ -9,7 +9,7 @@ export function getYargsOption() {
       alias: 'n',
       describe: 'project name',
       type: 'string',
-      demandOption: true,
+      demandOption: false,
     },
     playground: {
       describe: 'enable graphql playground',
