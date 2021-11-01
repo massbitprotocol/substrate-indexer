@@ -1780,6 +1780,7 @@ __metadata:
     "@types/lodash": ^4.14.170
     "@types/multer": ^1.4.7
     "@types/pino": ^6.3.8
+    "@types/pluralize": ^0.0.29
     "@types/sequelize": ^4.28.9
     "@types/supertest": ^2.0.10
     "@types/tar": ^4.0.4
@@ -1796,6 +1797,7 @@ __metadata:
     parse-json: ^5.2.0
     pg: ^8.6.0
     pino: ^6.11.3
+    pluralize: ^8.0.0
     pm2: ^5.1.2
     prom-client: ^13.1.0
     reflect-metadata: ^0.1.13
@@ -1829,9 +1831,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@massbit/node@workspace:packages/node":
+"@massbit/indexer-manager@workspace:packages/indexer-manager":
   version: 0.0.0-use.local
-  resolution: "@massbit/node@workspace:packages/node"
+  resolution: "@massbit/indexer-manager@workspace:packages/indexer-manager"
   dependencies:
     "@apollo/client": ^3.4.16
     "@massbit/common": "workspace:*"
@@ -3173,6 +3175,13 @@ __metadata:
     "@types/pino-std-serializers": "*"
     "@types/sonic-boom": "*"
   checksum: f3cf2324ff72c4472c34dc5019615abfbeb86331a79ed401a135c0d9a1375f560e86d517c18019666d0c1eff2e6cf076925bfa4de836c865214f25f75784f3d4
+  languageName: node
+  linkType: hard
+
+"@types/pluralize@npm:^0.0.29":
+  version: 0.0.29
+  resolution: "@types/pluralize@npm:0.0.29"
+  checksum: e800d731c76ca1506e4570fbdcc802df48cb002bce23e10059a77023cbdbd0093728f56d5b762214571b8f12db5014cc3afc55a7f6c0814152b3b2f1b6f711f1
   languageName: node
   linkType: hard
 
@@ -11230,7 +11239,7 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"pluralize@npm:8.0.0":
+"pluralize@npm:8.0.0, pluralize@npm:^8.0.0":
   version: 8.0.0
   resolution: "pluralize@npm:8.0.0"
   checksum: 5251b470a0c8e5181ac7e1d61028553f90cb2c85c34b8e468cea269ae715499524546c2c3681029ef5697d86c54bfb12e49388f5cc6082051e84f5888588f4ec

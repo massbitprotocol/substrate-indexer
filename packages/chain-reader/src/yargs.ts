@@ -15,6 +15,11 @@ export function getYargsOption() {
       demandOption: false,
       describe: 'Use local mode',
     },
+    'start-block': {
+      type: 'number',
+      demandOption: false,
+      describe: 'Start block to fetch data',
+    },
     'batch-size': {
       demandOption: false,
       describe: 'Batch size of blocks to fetch in one round',

@@ -9,6 +9,8 @@ import {getLogger} from '../utils/logger';
 import {IndexerService} from './indexer.service';
 import {plugins} from './plugins';
 
+const DEFAULT_DB_SCHEMA = 'public';
+
 @Module({
   providers: [IndexerService],
 })
@@ -37,7 +39,13 @@ export class GraphqlModule implements OnModuleInit, OnModuleDestroy {
     const app = this.httpAdapterHost.httpAdapter.getInstance();
     const httpServer = this.httpAdapterHost.httpAdapter.getHttpServer();
 
-    const dbSchema = await this.projectService.getIndexerSchema(this.config.get('name'));
+    let dbSchema: string;
+    if (this.config.get('name')) {
+      dbSchema = await this.projectService.getIndexerSchema(this.config.get('name'));
+    } else {
+      dbSchema = DEFAULT_DB_SCHEMA;
+    }
+
     const builder = await getPostGraphileBuilder(this.pgPool, [dbSchema], {
       replaceAllPlugins: plugins,
       subscriptions: true,

@@ -26,7 +26,7 @@
   },
   "references": [
     {"path": "packages/common"},
-    {"path": "packages/node"},
+    {"path": "packages/indexer-manager"},
     {"path": "packages/types"},
     {"path": "packages/query"},
     {"path": "packages/chain-reader"}

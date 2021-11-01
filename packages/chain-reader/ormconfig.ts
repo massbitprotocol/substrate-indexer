@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const NamingStrategy = require('./src/config/db.config').NamingStrategy;
+
 const baseOptions = {
   type: process.env.ORM_CONNECTION || 'postgres',
   host: process.env.ORM_HOST,
@@ -8,6 +11,7 @@ const baseOptions = {
   timezone: 'Z',
   synchronize: false,
   dropSchema: false,
+  namingStrategy: new NamingStrategy(),
   entities: ['src/**/*.entity.ts'],
 };
 

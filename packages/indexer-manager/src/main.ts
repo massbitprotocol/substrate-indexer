@@ -11,9 +11,9 @@ async function bootstrap() {
     });
     await app.init();
     await app.listen(parseInt(process.env.PORT, 10) || 3000);
-    getLogger('massbit-node').info('node started');
+    getLogger('indexer-manager').info('service started');
   } catch (e) {
-    getLogger('massbit-node').error(e, 'node failed to start');
+    getLogger('indexer-manager').error(e, 'service failed to start');
     process.exit(1);
   }
 }

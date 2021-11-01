@@ -1,5 +1,5 @@
 {
-  "name": "@massbit/node",
+  "name": "@massbit/indexer-manager",
   "version": "0.0.1",
   "scripts": {
     "prebuild": "rimraf dist",

@@ -17,6 +17,7 @@ export interface IConfig {
   readonly queryLimit: number;
   readonly indexCountLimit: number;
   readonly timestampField: boolean;
+  readonly startBlock: number;
 }
 
 const DEFAULT_CONFIG = {
@@ -28,6 +29,7 @@ const DEFAULT_CONFIG = {
   queryLimit: 100,
   indexCountLimit: 10,
   timestampField: true,
+  blockHeight: 1,
 };
 
 export class NodeConfig implements IConfig {
@@ -95,6 +97,10 @@ export class NodeConfig implements IConfig {
 
   get timestampField(): boolean {
     return this._config.timestampField;
+  }
+
+  get startBlock(): number {
+    return this._config.startBlock;
   }
 
   merge(config: Partial<IConfig>): this {

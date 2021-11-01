@@ -22,7 +22,7 @@ export class Extrinsic {
   blockHeight!: number;
 
   @Column({nullable: true})
-  success: boolean | null;
+  success?: boolean;
 
   @Column()
   isSigned!: boolean;
