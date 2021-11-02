@@ -1,10 +1,10 @@
+import {delay} from '@massbit/common/utils/promise';
 import {Injectable, OnApplicationShutdown} from '@nestjs/common';
 import {Interval} from '@nestjs/schedule';
 import {ApiPromise} from '@polkadot/api';
 import {isUndefined, range} from 'lodash';
 import {NodeConfig} from '../configure/node-config';
 import {getLogger} from '../utils/logger';
-import {delay} from '../utils/promise';
 import * as SubstrateUtil from '../utils/substrate';
 import {ApiService} from './api.service';
 import {BlockedQueue} from './queue';

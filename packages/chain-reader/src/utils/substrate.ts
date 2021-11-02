@@ -1,20 +1,9 @@
-import {
-  SpecVersionRange,
-  SubstrateBlockFilter,
-  SubstrateCallFilter,
-  SubstrateEventFilter,
-  SubstrateBlock,
-  SubstrateEvent,
-  SubstrateExtrinsic,
-} from '@massbit/types';
+import {SubstrateBlock, SubstrateEvent, SubstrateExtrinsic} from '@massbit/types';
 import {ApiPromise} from '@polkadot/api';
-import {Option, Vec} from '@polkadot/types';
-import {BlockHash, EventRecord, LastRuntimeUpgradeInfo, RuntimeVersion, SignedBlock} from '@polkadot/types/interfaces';
-import {last, merge, range} from 'lodash';
+import {Vec} from '@polkadot/types';
+import {BlockHash, EventRecord, RuntimeVersion, SignedBlock} from '@polkadot/types/interfaces';
+import {merge} from 'lodash';
 import {BlockContent} from '../chain-reader/types';
-import {getLogger} from './logger';
-
-const logger = getLogger('fetch');
 
 export function wrapBlock(signedBlock: SignedBlock, events: EventRecord[], specVersion?: number): SubstrateBlock {
   return merge(signedBlock, {
@@ -76,93 +65,26 @@ export function wrapEvents(
   }, [] as SubstrateEvent[]);
 }
 
-function checkSpecRange(specVersionRange: SpecVersionRange, specVersion: number) {
-  const [lowerBond, upperBond] = specVersionRange;
-  return (
-    (lowerBond === undefined || lowerBond === null || specVersion >= lowerBond) &&
-    (upperBond === undefined || upperBond === null || specVersion <= upperBond)
-  );
-}
-
-export function filterBlock(block: SubstrateBlock, filter?: SubstrateBlockFilter): SubstrateBlock | undefined {
-  if (!filter) return block;
-  return filter.specVersion === undefined ||
-    block.specVersion === undefined ||
-    checkSpecRange(filter.specVersion, block.specVersion)
-    ? block
-    : undefined;
-}
-
-export function filterExtrinsics(
-  extrinsics: SubstrateExtrinsic[],
-  filterOrFilters: SubstrateCallFilter | SubstrateCallFilter[] | undefined
-): SubstrateExtrinsic[] {
-  if (!filterOrFilters || (filterOrFilters instanceof Array && filterOrFilters.length === 0)) {
-    return extrinsics;
-  }
-  const filters = filterOrFilters instanceof Array ? filterOrFilters : [filterOrFilters];
-  return extrinsics.filter(({block, extrinsic, success}) =>
-    filters.find(
-      (filter) =>
-        (filter.specVersion === undefined ||
-          block.specVersion === undefined ||
-          checkSpecRange(filter.specVersion, block.specVersion)) &&
-        (filter.module === undefined || extrinsic.method.section === filter.module) &&
-        (filter.method === undefined || extrinsic.method.method === filter.method) &&
-        (filter.success === undefined || success === filter.success)
-    )
-  );
-}
-
-export function filterEvents(
-  events: SubstrateEvent[],
-  filterOrFilters?: SubstrateEventFilter | SubstrateEventFilter[] | undefined
-): SubstrateEvent[] {
-  if (!filterOrFilters || (filterOrFilters instanceof Array && filterOrFilters.length === 0)) {
-    return events;
-  }
-  const filters = filterOrFilters instanceof Array ? filterOrFilters : [filterOrFilters];
-  return events.filter(({block, event}) =>
-    filters.find(
-      (filter) =>
-        (filter.specVersion === undefined ||
-          block.specVersion === undefined ||
-          checkSpecRange(filter.specVersion, block.specVersion)) &&
-        (filter.module ? event.section === filter.module : true) &&
-        (filter.method ? event.method === filter.method : true)
-    )
-  );
-}
-
 // TODO: prefetch all known runtime upgrades at once
 export async function prefetchMetadata(api: ApiPromise, hash: BlockHash): Promise<void> {
   await api.getBlockRegistry(hash);
 }
 
-/**
- *
- * @param api
- * @param startHeight
- * @param endHeight
- * @param overallSpecVer exists if all blocks in the range have same parant specVersion
- */
-export async function fetchBlocks(
+export async function fetchBlocksBatches(
   api: ApiPromise,
-  startHeight: number,
-  endHeight: number,
+  blockArray: number[],
   overallSpecVer?: number
 ): Promise<BlockContent[]> {
-  const blocks = await fetchBlocksRange(api, startHeight, endHeight);
-  const blockHashs = blocks.map((b) => b.block.header.hash);
-  const parentBlockHashs = blocks.map((b) => b.block.header.parentHash);
+  const blocks = await fetchBlocksArray(api, blockArray);
+  const blockHashes = blocks.map((b) => b.block.header.hash);
+  const parentBlockHashes = blocks.map((b) => b.block.header.parentHash);
   const [blockEvents, runtimeVersions] = await Promise.all([
-    fetchEventsRange(api, blockHashs),
-    overallSpecVer ? undefined : fetchRuntimeVersionRange(api, parentBlockHashs),
+    fetchEventsRange(api, blockHashes),
+    overallSpecVer ? undefined : fetchRuntimeVersionRange(api, parentBlockHashes),
   ]);
   return blocks.map((block, idx) => {
     const events = blockEvents[idx];
     const parentSpecVersion = overallSpecVer ? overallSpecVer : runtimeVersions[idx].specVersion.toNumber();
-
     const wrappedBlock = wrapBlock(block, events.toArray(), parentSpecVersion);
     const wrappedExtrinsics = wrapExtrinsics(wrappedBlock, events);
     const wrappedEvents = wrapEvents(wrappedExtrinsics, events, wrappedBlock);
@@ -172,56 +94,6 @@ export async function fetchBlocks(
       events: wrappedEvents,
     };
   });
-}
-
-export async function fetchBlocksViaRangeQuery(
-  api: ApiPromise,
-  startHeight: number,
-  endHeight: number
-): Promise<BlockContent[]> {
-  const blocks = await fetchBlocksRange(api, startHeight, endHeight);
-  const firstBlockHash = blocks[0].block.header.hash;
-  const endBlockHash = last(blocks).block.header.hash;
-  const [blockEvents, runtimeUpgrades] = await Promise.all([
-    api.query.system.events.range([firstBlockHash, endBlockHash]),
-    api.query.system.lastRuntimeUpgrade.range([firstBlockHash, endBlockHash]),
-  ]);
-
-  let lastEvents: Vec<EventRecord>;
-  let lastRuntimeUpgrade: Option<LastRuntimeUpgradeInfo>;
-  return blocks.map((block, idx) => {
-    const [, events = lastEvents] = blockEvents[idx] ?? [];
-    const [, runtimeUpgrade = lastRuntimeUpgrade] = runtimeUpgrades[idx] ?? [];
-    lastEvents = events;
-    lastRuntimeUpgrade = runtimeUpgrade;
-
-    const wrappedBlock = wrapBlock(block, events, runtimeUpgrade.unwrap()?.specVersion.toNumber());
-    const wrappedExtrinsics = wrapExtrinsics(wrappedBlock, events);
-    const wrappedEvents = wrapEvents(wrappedExtrinsics, events, wrappedBlock);
-    return {
-      block: wrappedBlock,
-      extrinsics: wrappedExtrinsics,
-      events: wrappedEvents,
-    };
-  });
-}
-
-export async function fetchBlocksRange(
-  api: ApiPromise,
-  startHeight: number,
-  endHeight: number
-): Promise<SignedBlock[]> {
-  return Promise.all(
-    range(startHeight, endHeight + 1).map(async (height) => {
-      try {
-        const blockHash = await api.rpc.chain.getBlockHash(height);
-        return await api.rpc.chain.getBlock(blockHash);
-      } catch (err) {
-        logger.error(`failed to fetch block at height ${height}`);
-        throw err;
-      }
-    })
-  );
 }
 
 export async function fetchBlocksArray(api: ApiPromise, blockArray: number[]): Promise<SignedBlock[]> {
@@ -239,31 +111,4 @@ export async function fetchEventsRange(api: ApiPromise, hashs: BlockHash[]): Pro
 
 export async function fetchRuntimeVersionRange(api: ApiPromise, hashs: BlockHash[]): Promise<RuntimeVersion[]> {
   return Promise.all(hashs.map((hash) => api.rpc.state.getRuntimeVersion(hash)));
-}
-
-export async function fetchBlocksBatches(
-  api: ApiPromise,
-  blockArray,
-  overallSpecVer?: number
-  // specVersionMap?: number[],
-): Promise<BlockContent[]> {
-  const blocks = await fetchBlocksArray(api, blockArray);
-  const blockHashs = blocks.map((b) => b.block.header.hash);
-  const parentBlockHashs = blocks.map((b) => b.block.header.parentHash);
-  const [blockEvents, runtimeVersions] = await Promise.all([
-    fetchEventsRange(api, blockHashs),
-    overallSpecVer ? undefined : fetchRuntimeVersionRange(api, parentBlockHashs),
-  ]);
-  return blocks.map((block, idx) => {
-    const events = blockEvents[idx];
-    const parentSpecVersion = overallSpecVer ? overallSpecVer : runtimeVersions[idx].specVersion.toNumber();
-    const wrappedBlock = wrapBlock(block, events.toArray(), parentSpecVersion);
-    const wrappedExtrinsics = wrapExtrinsics(wrappedBlock, events);
-    const wrappedEvents = wrapEvents(wrappedExtrinsics, events, wrappedBlock);
-    return {
-      block: wrappedBlock,
-      extrinsics: wrappedExtrinsics,
-      events: wrappedEvents,
-    };
-  });
 }
