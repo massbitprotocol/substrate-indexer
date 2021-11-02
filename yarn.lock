@@ -1819,6 +1819,7 @@ __metadata:
   resolution: "@massbit/common@workspace:packages/common"
   dependencies:
     "@types/js-yaml": ^4.0.1
+    "@types/lodash": ^4.14.170
     "@types/pino": ^6.3.11
     class-transformer: 0.3.1
     class-validator: ^0.13.1
@@ -1826,6 +1827,7 @@ __metadata:
     graphql: ^15.5.1
     graphql-tag: ^2.12.4
     js-yaml: ^4.1.0
+    lodash: ^4.17.21
     pino: ^6.13.1
     reflect-metadata: ^0.1.13
   languageName: unknown

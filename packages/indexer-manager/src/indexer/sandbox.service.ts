@@ -1,5 +1,6 @@
 import path from 'path';
 import {isRuntimeDataSourceV0_2_0, levelFilter} from '@massbit/common';
+import {timeout} from '@massbit/common/utils/promise';
 import {Store, SubstrateDatasource} from '@massbit/types';
 import {ApiPromise} from '@polkadot/api';
 import {merge} from 'lodash';
@@ -7,7 +8,6 @@ import {NodeVM, NodeVMOptions, VMScript} from 'vm2';
 import {NodeConfig} from '../configure/node-config';
 import {getLogger} from '../utils/logger';
 import {getProjectEntry} from '../utils/project';
-import {timeout} from '../utils/promise';
 import {ApiService} from './api.service';
 import {Project} from './project.model';
 import {StoreService} from './store.service';

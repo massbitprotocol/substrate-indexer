@@ -174,8 +174,8 @@ export class DictionaryService implements OnApplicationShutdown {
         extrinsicFilter = extrinsicFilter.concat(`
         {
           and:[
-            {module:{equalTo: "${extrinsic.module}"}},
-            {call:{equalTo:"${extrinsic.method}"}}
+            {module: {equalTo: "${extrinsic.module}"}},
+            {call: {equalTo: "${extrinsic.method}"}}
           ]
         },`);
       });
