@@ -1,12 +1,12 @@
 import assert from 'assert';
 import {GraphQLModelsRelations} from '@massbit/common/graphql/types';
+import {camelCaseObjectKey} from '@massbit/common/utils/object';
 import {Entity, Store} from '@massbit/types';
 import {camelCase, flatten, upperFirst} from 'lodash';
 import {QueryTypes, Sequelize, Transaction, Utils} from 'sequelize';
 import {NodeConfig} from '../configure/node-config';
 import {modelsTypeToModelAttributes} from '../utils/graphql';
 import {getLogger} from '../utils/logger';
-import {camelCaseObjectKey} from '../utils/object';
 import {commentConstraintQuery, createUniqueIndexQuery, getFkConstraint, smartTags} from '../utils/sync-helper';
 import {MetadataFactory, MetadataRepo} from './entities/metadata.entity';
 

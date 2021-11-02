@@ -1,4 +1,5 @@
 import {isRuntimeDataSourceV0_2_0, RuntimeDataSourceV0_0_1} from '@massbit/common';
+import {delay} from '@massbit/common/utils/promise';
 import {
   SubstrateCallFilter,
   SubstrateEventFilter,
@@ -17,7 +18,6 @@ import {NodeConfig} from '../configure/node-config';
 import {getLogger} from '../utils/logger';
 import {profiler, profilerWrap} from '../utils/profiler';
 import {isBaseHandler, isCustomDs, isCustomHandler, isRuntimeDs} from '../utils/project';
-import {delay} from '../utils/promise';
 import * as SubstrateUtil from '../utils/substrate';
 import {getYargsOption} from '../yargs';
 import {ApiService} from './api.service';

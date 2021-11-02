@@ -1,7 +1,6 @@
 import path from 'path';
-import {loadFromJsonOrYaml} from '@massbit/common';
+import {loadFromJsonOrYaml, assign} from '@massbit/common';
 import {LevelWithSilent} from 'pino';
-import {assign} from '../utils/object';
 
 export interface IConfig {
   readonly configDir?: string;
