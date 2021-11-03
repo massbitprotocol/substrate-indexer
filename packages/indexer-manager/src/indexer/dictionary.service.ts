@@ -148,7 +148,7 @@ export class DictionaryService implements OnApplicationShutdown {
         eventFilter = eventFilter.concat(`
         {
           and: [
-            {module:{equalTo: "${event.module}"}},
+            {module:{equalTo:"${event.module}"}},
             {event:{equalTo:"${event.method}"}}
           ]
         },`);
