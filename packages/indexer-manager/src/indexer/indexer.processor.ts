@@ -1,3 +1,4 @@
+import {execSync} from 'child_process';
 import path from 'path';
 import {ProjectNetworkConfig} from '@massbit/common';
 import {Process, Processor} from '@nestjs/bull';
@@ -16,7 +17,6 @@ import {Project} from './project.model';
 import 'multer';
 
 const logger = getLogger('indexer-processor');
-const projectsDir = './projects';
 
 @Injectable()
 @Processor('indexer')
@@ -33,6 +33,8 @@ export class IndexerProcessor {
     const {file} = job.data;
     let projectPath = this.extractProject(file);
     projectPath = path.resolve('.', projectPath);
+    this.exec(projectPath, `npm install`);
+    this.exec(projectPath, `npm run build`);
     const project = await Project.create(
       projectPath,
       omitBy<ProjectNetworkConfig>(
@@ -53,9 +55,18 @@ export class IndexerProcessor {
   }
 
   extractProject(file: Express.Multer.File): string {
+    const projectsDir = process.env.PROJECTS_DIR ?? './projects';
     const unzip = new admZip(file.path);
     unzip.extractAllTo(projectsDir, true);
     const projectName = file.originalname.split('.')[0];
     return `${projectsDir}/${projectName}`;
+  }
+
+  exec(srcDir: string, cmd: string) {
+    try {
+      return execSync(cmd, {cwd: srcDir, stdio: 'inherit'});
+    } catch (e) {
+      logger.error(`failed to run command \`${cmd}\``);
+    }
   }
 }
