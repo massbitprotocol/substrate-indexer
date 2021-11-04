@@ -1,6 +1,6 @@
 {
   "name": "@massbit/types",
-  "version": "0.0.1",
+  "version": "0.5.0",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rm -rf dist && tsc -b"

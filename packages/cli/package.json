@@ -1,0 +1,69 @@
+{
+  "name": "@massbit/cli",
+  "description": "cli for massbit",
+  "version": "0.5.0",
+  "bin": {
+    "massbit": "./bin/run"
+  },
+  "dependencies": {
+    "@massbit/common": "workspace:*",
+    "@oclif/command": "^1.8.0",
+    "@oclif/config": "^1.17.0",
+    "@oclif/plugin-help": "^3.2.3",
+    "@types/ejs": "^3.1.0",
+    "adm-zip": "^0.5.9",
+    "axios": "^0.24.0",
+    "chalk": "^4.1.2",
+    "cli-ux": "^5.6.3",
+    "ejs": "^3.1.6",
+    "ipfs-http-client": "^52.0.5",
+    "rimraf": "^3.0.2",
+    "simple-git": "^2.47.0",
+    "ts-loader": "^9.2.6",
+    "tslib": "^2.3.1",
+    "webpack": "^5.61.0",
+    "webpack-merge": "^5.8.0",
+    "websocket": "^1.0.34"
+  },
+  "devDependencies": {
+    "@oclif/dev-cli": "^1.26.0",
+    "@types/adm-zip": "^0.4.34",
+    "@types/node": "^14.17.32",
+    "@types/rimraf": "^3.0.2",
+    "@types/websocket": "^1",
+    "eslint": "^8.1.0",
+    "eslint-config-oclif": "^4.0.0",
+    "eslint-config-oclif-typescript": "^1.0.2"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "files": [
+    "/bin",
+    "/lib",
+    "/npm-shrinkwrap.json",
+    "/oclif.manifest.json"
+  ],
+  "repository": "packages/cli",
+  "keywords": [
+    "oclif"
+  ],
+  "main": "lib/index.js",
+  "oclif": {
+    "commands": "./lib/commands",
+    "bin": "massbit",
+    "plugins": [
+      "@oclif/plugin-help"
+    ]
+  },
+  "scripts": {
+    "build": "rm -rf lib && tsc -b",
+    "postpack": "rm -f oclif.manifest.json",
+    "posttest": "eslint . --ext .ts --config .eslintrc",
+    "prepack": "yarn build && cp -r src/template lib/ && oclif-dev manifest && oclif-dev readme",
+    "test": "echo NO TESTS",
+    "version": "oclif-dev readme && git add README.md",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "types": "lib/index.d.ts"
+}
