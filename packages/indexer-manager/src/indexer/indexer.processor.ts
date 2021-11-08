@@ -34,6 +34,7 @@ export class IndexerProcessor {
     let projectPath = this.extractProject(file);
     projectPath = path.resolve('.', projectPath);
     this.exec(projectPath, `npm install`);
+    this.exec(projectPath, `npm run build`);
     const project = await Project.create(
       projectPath,
       omitBy<ProjectNetworkConfig>(
@@ -58,7 +59,6 @@ export class IndexerProcessor {
     const unzip = new admZip(file.path);
     const projectPath = `${projectsDir}/${file.originalname}`;
     unzip.extractAllTo(projectPath, true);
-    // const projectName = file.originalname.split('.')[0];
     return projectPath;
   }
 

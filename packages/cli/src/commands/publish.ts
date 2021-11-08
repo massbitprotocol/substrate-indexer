@@ -12,7 +12,7 @@ export default class Publish extends Command {
     this.log('---------Publish Indexer---------');
     this.log('===============================');
     const zip = new admZip();
-    zip.addLocalFolder('./dist', './dist');
+    zip.addLocalFolder('./src', './src');
     zip.addLocalFile('./project.yaml');
     zip.addLocalFile('./schema.graphql');
     zip.addLocalFile('./package.json');

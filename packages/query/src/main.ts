@@ -6,5 +6,5 @@ void (async () => {
   const app = await NestFactory.create(AppModule, {
     logger: new NestLogger(),
   });
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3001);
 })();
