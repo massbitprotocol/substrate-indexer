@@ -27,7 +27,7 @@
   "references": [
     {"path": "packages/cli"},
     {"path": "packages/common"},
-    {"path": "packages/indexer-manager"},
+    {"path": "packages/manager"},
     {"path": "packages/types"},
     {"path": "packages/query"},
     {"path": "packages/chain-reader"}

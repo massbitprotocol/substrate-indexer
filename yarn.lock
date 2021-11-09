@@ -2201,9 +2201,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@massbit/indexer-manager@workspace:packages/indexer-manager":
+"@massbit/indexer-manager@workspace:packages/manager":
   version: 0.0.0-use.local
-  resolution: "@massbit/indexer-manager@workspace:packages/indexer-manager"
+  resolution: "@massbit/indexer-manager@workspace:packages/manager"
   dependencies:
     "@apollo/client": ^3.4.16
     "@massbit/common": "workspace:*"

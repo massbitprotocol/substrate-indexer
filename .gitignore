@@ -180,4 +180,4 @@ lib
 .DS_Store
 
 # Upload indexers
-packages/indexer-manager/projects
+packages/manager/projects
