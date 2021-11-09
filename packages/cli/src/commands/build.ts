@@ -35,7 +35,7 @@ const getBaseConfig = (dir: string, outputPath: string, development?: boolean): 
 });
 
 export default class Build extends Command {
-  static description = 'Build indexer code';
+  static description = 'Build indexer';
 
   static flags = {
     location: flags.string({char: 'l', description: 'local folder'}),

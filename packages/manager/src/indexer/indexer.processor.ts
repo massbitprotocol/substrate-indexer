@@ -16,7 +16,7 @@ import {IndexerManager} from './indexer.manager';
 import {Project} from './project.model';
 import 'multer';
 
-const logger = getLogger('indexer-processor');
+const logger = getLogger('indexer-manager');
 
 @Injectable()
 @Processor('indexer')
@@ -33,8 +33,6 @@ export class IndexerProcessor {
     const {file} = job.data;
     let projectPath = this.extractProject(file);
     projectPath = path.resolve('.', projectPath);
-    this.exec(projectPath, `npm install`);
-    this.exec(projectPath, `npm run build`);
     const project = await Project.create(
       projectPath,
       omitBy<ProjectNetworkConfig>(
@@ -50,12 +48,20 @@ export class IndexerProcessor {
     });
 
     const indexer = new IndexerManager(project, this.sequelize, this.nodeConfig, this.indexerRepo, this.eventEmitter);
-    logger.info(`deploy indexer ${project.projectManifest.name}`);
+    logger.info(`extract indexer ${project.projectManifest.name}`);
+
+    logger.info("install indexer's dependencies...");
+    this.exec(projectPath, `npm install`);
+
+    logger.info('build indexer...');
+    this.exec(projectPath, `npm run build`);
+
+    logger.info('start indexer');
     await indexer.start();
   }
 
   extractProject(file: Express.Multer.File): string {
-    const projectsDir = process.env.PROJECTS_DIR ?? './projects';
+    const projectsDir = process.env.PROJECTS_DIR ?? '../../../projects';
     const unzip = new admZip(file.path);
     const projectPath = `${projectsDir}/${file.originalname}`;
     unzip.extractAllTo(projectPath, true);
@@ -64,7 +70,7 @@ export class IndexerProcessor {
 
   exec(srcDir: string, cmd: string) {
     try {
-      return execSync(cmd, {cwd: srcDir, stdio: 'inherit'});
+      return execSync(cmd, {cwd: srcDir, stdio: 'ignore'});
     } catch (e) {
       logger.error(`failed to run command \`${cmd}\``);
     }

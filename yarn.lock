@@ -2201,9 +2201,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@massbit/indexer-manager@workspace:packages/manager":
+"@massbit/manager@workspace:packages/manager":
   version: 0.0.0-use.local
-  resolution: "@massbit/indexer-manager@workspace:packages/manager"
+  resolution: "@massbit/manager@workspace:packages/manager"
   dependencies:
     "@apollo/client": ^3.4.16
     "@massbit/common": "workspace:*"
@@ -2253,7 +2253,7 @@ __metadata:
     vm2: ^3.9.5
     yargs: ^16.2.0
   bin:
-    massbit-node: ./bin/run
+    massbit-manager: ./bin/run
   languageName: unknown
   linkType: soft
 
@@ -2264,6 +2264,7 @@ __metadata:
     "@graphile-contrib/pg-many-to-many": ^1.0.1
     "@graphile-contrib/pg-simplify-inflector": ^6.1.0
     "@massbit/common": "workspace:*"
+    "@massbit/types": "workspace:*"
     "@nestjs/common": ^7.6.9
     "@nestjs/core": ^7.6.1
     "@nestjs/platform-express": ^7.6.1
@@ -2290,7 +2291,7 @@ __metadata:
     typescript: ^4.1.3
     yargs: ^16.2.0
   bin:
-    subql-query: ./bin/run
+    massbit-query: ./bin/run
   languageName: unknown
   linkType: soft
 

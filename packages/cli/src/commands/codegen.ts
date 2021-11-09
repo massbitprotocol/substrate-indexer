@@ -1,9 +1,9 @@
 import path from 'path';
 import {Command, flags} from '@oclif/command';
-import {codegen} from '../controller/codegen-controller';
+import {codegen} from '../controllers/codegen-controller';
 
 export default class Codegen extends Command {
-  static description = 'Code generator';
+  static description = 'Generate code';
 
   static flags = {
     force: flags.boolean({char: 'f'}),

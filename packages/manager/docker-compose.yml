@@ -13,3 +13,20 @@ services:
     image: redis:alpine
     ports:
       - '6379:6379'
+  manager:
+    image: manager
+    ports:
+      - '3000:3000'
+    depends_on:
+      - "postgres"
+      - "redis"
+    restart: always
+    environment:
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_DATABASE: postgres
+      DB_HOST: postgres
+      DB_POST: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      PROJECTS_DIR: ./projects

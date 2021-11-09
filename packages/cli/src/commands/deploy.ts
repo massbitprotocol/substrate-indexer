@@ -1,8 +1,13 @@
 import fs from 'fs';
+import path from 'path';
+import {promisify} from 'util';
 import {Command, flags} from '@oclif/command';
 import admZip from 'adm-zip';
 import axios from 'axios';
 import FormData from 'form-data';
+import rimraf from 'rimraf';
+
+const DEPLOYMENT_DIR = './deployments';
 
 export default class Deploy extends Command {
   static description = 'Deploy indexer';
@@ -11,7 +16,6 @@ export default class Deploy extends Command {
     endpoint: flags.string({
       char: 'l',
       description: 'manager endpoint for deploying indexers',
-      default: '127.0.0.1:3000/indexers',
     }),
   };
 
@@ -28,15 +32,19 @@ export default class Deploy extends Command {
     zip.addLocalFile('./tsconfig.json');
     zip.toBuffer();
     const fileName = `${Date.now()}.zip`;
-    zip.writeZip(`../${fileName}`);
+    const filePath = path.join(DEPLOYMENT_DIR, fileName);
+    zip.writeZip(filePath);
 
     const form = new FormData();
-    const file = await fs.promises.readFile(`../${fileName}`);
+    const file = await fs.promises.readFile(filePath);
     form.append('file', file, fileName);
     await axios.post(flags.endpoint, form, {
       headers: {
         ...form.getHeaders(),
       },
     });
+
+    // cleanup deployment directory
+    await promisify(rimraf)(DEPLOYMENT_DIR);
   }
 }

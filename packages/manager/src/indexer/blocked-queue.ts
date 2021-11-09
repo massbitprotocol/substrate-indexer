@@ -1,4 +1,4 @@
-import {delay} from '@massbit/common/utils/promise';
+import {delay} from '@massbit/common';
 
 export class BlockedQueue<T> {
   private _queue: T[] = [];
