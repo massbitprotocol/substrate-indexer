@@ -1,6 +1,5 @@
 import path from 'path';
-import {isRuntimeDataSourceV0_2_0, levelFilter} from '@massbit/common';
-import {timeout} from '@massbit/common/utils/promise';
+import {isRuntimeDataSourceV0_2_0, levelFilter, timeout} from '@massbit/common';
 import {Store, SubstrateDatasource} from '@massbit/types';
 import {ApiPromise} from '@polkadot/api';
 import {merge} from 'lodash';

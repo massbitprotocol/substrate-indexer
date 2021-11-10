@@ -1,8 +1,8 @@
 {
   "name": "@massbit/query",
-  "version": "0.0.1",
+  "version": "0.3.0",
   "bin": {
-    "subql-query": "./bin/run"
+    "massbit-query": "./bin/run"
   },
   "scripts": {
     "prebuild": "rimraf dist",
@@ -27,6 +27,7 @@
     "@graphile-contrib/pg-many-to-many": "^1.0.1",
     "@graphile-contrib/pg-simplify-inflector": "^6.1.0",
     "@massbit/common": "workspace:*",
+    "@massbit/types": "workspace:*",
     "@nestjs/common": "^7.6.9",
     "@nestjs/core": "^7.6.1",
     "@nestjs/platform-express": "^7.6.1",

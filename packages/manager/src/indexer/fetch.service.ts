@@ -1,5 +1,4 @@
-import {isRuntimeDataSourceV0_2_0, RuntimeDataSourceV0_0_1} from '@massbit/common';
-import {delay} from '@massbit/common/utils/promise';
+import {isRuntimeDataSourceV0_2_0, RuntimeDataSourceV0_0_1, delay} from '@massbit/common';
 import {
   SubstrateCallFilter,
   SubstrateEventFilter,

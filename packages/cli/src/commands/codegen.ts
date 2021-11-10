@@ -1,9 +1,9 @@
 import path from 'path';
 import {Command, flags} from '@oclif/command';
-import {codegen} from '../controller/codegen-controller';
+import {codegen} from '../controllers/codegen-controller';
 
 export default class Codegen extends Command {
-  static description = 'Code generator';
+  static description = 'Generate code';
 
   static flags = {
     force: flags.boolean({char: 'f'}),
@@ -14,7 +14,7 @@ export default class Codegen extends Command {
   async run(): Promise<void> {
     const {flags} = this.parse(Codegen);
     this.log('===============================');
-    this.log('---------Massbit Codegen---------');
+    this.log('---------Generate code--------');
     this.log('===============================');
 
     const location = flags.location ? path.resolve(flags.location) : process.cwd();

@@ -1,4 +1,4 @@
-import {delay} from '@massbit/common/utils/promise';
+import {delay} from '@massbit/common';
 import {Injectable, OnApplicationShutdown} from '@nestjs/common';
 import {Interval} from '@nestjs/schedule';
 import {ApiPromise} from '@polkadot/api';

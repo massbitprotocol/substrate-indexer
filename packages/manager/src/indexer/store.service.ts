@@ -1,6 +1,6 @@
 import assert from 'assert';
+import {camelCaseObjectKey} from '@massbit/common';
 import {GraphQLModelsRelations} from '@massbit/common/graphql/types';
-import {camelCaseObjectKey} from '@massbit/common/utils/object';
 import {Entity, Store} from '@massbit/types';
 import {camelCase, flatten, upperFirst} from 'lodash';
 import {QueryTypes, Sequelize, Transaction, Utils} from 'sequelize';

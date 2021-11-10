@@ -23,11 +23,9 @@ const getBaseConfig = (dir: string, outputPath: string, development?: boolean): 
       },
     ],
   },
-
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
   },
-
   output: {
     path: path.dirname(outputPath),
     filename: path.basename(outputPath),
@@ -37,7 +35,7 @@ const getBaseConfig = (dir: string, outputPath: string, development?: boolean): 
 });
 
 export default class Build extends Command {
-  static description = 'Build this SubQuery project code';
+  static description = 'Build indexer';
 
   static flags = {
     location: flags.string({char: 'l', description: 'local folder'}),
@@ -55,8 +53,8 @@ export default class Build extends Command {
     }
 
     // Get the output location from the project package.json main field
-    const pjson = JSON.parse(readFileSync(path.join(directory, 'package.json')).toString());
-    const outputPath = path.resolve(directory, pjson.main || 'dist/index.js');
+    const packageJson = JSON.parse(readFileSync(path.join(directory, 'package.json')).toString());
+    const outputPath = path.resolve(directory, packageJson.main || 'dist/index.js');
 
     const config = merge(
       getBaseConfig(directory, outputPath, isDev)

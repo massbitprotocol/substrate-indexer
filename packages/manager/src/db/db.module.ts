@@ -1,4 +1,4 @@
-import {delay} from '@massbit/common/utils/promise';
+import {delay} from '@massbit/common';
 import {DynamicModule, Global} from '@nestjs/common';
 import {Sequelize} from 'sequelize';
 import {Options as SequelizeOption} from 'sequelize/types';
