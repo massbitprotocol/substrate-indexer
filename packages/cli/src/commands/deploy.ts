@@ -7,7 +7,7 @@ import axios from 'axios';
 import FormData from 'form-data';
 import rimraf from 'rimraf';
 
-const DEPLOYMENT_DIR = './deployments';
+const DEPLOYMENT_DIR = 'deployments';
 
 export default class Deploy extends Command {
   static description = 'Deploy indexer';
@@ -32,7 +32,7 @@ export default class Deploy extends Command {
     zip.addLocalFile('./tsconfig.json');
     zip.toBuffer();
     const fileName = `${Date.now()}.zip`;
-    const filePath = path.join(DEPLOYMENT_DIR, fileName);
+    const filePath = `./${DEPLOYMENT_DIR}/${fileName}`;
     zip.writeZip(filePath);
 
     const form = new FormData();
