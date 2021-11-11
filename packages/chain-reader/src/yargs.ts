@@ -1,24 +1,24 @@
-import {hideBin} from 'yargs/helpers';
+import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs/yargs';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function getYargsOption() {
   return yargs(hideBin(process.argv)).options({
-    config: {
-      alias: 'c',
+    'network-indexer': {
+      alias: 'f',
       demandOption: false,
-      describe: 'Specify configuration file',
+      describe: 'Local path of the network indexer project',
       type: 'string',
     },
-    local: {
-      type: 'boolean',
+    'indexer-name': {
       demandOption: false,
-      describe: 'Use local mode',
+      describe: 'Name of the indexer',
+      type: 'string',
     },
-    'start-block': {
-      type: 'number',
+    'network-endpoint': {
       demandOption: false,
-      describe: 'Start block to fetch data',
+      type: 'string',
+      describe: 'Blockchain network endpoint to connect',
     },
     'batch-size': {
       demandOption: false,
@@ -32,7 +32,8 @@ export function getYargsOption() {
     },
     debug: {
       demandOption: false,
-      describe: 'Show debug information to console output. will forcefully set log level to debug',
+      describe:
+        'Show debug information to console output. will forcefully set log level to debug',
       type: 'boolean',
       default: false,
     },
@@ -41,11 +42,6 @@ export function getYargsOption() {
       describe: 'Show profiler information to console output',
       type: 'boolean',
       default: false,
-    },
-    'network-endpoint': {
-      demandOption: false,
-      type: 'string',
-      describe: 'Blockchain network endpoint to connect',
     },
     'output-fmt': {
       demandOption: false,
@@ -70,12 +66,6 @@ export function getYargsOption() {
       describe: 'Enable/disable created_at and updated_at in schema',
       type: 'boolean',
       default: true,
-    },
-    'network-dictionary': {
-      alias: 'd',
-      demandOption: false,
-      describe: 'Specify the dictionary api for this network',
-      type: 'string',
     },
   });
 }

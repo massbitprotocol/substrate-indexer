@@ -1,14 +1,12 @@
 import path from 'path';
-import {isRuntimeDataSourceV0_2_0, levelFilter, timeout} from '@massbit/common';
-import {Store, SubstrateDatasource} from '@massbit/types';
+import {isRuntimeDataSourceV0_0_2, levelFilter, timeout, getProjectEntry, Project} from '@massbit/common';
+import {Store, Datasource} from '@massbit/types';
 import {ApiPromise} from '@polkadot/api';
 import {merge} from 'lodash';
 import {NodeVM, NodeVMOptions, VMScript} from 'vm2';
-import {NodeConfig} from '../configure/node-config';
+import {Config} from '../configure/config';
 import {getLogger} from '../utils/logger';
-import {getProjectEntry} from '../utils/project';
 import {ApiService} from './api.service';
-import {Project} from './project.model';
 import {StoreService} from './store.service';
 
 export interface SandboxOption {
@@ -53,7 +51,7 @@ export class Sandbox extends NodeVM {
 }
 
 export class IndexerSandbox extends Sandbox {
-  constructor(option: SandboxOption, private readonly config: NodeConfig) {
+  constructor(option: SandboxOption, private readonly config: Config) {
     super(
       option,
       new VMScript(
@@ -100,16 +98,16 @@ export class SandboxService {
   private apiService: ApiService;
   private storeService: StoreService;
   private project: Project;
-  private readonly nodeConfig: NodeConfig;
+  private readonly nodeConfig: Config;
 
-  constructor(project: Project, nodeConfig: NodeConfig, apiService: ApiService, storeService: StoreService) {
+  constructor(project: Project, nodeConfig: Config, apiService: ApiService, storeService: StoreService) {
     this.project = project;
     this.nodeConfig = nodeConfig;
     this.apiService = apiService;
     this.storeService = storeService;
   }
 
-  async getDatasourceProcessor(ds: SubstrateDatasource): Promise<IndexerSandbox> {
+  async getDatasourceProcessor(ds: Datasource): Promise<IndexerSandbox> {
     const entry = this.getDataSourceEntry(ds);
 
     if (!this.processorCache[entry]) {
@@ -127,8 +125,8 @@ export class SandboxService {
     return this.processorCache[entry];
   }
 
-  private getDataSourceEntry(ds: SubstrateDatasource): string {
-    if (isRuntimeDataSourceV0_2_0(ds)) {
+  private getDataSourceEntry(ds: Datasource): string {
+    if (isRuntimeDataSourceV0_0_2(ds)) {
       return ds.mapping.file;
     } else {
       return getProjectEntry(this.project.path);

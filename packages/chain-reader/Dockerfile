@@ -5,7 +5,7 @@ ENV TZ utc
 
 ARG RELEASE_VERSION
 RUN apk add --no-cache tini git
-ENTRYPOINT ["/sbin/tini", "--", "massbit-chain-reader"]
+ENTRYPOINT ["/sbin/tini", "--", "chain-reader"]
 
 RUN npm i -g @massbit/chain-reader@${RELEASE_VERSION}
 WORKDIR /workdir

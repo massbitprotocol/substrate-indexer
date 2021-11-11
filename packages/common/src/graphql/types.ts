@@ -11,10 +11,20 @@ export interface GraphQLJsonFieldType {
   isArray: boolean;
 }
 
-export interface GraphQLModelsRelations {
+export interface GraphQLModelsRelationsEnums {
   models: GraphQLModelsType[];
 
   relations: GraphQLRelationsType[];
+
+  enums: GraphQLEnumsType[];
+}
+
+export interface GraphQLEnumsType {
+  name: string;
+
+  values: string[];
+
+  description?: string;
 }
 
 export interface GraphQLModelsType {
@@ -23,6 +33,8 @@ export interface GraphQLModelsType {
   fields: GraphQLEntityField[];
 
   indexes: GraphQLEntityIndex[];
+
+  description?: string;
 }
 
 export interface GraphQLEntityField {
@@ -35,6 +47,10 @@ export interface GraphQLEntityField {
   isArray: boolean;
 
   nullable: boolean;
+
+  isEnum: boolean;
+
+  description?: string;
 }
 
 export enum IndexType {

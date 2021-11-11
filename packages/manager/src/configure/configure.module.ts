@@ -2,7 +2,7 @@ import {DynamicModule, Global, Module} from '@nestjs/common';
 import {camelCase} from 'lodash';
 import {setLevel} from '../utils/logger';
 import {getYargsOption} from '../yargs';
-import {IConfig, NodeConfig} from './node-config';
+import {IConfig, Config} from './config';
 
 const YargsNameMapping = {
   local: 'localMode',
@@ -32,11 +32,11 @@ export class ConfigureModule {
   static register(): DynamicModule {
     const yargsOptions = getYargsOption();
     const {argv} = yargsOptions;
-    let config: NodeConfig;
+    let config: Config;
     if (argv.config) {
-      config = NodeConfig.fromFile(argv.config, yargsToIConfig(argv));
+      config = Config.fromFile(argv.config, yargsToIConfig(argv));
     } else {
-      config = new NodeConfig({...yargsToIConfig(argv)} as IConfig);
+      config = new Config({...yargsToIConfig(argv)} as IConfig);
     }
 
     if (config.debug) {
@@ -47,11 +47,11 @@ export class ConfigureModule {
       module: ConfigureModule,
       providers: [
         {
-          provide: NodeConfig,
+          provide: Config,
           useValue: config,
         },
       ],
-      exports: [NodeConfig],
+      exports: [Config],
     };
   }
 }

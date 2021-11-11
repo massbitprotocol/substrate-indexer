@@ -5,6 +5,7 @@ export interface Entity {
 }
 
 export type FunctionPropertyNames<T> = {
+  // eslint-disable-next-line @typescript-eslint/ban-types
   [K in keyof T]: T[K] extends Function ? K : never;
 }[keyof T];
 
@@ -24,7 +25,6 @@ export interface SubstrateBlock extends SignedBlock {
 }
 
 export interface SubstrateExtrinsic {
-  // index in the block
   idx: number;
   extrinsic: Extrinsic;
   block: SubstrateBlock;
@@ -33,7 +33,6 @@ export interface SubstrateExtrinsic {
 }
 
 export interface SubstrateEvent extends EventRecord {
-  // index in the block
   idx: number;
   extrinsic?: SubstrateExtrinsic;
   block: SubstrateBlock;

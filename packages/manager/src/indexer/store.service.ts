@@ -1,14 +1,14 @@
 import assert from 'assert';
-import {camelCaseObjectKey} from '@massbit/common';
-import {GraphQLModelsRelations} from '@massbit/common/graphql/types';
+import {GraphQLModelsRelationsEnums, camelCaseObjectKey} from '@massbit/common';
 import {Entity, Store} from '@massbit/types';
+import {Injectable} from '@nestjs/common';
 import {camelCase, flatten, upperFirst} from 'lodash';
 import {QueryTypes, Sequelize, Transaction, Utils} from 'sequelize';
-import {NodeConfig} from '../configure/node-config';
+import {Config} from '../configure/config';
+import {MetadataFactory, MetadataRepo} from '../entities';
 import {modelsTypeToModelAttributes} from '../utils/graphql';
 import {getLogger} from '../utils/logger';
 import {commentConstraintQuery, createUniqueIndexQuery, getFkConstraint, smartTags} from '../utils/sync-helper';
-import {MetadataFactory, MetadataRepo} from './entities/metadata.entity';
 
 const logger = getLogger('store');
 
@@ -19,16 +19,17 @@ interface IndexField {
   type: string;
 }
 
+@Injectable()
 export class StoreService {
   private tx?: Transaction;
   private modelIndexedFields: IndexField[];
   private schema: string;
-  private modelsRelations: GraphQLModelsRelations;
+  private modelsRelations: GraphQLModelsRelationsEnums;
   private metaDataRepo: MetadataRepo;
 
-  constructor(private sequelize: Sequelize, private config: NodeConfig) {}
+  constructor(private sequelize: Sequelize, private config: Config) {}
 
-  async init(schema: string, modelsRelations: GraphQLModelsRelations): Promise<void> {
+  async init(modelsRelations: GraphQLModelsRelationsEnums, schema: string): Promise<void> {
     this.schema = schema;
     this.modelsRelations = modelsRelations;
     try {
@@ -37,7 +38,6 @@ export class StoreService {
       logger.error(e, `Having a problem when syncing schema`);
       process.exit(1);
     }
-
     try {
       this.modelIndexedFields = await this.getAllIndexFields(this.schema);
     } catch (e) {
@@ -47,8 +47,61 @@ export class StoreService {
   }
 
   async syncSchema(schema: string): Promise<void> {
+    const enumTypeMap = new Map<string, string>();
+
+    let i = 0;
+    for (const e of this.modelsRelations.enums) {
+      // We shouldn't set the typename to e.name because it could potentially create SQL injection,
+      // using a replacement at the type name location doesn't work.
+      const enumTypeName = `${schema}_custom_enum_${i}`;
+
+      const [results] = await this.sequelize.query(
+        `select e.enumlabel as enum_value
+         from pg_type t
+         join pg_enum e on t.oid = e.enumtypid
+         where t.typname = ?;`,
+        {replacements: [enumTypeName]}
+      );
+
+      if (results.length === 0) {
+        await this.sequelize.query(`CREATE TYPE ${enumTypeName} as ENUM (${e.values.map(() => '?').join(',')});`, {
+          replacements: e.values,
+        });
+      } else {
+        const currentValues = results.map((v: any) => v.enum_value);
+        // Assert the existing enum has the same values
+
+        // Make it a function to not execute potentially big joins unless needed
+        const differentValuesError = () =>
+          new Error(
+            `Can't modify enum ${enumTypeName} between runs, it used to have values: ${currentValues.join(
+              ', '
+            )} but now has ${e.values.join(', ')} you must rerun the full subquery to do such a change`
+          );
+
+        if (e.values.length !== currentValues.length) {
+          throw differentValuesError();
+        }
+        const newSet = new Set(e.values);
+        for (const value of currentValues) {
+          if (!newSet.has(value)) {
+            throw differentValuesError();
+          }
+        }
+      }
+
+      const comment = `@enum\\n@enumName ${e.name}${e.description ? `\\n ${e.description}` : ''}`;
+
+      await this.sequelize.query(`COMMENT ON TYPE ${enumTypeName} IS E?`, {
+        replacements: [comment],
+      });
+      enumTypeMap.set(e.name, enumTypeName);
+
+      i++;
+    }
+
     for (const model of this.modelsRelations.models) {
-      const attributes = modelsTypeToModelAttributes(model);
+      const attributes = modelsTypeToModelAttributes(model, enumTypeMap);
       const indexes = model.indexes.map(({fields, unique, using}) => ({
         fields: fields.map((field) => Utils.underscoredIf(field, true)),
         unique,
@@ -59,6 +112,7 @@ export class StoreService {
       }
       this.sequelize.define(model.name, attributes, {
         underscored: true,
+        comment: model.description,
         freezeTableName: false,
         createdAt: this.config.timestampField,
         updatedAt: this.config.timestampField,
@@ -98,13 +152,13 @@ export class StoreService {
             foreignFieldName: relation.fieldName,
           });
           extraQueries.push(commentConstraintQuery(`${schema}.${rel.target.tableName}`, fkConstraint, tags));
+
           break;
         }
         default:
           throw new Error('Relation type is not supported');
       }
     }
-
     this.metaDataRepo = MetadataFactory(this.sequelize, schema);
 
     await this.sequelize.sync();
@@ -113,7 +167,7 @@ export class StoreService {
     }
   }
 
-  setTransaction(tx: Transaction): void {
+  setTransaction(tx: Transaction) {
     this.tx = tx;
     tx.afterCommit(() => (this.tx = undefined));
   }

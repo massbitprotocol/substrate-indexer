@@ -1,6 +1,6 @@
 import {execSync} from 'child_process';
 import path from 'path';
-import {ProjectNetworkConfig} from '@massbit/common';
+import {INetworkConfig, Project} from '@massbit/common';
 import {Process, Processor} from '@nestjs/bull';
 import {Inject, Injectable} from '@nestjs/common';
 import {EventEmitter2} from '@nestjs/event-emitter';
@@ -9,11 +9,10 @@ import {Job} from 'bull';
 import {Express} from 'express';
 import {isNil, omitBy} from 'lodash';
 import {Sequelize} from 'sequelize';
-import {NodeConfig} from '../configure/node-config';
+import {Config} from '../configure/config';
 import {IndexerRepo} from '../entities';
 import {getLogger} from '../utils/logger';
 import {IndexerManager} from './indexer.manager';
-import {Project} from './project.model';
 import 'multer';
 
 const logger = getLogger('indexer-manager');
@@ -23,22 +22,24 @@ const logger = getLogger('indexer-manager');
 export class IndexerProcessor {
   constructor(
     private sequelize: Sequelize,
-    private nodeConfig: NodeConfig,
+    private nodeConfig: Config,
     @Inject('Indexer') protected indexerRepo: IndexerRepo,
     private eventEmitter: EventEmitter2
   ) {}
 
   @Process()
   async handleIndexer(job: Job): Promise<void> {
+    logger.info('handle indexer deployment');
+
     const {file} = job.data;
     let projectPath = this.extractProject(file);
     projectPath = path.resolve('.', projectPath);
     const project = await Project.create(
       projectPath,
-      omitBy<ProjectNetworkConfig>(
+      omitBy<INetworkConfig>(
         {
           endpoint: this.nodeConfig.networkEndpoint,
-          dictionary: this.nodeConfig.networkDictionary,
+          networkIndexer: this.nodeConfig.networkIndexer,
         },
         isNil
       )
@@ -48,7 +49,6 @@ export class IndexerProcessor {
     });
 
     const indexer = new IndexerManager(project, this.sequelize, this.nodeConfig, this.indexerRepo, this.eventEmitter);
-    logger.info(`extract indexer ${project.projectManifest.name}`);
 
     logger.info("install indexer's dependencies...");
     this.exec(projectPath, `npm install`);

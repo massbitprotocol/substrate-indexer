@@ -36,6 +36,7 @@ export class BlockedQueue<T> {
     }
     return this._queue.shift();
   }
+
   async takeAll(max?: number): Promise<T[]> {
     while (!this.size) {
       await delay(0.1);

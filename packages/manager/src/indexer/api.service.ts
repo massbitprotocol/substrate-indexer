@@ -1,3 +1,4 @@
+import {Project} from '@massbit/common';
 import {OnApplicationShutdown} from '@nestjs/common';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {ApiPromise, HttpProvider, WsProvider} from '@polkadot/api';
@@ -14,7 +15,6 @@ import {BlockHash} from '@polkadot/types/interfaces';
 import {StorageEntry} from '@polkadot/types/primitive/types';
 import {AnyFunction, AnyTuple} from '@polkadot/types/types';
 import {IndexerEvent, NetworkMetadataPayload} from './events';
-import {Project} from './project.model';
 
 const NOT_SUPPORT = (name: string) => () => {
   throw new Error(`${name}() is not supported`);
@@ -173,14 +173,12 @@ export class ApiService implements OnApplicationShutdown {
           argsClone[hashIndex] = this.currentBlockHash;
           return original(...argsClone);
         }) as RpcMethodResult<T, AnyFunction>;
-        ret.json = NOT_SUPPORT('api.rpc.*.*.json');
         ret.raw = NOT_SUPPORT('api.rpc.*.*.raw');
         ret.meta = original.meta;
         return ret;
       }
     }
     const ret = NOT_SUPPORT('api.rpc.*.*') as unknown as RpcMethodResult<T, AnyFunction>;
-    ret.json = NOT_SUPPORT('api.rpc.*.*.json');
     ret.raw = NOT_SUPPORT('api.rpc.*.*.raw');
     ret.meta = original.meta;
     return ret;

@@ -1,16 +1,19 @@
-import {NestFactory} from '@nestjs/core';
-import {AppModule} from './app.module';
-import {ChainReader} from './chain-reader/chain-reader.service';
-import {getLogger, NestLogger} from './utils/logger';
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { IndexerManager } from './indexer/indexer.manager';
+import { getLogger, NestLogger } from './utils/logger';
+import { argv } from './yargs';
 
 async function bootstrap() {
+  const debug = argv('debug');
   try {
     const app = await NestFactory.create(AppModule, {
-      logger: new NestLogger(),
+      logger: debug ? new NestLogger() : false,
     });
     await app.init();
-    const chainReader = app.get(ChainReader);
-    await chainReader.start();
+    const indexerManager = app.get(IndexerManager);
+    await indexerManager.start();
+    await app.listen(3000);
     getLogger('chain-reader').info('service started');
   } catch (e) {
     getLogger('chain-reader').error(e, 'service failed to start');

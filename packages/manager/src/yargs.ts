@@ -66,10 +66,10 @@ export function getYargsOption() {
       type: 'boolean',
       default: true,
     },
-    'network-dictionary': {
+    'network-indexer': {
       alias: 'd',
       demandOption: false,
-      describe: 'Specify the dictionary api for this network',
+      describe: 'Specify the indexer api for this network',
       type: 'string',
     },
   });
