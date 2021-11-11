@@ -23,7 +23,7 @@
     "@nestjs/event-emitter": "^0.0.2",
     "@nestjs/platform-express": "^7.6.1",
     "@nestjs/schedule": "^0.4.2",
-    "@polkadot/api": "6.4.2",
+    "@polkadot/api": "6.6.1",
     "@willsoto/nestjs-prometheus": "^3.0.0",
     "adm-zip": "^0.5.9",
     "app-module-path": "^2.2.0",

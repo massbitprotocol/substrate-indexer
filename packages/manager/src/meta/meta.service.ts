@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import {Injectable} from '@nestjs/common';
+import {OnEvent} from '@nestjs/event-emitter';
 import {
   BestBlockPayload,
   EventPayload,
@@ -10,8 +10,8 @@ import {
 } from '../indexer/events';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { version: polkadotSdkVersion } = require('@polkadot/api/package.json');
-const { version: packageVersion } = require('../../package.json');
+const {version: polkadotSdkVersion} = require('@polkadot/api/package.json');
+const {version: packageVersion} = require('../../package.json');
 
 @Injectable()
 export class MetaService {
@@ -21,7 +21,6 @@ export class MetaService {
   private targetHeight: number;
   private networkMeta: NetworkMetadataPayload;
   private apiConnected: boolean;
-  private usingDictionary: boolean;
   private injectedApiConnected: boolean;
   private lastProcessedHeight: number;
   private lastProcessedTimestamp: number;
@@ -39,7 +38,6 @@ export class MetaService {
       polkadotSdkVersion,
       apiConnected: this.apiConnected,
       injectedApiConnected: this.injectedApiConnected,
-      usingDictionary: this.usingDictionary,
       ...this.networkMeta,
     };
   }
@@ -72,17 +70,12 @@ export class MetaService {
   }
 
   @OnEvent(IndexerEvent.ApiConnected)
-  handleApiConnected({ value }: EventPayload<number>) {
+  handleApiConnected({value}: EventPayload<number>): void {
     this.apiConnected = !!value;
   }
 
   @OnEvent(IndexerEvent.InjectedApiConnected)
-  handleInjectedApiConnected({ value }: EventPayload<number>) {
+  handleInjectedApiConnected({value}: EventPayload<number>): void {
     this.injectedApiConnected = !!value;
-  }
-
-  @OnEvent(IndexerEvent.UsingDictionary)
-  handleUsingDictionary({ value }: EventPayload<number>) {
-    this.usingDictionary = !!value;
   }
 }

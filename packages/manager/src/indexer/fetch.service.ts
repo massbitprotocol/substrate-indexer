@@ -1,10 +1,19 @@
-import {isRuntimeDataSourceV0_2_0, RuntimeDataSourceV0_0_1, delay} from '@massbit/common';
+import {
+  isRuntimeDataSourceV0_0_2,
+  IRuntimeDataSourceV0_0_1,
+  delay,
+  isBaseHandler,
+  isCustomDatasource,
+  isCustomHandler,
+  isRuntimeDatasource,
+  Project,
+} from '@massbit/common';
 import {
   SubstrateCallFilter,
   SubstrateEventFilter,
   SubstrateHandlerKind,
   SubstrateHandler,
-  SubstrateDatasource,
+  Datasource,
   SubstrateHandlerFilter,
 } from '@massbit/types';
 import {OnApplicationShutdown} from '@nestjs/common';
@@ -13,22 +22,20 @@ import {Interval} from '@nestjs/schedule';
 import {ApiPromise} from '@polkadot/api';
 import {isUndefined, range} from 'lodash';
 import Pino from 'pino';
-import {NodeConfig} from '../configure/node-config';
+import {Config} from '../configure/config';
 import {getLogger} from '../utils/logger';
 import {profiler, profilerWrap} from '../utils/profiler';
-import {isBaseHandler, isCustomDs, isCustomHandler, isRuntimeDs} from '../utils/project';
 import * as SubstrateUtil from '../utils/substrate';
 import {getYargsOption} from '../yargs';
 import {ApiService} from './api.service';
 import {BlockedQueue} from './blocked-queue';
-import {Dictionary, DictionaryService} from './dictionary.service';
 import {DsProcessorService} from './ds-processor.service';
 import {IndexerEvent} from './events';
-import {Project} from './project.model';
+import {NetworkIndexer, NetworkIndexerService} from './network-indexer.service';
 import {BlockContent, IndexerFilters} from './types';
 
 const BLOCK_TIME_VARIANCE = 5;
-const DICTIONARY_MAX_QUERY_SIZE = 10000;
+const NETWORK_INDEXER_MAX_QUERY_SIZE = 10000;
 const {argv} = getYargsOption();
 
 const fetchBlocksBatches = argv.profiler
@@ -44,42 +51,38 @@ export class FetchService implements OnApplicationShutdown {
   private blockNumberBuffer: BlockedQueue<number>;
   private isShutdown = false;
   private parentSpecVersion: number;
-  private useDictionary: boolean;
+  private useNetworkIndexer: boolean;
   private indexerFilters: IndexerFilters;
   private readonly project: Project;
   private apiService: ApiService;
   private dsProcessorService: DsProcessorService;
-  private nodeConfig: NodeConfig;
-  private dictionaryService: DictionaryService;
+  private nodeConfig: Config;
+  private networkIndexerService: NetworkIndexerService;
   private eventEmitter: EventEmitter2;
   private logger: Pino.Logger;
 
   constructor(
     project: Project,
-    nodeConfig: NodeConfig,
+    nodeConfig: Config,
     apiService: ApiService,
     dsProcessorService: DsProcessorService,
-    dictionaryService: DictionaryService,
+    networkIndexerService: NetworkIndexerService,
     eventEmitter: EventEmitter2
   ) {
     this.nodeConfig = nodeConfig;
     this.project = project;
     this.eventEmitter = eventEmitter;
     this.apiService = apiService;
-    this.dictionaryService = dictionaryService;
+    this.networkIndexerService = networkIndexerService;
     this.dsProcessorService = dsProcessorService;
     this.blockBuffer = new BlockedQueue<BlockContent>(this.nodeConfig.batchSize * 3);
     this.blockNumberBuffer = new BlockedQueue<number>(this.nodeConfig.batchSize * 3);
-    this.logger = getLogger(`[fetch] [${project.projectManifest.name}]`);
+    this.logger = getLogger(`[fetch] [${project.manifest.name}]`);
   }
 
   async init(): Promise<void> {
     this.indexerFilters = this.getIndexFilters();
-    this.useDictionary = !!this.indexerFilters && !!this.project.network.dictionary;
-
-    this.eventEmitter.emit(IndexerEvent.UsingDictionary, {
-      value: Number(this.useDictionary),
-    });
+    this.useNetworkIndexer = !!this.indexerFilters && !!this.project.network.networkIndexer;
     await this.getFinalizedBlockHead();
     await this.getBestBlockHead();
   }
@@ -97,14 +100,14 @@ export class FetchService implements OnApplicationShutdown {
     const extrinsicFilters: SubstrateCallFilter[] = [];
     const dataSources = this.project.dataSources.filter(
       (ds) =>
-        isRuntimeDataSourceV0_2_0(ds) ||
-        !(ds as RuntimeDataSourceV0_0_1).filter?.specName ||
-        (ds as RuntimeDataSourceV0_0_1).filter.specName === this.api.runtimeVersion.specName.toString()
+        isRuntimeDataSourceV0_0_2(ds) ||
+        !(ds as IRuntimeDataSourceV0_0_1).filter?.specName ||
+        (ds as IRuntimeDataSourceV0_0_1).filter.specName === this.api.runtimeVersion.specName.toString()
     );
     for (const ds of dataSources) {
       for (const handler of ds.mapping.handlers) {
         const baseHandlerKind = this.getBaseHandlerKind(ds, handler);
-        const filterList = isRuntimeDs(ds)
+        const filterList = isRuntimeDatasource(ds)
           ? [handler.filter as SubstrateHandlerFilter].filter(Boolean)
           : this.getBaseHandlerFilters<SubstrateHandlerFilter>(ds, handler.kind);
         if (!filterList.length) return;
@@ -242,21 +245,19 @@ export class FetchService implements OnApplicationShutdown {
         await delay(1);
         continue;
       }
-      if (this.useDictionary) {
-        const queryEndBlock = startBlockHeight + DICTIONARY_MAX_QUERY_SIZE;
+      if (this.useNetworkIndexer) {
+        const queryEndBlock = startBlockHeight + NETWORK_INDEXER_MAX_QUERY_SIZE;
         try {
-          const dictionary = await this.dictionaryService.getDictionary(
+          const networkIndexer = await this.networkIndexerService.getNetworkIndexer(
             startBlockHeight,
             queryEndBlock,
             this.nodeConfig.batchSize,
             this.indexerFilters
           );
-          //TODO
-          // const specVersionMap = dictionary.specVersions;
-          if (dictionary && this.dictionaryValidation(dictionary, startBlockHeight)) {
-            const {batchBlocks} = dictionary;
+          if (networkIndexer && this.validateNetworkIndexer(networkIndexer, startBlockHeight)) {
+            const {batchBlocks} = networkIndexer;
             if (batchBlocks.length === 0) {
-              this.setLatestBufferedHeight(Math.min(queryEndBlock - 1, dictionary._metadata.lastProcessedHeight));
+              this.setLatestBufferedHeight(Math.min(queryEndBlock - 1, networkIndexer._metadata.lastProcessedHeight));
             } else {
               this.blockNumberBuffer.putAll(batchBlocks);
               this.setLatestBufferedHeight(batchBlocks[batchBlocks.length - 1]);
@@ -266,10 +267,8 @@ export class FetchService implements OnApplicationShutdown {
             });
             continue; // skip nextBlockRange() way
           }
-          // else use this.nextBlockRange()
         } catch (e) {
-          this.logger.debug(`Fetch dictionary stopped: ${e.message}`);
-          this.eventEmitter.emit(IndexerEvent.SkipDictionary);
+          this.logger.debug(`Fetch network indexer stopped: ${e.message}`);
         }
       }
       // the original method: fill next batch size of blocks
@@ -327,19 +326,14 @@ export class FetchService implements OnApplicationShutdown {
     return endBlockHeight;
   }
 
-  private dictionaryValidation({_metadata: metaData}: Dictionary, startBlockHeight: number): boolean {
+  private validateNetworkIndexer({_metadata: metaData}: NetworkIndexer, startBlockHeight: number): boolean {
     if (metaData.genesisHash !== this.api.genesisHash.toString()) {
-      this.logger.warn(`Dictionary is disabled since now`);
-      this.useDictionary = false;
-      this.eventEmitter.emit(IndexerEvent.UsingDictionary, {
-        value: Number(this.useDictionary),
-      });
-      this.eventEmitter.emit(IndexerEvent.SkipDictionary);
+      this.logger.warn(`Network Indexer is disabled`);
+      this.useNetworkIndexer = false;
       return false;
     }
     if (metaData.lastProcessedHeight < startBlockHeight) {
-      this.logger.warn(`Dictionary indexed block is behind current indexing block height`);
-      this.eventEmitter.emit(IndexerEvent.SkipDictionary);
+      this.logger.warn(`Network Indexer indexed block is behind current indexing block height`);
       return false;
     }
     return true;
@@ -352,10 +346,10 @@ export class FetchService implements OnApplicationShutdown {
     });
   }
 
-  private getBaseHandlerKind(ds: SubstrateDatasource, handler: SubstrateHandler): SubstrateHandlerKind {
-    if (isRuntimeDs(ds) && isBaseHandler(handler)) {
+  private getBaseHandlerKind(ds: Datasource, handler: SubstrateHandler): SubstrateHandlerKind {
+    if (isRuntimeDatasource(ds) && isBaseHandler(handler)) {
       return handler.kind;
-    } else if (isCustomDs(ds) && isCustomHandler(handler)) {
+    } else if (isCustomDatasource(ds) && isCustomHandler(handler)) {
       const plugin = this.dsProcessorService.getDsProcessor(ds);
       const baseHandler = plugin.handlerProcessors[handler.kind]?.baseHandlerKind;
       if (!baseHandler) {
@@ -365,8 +359,8 @@ export class FetchService implements OnApplicationShutdown {
     }
   }
 
-  private getBaseHandlerFilters<T extends SubstrateHandlerFilter>(ds: SubstrateDatasource, handlerKind: string): T[] {
-    if (isCustomDs(ds)) {
+  private getBaseHandlerFilters<T extends SubstrateHandlerFilter>(ds: Datasource, handlerKind: string): T[] {
+    if (isCustomDatasource(ds)) {
       const plugin = this.dsProcessorService.getDsProcessor(ds);
       const processor = plugin.handlerProcessors[handlerKind];
       return processor.baseFilter instanceof Array ? (processor.baseFilter as T[]) : ([processor.baseFilter] as T[]);

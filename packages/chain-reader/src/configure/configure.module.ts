@@ -1,8 +1,11 @@
-import {DynamicModule, Global, Module} from '@nestjs/common';
-import {camelCase} from 'lodash';
-import {setLevel} from '../utils/logger';
-import {getYargsOption} from '../yargs';
-import {IConfig, NodeConfig} from './node-config';
+import assert from 'assert';
+import path from 'path';
+import { INetworkConfig, Project } from '@massbit/common';
+import { DynamicModule, Global, Module } from '@nestjs/common';
+import { camelCase, last, omitBy, isNil } from 'lodash';
+import { getLogger, setLevel } from '../utils/logger';
+import { getYargsOption } from '../yargs';
+import { IConfig, MinConfig, Config } from './config';
 
 const YargsNameMapping = {
   local: 'localMode',
@@ -26,32 +29,68 @@ function yargsToIConfig(yargs: Args): Partial<IConfig> {
   }, {});
 }
 
+function defaultSubqueryName(config: Partial<IConfig>): MinConfig {
+  return {
+    ...config,
+    indexerName:
+      config.indexerName ?? last(path.resolve(config.indexer).split(path.sep)),
+  } as MinConfig;
+}
+
+const logger = getLogger('configure');
+
 @Global()
 @Module({})
 export class ConfigureModule {
   static register(): DynamicModule {
     const yargsOptions = getYargsOption();
-    const {argv} = yargsOptions;
-    let config: NodeConfig;
-    if (argv.config) {
-      config = NodeConfig.fromFile(argv.config, yargsToIConfig(argv));
-    } else {
-      config = new NodeConfig({...yargsToIConfig(argv)} as IConfig);
+    const { argv } = yargsOptions;
+    if (!argv.subquery) {
+      logger.error(
+        'subquery path is missing neither in cli options nor in config file',
+      );
+      yargsOptions.showHelp();
+      process.exit(1);
     }
+    assert(argv.subquery, 'subquery path is missing');
+    const config = new Config(defaultSubqueryName(yargsToIConfig(argv)));
 
     if (config.debug) {
       setLevel('debug');
     }
 
+    const projectPath = path.resolve('.', config.indexer);
+
+    const project = async () => {
+      const p = await Project.create(
+        projectPath,
+        omitBy<INetworkConfig>(
+          {
+            endpoint: config.networkEndpoint,
+          },
+          isNil,
+        ),
+      ).catch((err) => {
+        logger.error(err, 'Create Subquery project from given path failed!');
+        process.exit(1);
+      });
+
+      return p;
+    };
+
     return {
       module: ConfigureModule,
       providers: [
         {
-          provide: NodeConfig,
+          provide: Config,
           useValue: config,
         },
+        {
+          provide: Project,
+          useFactory: project,
+        },
       ],
-      exports: [NodeConfig],
+      exports: [Config, Project],
     };
   }
 }

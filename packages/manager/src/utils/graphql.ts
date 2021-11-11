@@ -1,15 +1,7 @@
-import {
-  isHex,
-  hexToU8a,
-  u8aToBuffer,
-  u8aToHex,
-  bufferToU8a,
-  isBuffer,
-  isNull,
-} from '@polkadot/util';
-import { GraphQLModelsType } from '@massbit/common/graphql/types';
-import { ModelAttributes, DataTypes } from 'sequelize';
-import { ModelAttributeColumnOptions } from 'sequelize/types/lib/model';
+import {GraphQLModelsType} from '@massbit/common';
+import {isHex, hexToU8a, u8aToBuffer, u8aToHex, bufferToU8a, isBuffer, isNull} from '@polkadot/util';
+import {ModelAttributes, DataTypes} from 'sequelize';
+import {ModelAttributeColumnOptions} from 'sequelize/types/lib/model';
 
 const SEQUELIZE_TYPE_MAPPING = {
   ID: 'text',
@@ -25,17 +17,18 @@ const SEQUELIZE_TYPE_MAPPING = {
 
 export function modelsTypeToModelAttributes(
   modelType: GraphQLModelsType,
+  enums: Map<string, string>
 ): ModelAttributes<any> {
   const fields = modelType.fields;
   return Object.values(fields).reduce((acc, field) => {
-    let allowNull = true;
-    if (!field.nullable) {
-      allowNull = false;
-    }
+    const allowNull = field.nullable;
     const columnOption: ModelAttributeColumnOptions<any> = {
-      type: field.isArray
+      type: field.isEnum
+        ? `${enums.get(field.type)}${field.isArray ? '[]' : ''}`
+        : field.isArray
         ? SEQUELIZE_TYPE_MAPPING.Json
         : SEQUELIZE_TYPE_MAPPING[field.type],
+      comment: field.description,
       allowNull,
       primaryKey: field.type === 'ID',
     };
@@ -55,9 +48,7 @@ export function modelsTypeToModelAttributes(
           return null;
         }
         if (!isBuffer(dataValue)) {
-          throw new Error(
-            `Bytes: store.get() returned type is not buffer type`,
-          );
+          throw new Error(`Bytes: store.get() returned type is not buffer type`);
         }
         return u8aToHex(bufferToU8a(dataValue));
       };
@@ -68,9 +59,7 @@ export function modelsTypeToModelAttributes(
           const setValue = u8aToBuffer(hexToU8a(val));
           this.setDataValue(field.name, setValue);
         } else {
-          throw new Error(
-            `input for Bytes type is only support unprefixed hex`,
-          );
+          throw new Error(`input for Bytes type is only support unprefixed hex`);
         }
       };
     }

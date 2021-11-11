@@ -1,6 +1,6 @@
 import {Injectable} from '@nestjs/common';
 import {OnEvent} from '@nestjs/event-emitter';
-import {NodeConfig} from '../configure/node-config';
+import {Config} from '../configure/config';
 import {IndexerEvent, NetworkMetadataPayload, ProcessBlockPayload, TargetBlockPayload} from '../indexer/events';
 
 const DEFAULT_TIMEOUT = 900000;
@@ -14,7 +14,7 @@ export class HealthService {
   private blockTime = 6000;
   private healthTimeout: number;
 
-  constructor(protected nodeConfig: NodeConfig) {
+  constructor(protected nodeConfig: Config) {
     this.healthTimeout = Math.max(DEFAULT_TIMEOUT, this.nodeConfig.timeout * 1000);
   }
 

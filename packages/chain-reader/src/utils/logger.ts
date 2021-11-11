@@ -1,7 +1,7 @@
-import {Logger} from '@massbit/common';
-import {LoggerService} from '@nestjs/common';
+import { Logger } from '@massbit/common';
+import { LoggerService } from '@nestjs/common';
 import Pino from 'pino';
-import {argv} from '../yargs';
+import { argv } from '../yargs';
 
 const outputFmt = argv('output-fmt') as 'json' | 'colored';
 const debug = argv('debug');
@@ -24,19 +24,19 @@ export function setLevel(level: Pino.LevelWithSilent): void {
 export class NestLogger implements LoggerService {
   private logger = logger.getLogger('nestjs');
 
-  error(message: any, trace?: string): void {
+  error(message: any, trace?: string) {
     if (trace) {
-      this.logger.error({trace}, message);
+      this.logger.error({ trace }, message);
     } else {
       this.logger.error(message);
     }
   }
 
-  log(message: any): void {
+  log(message: any): any {
     this.logger.info(message);
   }
 
-  warn(message: any): void {
+  warn(message: any): any {
     this.logger.warn(message);
   }
 }

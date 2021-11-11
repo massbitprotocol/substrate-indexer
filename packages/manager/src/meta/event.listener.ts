@@ -4,8 +4,6 @@ import {Gauge} from 'prom-client';
 import {BestBlockPayload, EventPayload, IndexerEvent, ProcessBlockPayload, TargetBlockPayload} from '../indexer/events';
 
 export class MetricEventListener {
-  private skipDictionaryCount = 0;
-
   constructor(
     @InjectMetric('substrate_indexer_api_connected')
     private apiConnectedMetric: Gauge<string>,
@@ -22,60 +20,46 @@ export class MetricEventListener {
     @InjectMetric('substrate_indexer_target_block_height')
     private targetHeightMetric: Gauge<string>,
     @InjectMetric('substrate_indexer_best_block_height')
-    private bestHeightMetric: Gauge<string>,
-    @InjectMetric('substrate_indexer_using_dictionary')
-    private usingDictionaryMetric: Gauge<string>,
-    @InjectMetric('substrate_indexer_skip_dictionary_count')
-    private skipDictionaryCountMetric: Gauge<string>
+    private bestHeightMetric: Gauge<string>
   ) {}
 
   @OnEvent(IndexerEvent.ApiConnected)
-  handleApiConnected({value}: EventPayload<number>) {
+  handleApiConnected({value}: EventPayload<number>): void {
     this.apiConnectedMetric.set(value);
   }
 
   @OnEvent(IndexerEvent.InjectedApiConnected)
-  handleInjectedApiConnected({value}: EventPayload<number>) {
+  handleInjectedApiConnected({value}: EventPayload<number>): void {
     this.injectedApiConnectedMetric.set(value);
   }
 
   @OnEvent(IndexerEvent.BlockQueueSize)
-  handleBlockQueueSizeMetric({value}: EventPayload<number>) {
+  handleBlockQueueSizeMetric({value}: EventPayload<number>): void {
     this.blockQueueSizeMetric.set(value);
   }
 
   @OnEvent(IndexerEvent.BlocknumberQueueSize)
-  handleBlocknumberQueueSizeMetric({value}: EventPayload<number>) {
+  handleBlocknumberQueueSizeMetric({value}: EventPayload<number>): void {
     this.blocknumberQueueSizeMetric.set(value);
   }
 
   @OnEvent(IndexerEvent.BlockProcessing)
-  handleProcessingBlock(blockPayload: ProcessBlockPayload) {
+  handleProcessingBlock(blockPayload: ProcessBlockPayload): void {
     this.processingBlockHeight.set(blockPayload.height);
   }
+
   @OnEvent(IndexerEvent.BlockLastProcessed)
-  handleProcessedBlock(blockPayload: ProcessBlockPayload) {
+  handleProcessedBlock(blockPayload: ProcessBlockPayload): void {
     this.processedBlockHeight.set(blockPayload.height);
   }
 
   @OnEvent(IndexerEvent.BlockTarget)
-  handleTargetBlock(blockPayload: TargetBlockPayload) {
+  handleTargetBlock(blockPayload: TargetBlockPayload): void {
     this.targetHeightMetric.set(blockPayload.height);
   }
 
   @OnEvent(IndexerEvent.BlockBest)
-  handleBestBlock(blockPayload: BestBlockPayload) {
+  handleBestBlock(blockPayload: BestBlockPayload): void {
     this.bestHeightMetric.set(blockPayload.height);
-  }
-
-  @OnEvent(IndexerEvent.UsingDictionary)
-  handleUsingDictionary({value}: EventPayload<number>) {
-    this.usingDictionaryMetric.set(value);
-  }
-
-  @OnEvent(IndexerEvent.SkipDictionary)
-  handleSkipDictionary() {
-    this.skipDictionaryCount += 1;
-    this.skipDictionaryCountMetric.set(this.skipDictionaryCount);
   }
 }

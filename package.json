@@ -31,7 +31,7 @@
     "typescript": "^4.1.3"
   },
   "resolutions": {
-    "@polkadot/api": "6.4.2"
+    "@polkadot/api": "6.6.1"
   },
   "scripts": {
     "build": "yarn workspaces foreach -pt run build",

@@ -1,9 +1,8 @@
 import path from 'path';
+import {isCustomDatasource, Project} from '@massbit/common';
 import {SubstrateCustomDatasource, SubstrateDatasourceProcessor, SubstrateNetworkFilter} from '@massbit/types';
 import {VMScript} from 'vm2';
 import {getLogger} from '../utils/logger';
-import {isCustomDs} from '../utils/project';
-import {Project} from './project.model';
 import {Sandbox} from './sandbox.service';
 
 export interface DsPluginSandboxOption {
@@ -38,7 +37,7 @@ export class DsProcessorService {
   }
 
   validateCustomDs(): void {
-    for (const ds of this.project.dataSources.filter(isCustomDs)) {
+    for (const ds of this.project.dataSources.filter(isCustomDatasource)) {
       const processor = this.getDsProcessor(ds);
       /* Standard validation applicable to all custom ds and processors */
       if (ds.kind !== processor.kind) {
@@ -59,7 +58,7 @@ export class DsProcessorService {
   getDsProcessor<D extends string, T extends SubstrateNetworkFilter>(
     ds: SubstrateCustomDatasource<string, T>
   ): SubstrateDatasourceProcessor<D, T> {
-    if (!isCustomDs(ds)) {
+    if (!isCustomDatasource(ds)) {
       throw new Error(`data source is not a custom data source`);
     }
 

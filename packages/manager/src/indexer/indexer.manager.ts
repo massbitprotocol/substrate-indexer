@@ -1,35 +1,20 @@
 import path from 'path';
-import {
-  buildSchema,
-  getAllEntitiesRelations,
-  isBlockHandlerProcessor,
-  isCallHandlerProcessor,
-  isEventHandlerProcessor,
-} from '@massbit/common';
-import {
-  SubstrateCustomDatasource,
-  SubstrateDatasource,
-  SubstrateHandlerKind,
-  SubstrateNetworkFilter,
-  SubstrateRuntimeHandler,
-} from '@massbit/types';
+import {buildSchema, getAllEntitiesRelations, isCustomDatasource, isRuntimeDatasource, Project} from '@massbit/common';
+import {Datasource, SubstrateHandlerKind, SubstrateRuntimeHandler} from '@massbit/types';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {ApiPromise} from '@polkadot/api';
 import {QueryTypes, Sequelize} from 'sequelize';
-import {NodeConfig} from '../configure/node-config';
-import {IndexerModel, IndexerRepo} from '../entities';
+import {Config} from '../configure/config';
+import {IndexerModel, IndexerRepo, MetadataFactory} from '../entities';
 import {getLogger} from '../utils/logger';
 import {profiler} from '../utils/profiler';
-import {isCustomDs, isRuntimeDs} from '../utils/project';
 import * as SubstrateUtil from '../utils/substrate';
 import {getYargsOption} from '../yargs';
 import {ApiService} from './api.service';
-import {DictionaryService} from './dictionary.service';
 import {DsProcessorService} from './ds-processor.service';
-import {MetadataFactory} from './entities/metadata.entity';
 import {IndexerEvent} from './events';
 import {FetchService} from './fetch.service';
-import {Project} from './project.model';
+import {NetworkIndexerService} from './network-indexer.service';
 import {IndexerSandbox, SandboxService} from './sandbox.service';
 import {StoreService} from './store.service';
 import {BlockContent} from './types';
@@ -45,22 +30,22 @@ export class IndexerManager {
   private sandboxService: SandboxService;
   private readonly storeService: StoreService;
   private readonly sequelize: Sequelize;
-  private readonly nodeConfig: NodeConfig;
+  private readonly nodeConfig: Config;
   private readonly dsProcessorService: DsProcessorService;
   private readonly eventEmitter: EventEmitter2;
-  private readonly dictionaryService: DictionaryService;
+  private readonly networkIndexerService: NetworkIndexerService;
   protected indexerRepo: IndexerRepo;
 
   private api: ApiPromise;
   private indexerState: IndexerModel;
   private prevSpecVersion?: number;
-  private filteredDataSources: SubstrateDatasource[];
+  private filteredDataSources: Datasource[];
   private readonly project: Project;
 
   constructor(
     project: Project,
     sequelize: Sequelize,
-    nodeConfig: NodeConfig,
+    nodeConfig: Config,
     indexerRepo: IndexerRepo,
     eventEmitter: EventEmitter2
   ) {
@@ -70,7 +55,7 @@ export class IndexerManager {
     this.indexerRepo = indexerRepo;
     this.eventEmitter = eventEmitter;
 
-    this.dictionaryService = new DictionaryService(this.project);
+    this.networkIndexerService = new NetworkIndexerService(this.project);
     this.apiService = new ApiService(this.project, this.eventEmitter);
     this.dsProcessorService = new DsProcessorService(this.project);
     this.fetchService = new FetchService(
@@ -78,7 +63,7 @@ export class IndexerManager {
       this.nodeConfig,
       this.apiService,
       this.dsProcessorService,
-      this.dictionaryService,
+      this.networkIndexerService,
       this.eventEmitter
     );
     this.storeService = new StoreService(this.sequelize, this.nodeConfig);
@@ -90,13 +75,12 @@ export class IndexerManager {
     await this.apiService.init();
     await this.fetchService.init();
     this.api = this.apiService.getApi();
-    this.indexerState = await this.createIndexer(this.project.projectManifest.name);
+    this.indexerState = await this.createIndexer(this.project.manifest.name);
     await this.initDbSchema();
     await this.ensureMetadata(this.indexerState.dbSchema);
 
     void this.fetchService.startLoop(this.indexerState.nextBlockHeight).catch((err) => {
       logger.error(err, 'failed to fetch block');
-      // FIXME: retry before exit
       process.exit(1);
     });
     this.filteredDataSources = this.filterDataSources();
@@ -118,10 +102,8 @@ export class IndexerManager {
       await this.apiService.setBlockHash(block.block.hash);
       for (const ds of this.filteredDataSources) {
         const vm = await this.sandboxService.getDatasourceProcessor(ds);
-        if (isRuntimeDs(ds)) {
-          await this.indexBlockForRuntimeDs(vm, ds.mapping.handlers, blockContent);
-        } else if (isCustomDs(ds)) {
-          await this.indexBlockForCustomDs(ds, vm, blockContent);
+        if (isRuntimeDatasource(ds)) {
+          await IndexerManager.indexBlockForRuntimeDs(vm, ds.mapping.handlers, blockContent);
         }
       }
       this.indexerState.nextBlockHeight = block.block.header.number.toNumber() + 1;
@@ -198,7 +180,9 @@ export class IndexerManager {
         indexer.networkGenesis = genesisHash;
         await indexer.save();
       } else if (indexer.networkGenesis !== genesisHash) {
-        logger.error(`Not same network: genesisHash different - ${indexer.networkGenesis} : ${genesisHash}`);
+        logger.error(
+          `Not same network: genesisHash different. expected="${indexer.networkGenesis}"" actual="${genesisHash}"`
+        );
         process.exit(1);
       }
     }
@@ -209,7 +193,7 @@ export class IndexerManager {
     const schema = this.indexerState.dbSchema;
     const graphqlSchema = buildSchema(path.join(this.project.path, this.project.schema));
     const modelsRelations = getAllEntitiesRelations(graphqlSchema);
-    await this.storeService.init(schema, modelsRelations);
+    await this.storeService.init(modelsRelations, schema);
   }
 
   private async nextIndexerSchemaSuffix(): Promise<number> {
@@ -231,7 +215,7 @@ export class IndexerManager {
     return Number(nextval);
   }
 
-  private filterDataSources(): SubstrateDatasource[] {
+  private filterDataSources(): Datasource[] {
     let filteredDs = this.getDataSourcesForSpecName();
     if (filteredDs.length === 0) {
       logger.error(`Did not find any dataSource match with network specName ${this.api.runtimeVersion.specName}`);
@@ -246,7 +230,7 @@ export class IndexerManager {
     }
     // perform filter for custom ds
     filteredDs = filteredDs.filter((ds) => {
-      if (isCustomDs(ds)) {
+      if (isCustomDatasource(ds)) {
         return this.dsProcessorService.getDsProcessor(ds).dsFilterProcessor(ds, this.api);
       } else {
         return true;
@@ -255,13 +239,13 @@ export class IndexerManager {
     return filteredDs;
   }
 
-  private getDataSourcesForSpecName(): SubstrateDatasource[] {
+  private getDataSourcesForSpecName(): Datasource[] {
     return this.project.dataSources.filter(
       (ds) => !ds.filter?.specName || ds.filter.specName === this.api.runtimeVersion.specName.toString()
     );
   }
 
-  private async indexBlockForRuntimeDs(
+  private static async indexBlockForRuntimeDs(
     vm: IndexerSandbox,
     handlers: SubstrateRuntimeHandler[],
     {block, events, extrinsics}: BlockContent
@@ -288,39 +272,6 @@ export class IndexerManager {
           break;
         }
         default:
-      }
-    }
-  }
-
-  private async indexBlockForCustomDs(
-    ds: SubstrateCustomDatasource<string, SubstrateNetworkFilter>,
-    vm: IndexerSandbox,
-    {block, events, extrinsics}: BlockContent
-  ): Promise<void> {
-    const plugin = this.dsProcessorService.getDsProcessor(ds);
-    for (const handler of ds.mapping.handlers) {
-      const processor = plugin.handlerProcessors[handler.kind];
-      if (isBlockHandlerProcessor(processor)) {
-        const transformedOutput = processor.transformer(block, ds);
-        if (processor.filterProcessor(handler.filter as any, transformedOutput, ds)) {
-          await vm.securedExec(handler.handler, [transformedOutput]);
-        }
-      } else if (isCallHandlerProcessor(processor)) {
-        const filteredExtrinsics = SubstrateUtil.filterExtrinsics(extrinsics, processor.baseFilter);
-        for (const extrinsic of filteredExtrinsics) {
-          const transformedOutput = processor.transformer(extrinsic, ds);
-          if (processor.filterProcessor(handler.filter as any, transformedOutput, ds)) {
-            await vm.securedExec(handler.handler, [transformedOutput]);
-          }
-        }
-      } else if (isEventHandlerProcessor(processor)) {
-        const filteredEvents = SubstrateUtil.filterEvents(events, processor.baseFilter);
-        for (const event of filteredEvents) {
-          const transformedOutput = processor.transformer(event, ds);
-          if (processor.filterProcessor(handler.filter as any, transformedOutput, ds)) {
-            await vm.securedExec(handler.handler, [transformedOutput]);
-          }
-        }
       }
     }
   }
