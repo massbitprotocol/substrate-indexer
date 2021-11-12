@@ -76,7 +76,7 @@ export class StoreService {
           new Error(
             `Can't modify enum ${enumTypeName} between runs, it used to have values: ${currentValues.join(
               ', '
-            )} but now has ${e.values.join(', ')} you must rerun the full subquery to do such a change`
+            )} but now has ${e.values.join(', ')} you must rerun the full indexer to do such a change`
           );
 
         if (e.values.length !== currentValues.length) {

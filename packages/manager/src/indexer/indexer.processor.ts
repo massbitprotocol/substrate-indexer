@@ -51,10 +51,10 @@ export class IndexerProcessor {
     const indexer = new IndexerManager(project, this.sequelize, this.nodeConfig, this.indexerRepo, this.eventEmitter);
 
     logger.info("install indexer's dependencies...");
-    this.exec(projectPath, `npm install`);
+    this.exec(projectPath, `yarn install`);
 
     logger.info('build indexer...');
-    this.exec(projectPath, `npm run build`);
+    this.exec(projectPath, `yarn run build`);
 
     logger.info('start indexer');
     await indexer.start();

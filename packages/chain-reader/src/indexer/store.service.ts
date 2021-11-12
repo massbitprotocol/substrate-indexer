@@ -93,7 +93,7 @@ export class StoreService {
               ', ',
             )} but now has ${e.values.join(
               ', ',
-            )} you must rerun the full subquery to do such a change`,
+            )} you must rerun the full indexer to do such a change`,
           );
 
         if (e.values.length !== currentValues.length) {

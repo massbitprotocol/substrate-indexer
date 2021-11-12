@@ -13,7 +13,7 @@ async function bootstrap() {
     await app.init();
     const indexerManager = app.get(IndexerManager);
     await indexerManager.start();
-    await app.listen(3000);
+    await app.listen(parseInt(process.env.PORT, 10) || 3000);
     getLogger('chain-reader').info('service started');
   } catch (e) {
     getLogger('chain-reader').error(e, 'service failed to start');
