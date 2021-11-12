@@ -8,7 +8,7 @@ import { SandboxService } from './sandbox.service';
 import { StoreService } from './store.service';
 
 @Module({
-  imports: [DbModule.forFeature(['Subquery'])],
+  imports: [DbModule.forFeature(['Indexer'])],
   providers: [
     IndexerManager,
     StoreService,

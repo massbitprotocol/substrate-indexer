@@ -29,7 +29,7 @@ function yargsToIConfig(yargs: Args): Partial<IConfig> {
   }, {});
 }
 
-function defaultSubqueryName(config: Partial<IConfig>): MinConfig {
+function defaultIndexerName(config: Partial<IConfig>): MinConfig {
   return {
     ...config,
     indexerName:
@@ -45,15 +45,15 @@ export class ConfigureModule {
   static register(): DynamicModule {
     const yargsOptions = getYargsOption();
     const { argv } = yargsOptions;
-    if (!argv.subquery) {
+    if (!argv.indexer) {
       logger.error(
-        'subquery path is missing neither in cli options nor in config file',
+        'indexer path is missing neither in cli options nor in config file',
       );
       yargsOptions.showHelp();
       process.exit(1);
     }
-    assert(argv.subquery, 'subquery path is missing');
-    const config = new Config(defaultSubqueryName(yargsToIConfig(argv)));
+    assert(argv.indexer, 'indexer path is missing');
+    const config = new Config(defaultIndexerName(yargsToIConfig(argv)));
 
     if (config.debug) {
       setLevel('debug');
@@ -71,7 +71,7 @@ export class ConfigureModule {
           isNil,
         ),
       ).catch((err) => {
-        logger.error(err, 'Create Subquery project from given path failed!');
+        logger.error(err, 'Create network indexer from given path failed!');
         process.exit(1);
       });
 

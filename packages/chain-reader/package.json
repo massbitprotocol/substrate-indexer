@@ -1,6 +1,6 @@
 {
   "name": "@massbit/chain-reader",
-  "version": "0.4.0",
+  "version": "0.2.0",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "rm -rf dist && tsc -b",
@@ -10,7 +10,9 @@
     "start:dev": "nodemon",
     "start:prod": "node dist/main"
   },
-  "bin": "./bin/run",
+  "bin": {
+    "massbit-chain-reader": "./bin/run"
+  },
   "dependencies": {
     "@apollo/client": "^3.4.16",
     "@massbit/common": "workspace:*",

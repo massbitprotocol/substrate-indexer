@@ -4,10 +4,9 @@ import yargs from 'yargs/yargs';
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function getYargsOption() {
   return yargs(hideBin(process.argv)).options({
-    'network-indexer': {
-      alias: 'f',
+    indexer: {
       demandOption: false,
-      describe: 'Local path of the network indexer project',
+      describe: 'Local path of the indexer project',
       type: 'string',
     },
     'indexer-name': {

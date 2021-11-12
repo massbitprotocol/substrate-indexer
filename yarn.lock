@@ -2148,7 +2148,7 @@ __metadata:
     vm2: ^3.9.5
     yargs: ^16.2.0
   bin:
-    chain-reader: ./bin/run
+    massbit-chain-reader: ./bin/run
   languageName: unknown
   linkType: soft
 

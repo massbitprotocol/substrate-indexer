@@ -10,9 +10,7 @@ export interface IConfig {
   readonly batchSize: number;
   readonly timeout: number;
   readonly debug: boolean;
-  readonly preferRange: boolean;
   readonly networkEndpoint?: string;
-  readonly outputFmt?: 'json';
   readonly logLevel?: LevelWithSilent;
   readonly queryLimit: number;
   readonly indexCountLimit: number;
@@ -64,14 +62,6 @@ export class Config implements IConfig {
 
   get debug(): boolean {
     return this._config.debug;
-  }
-
-  get preferRange(): boolean {
-    return this._config.preferRange;
-  }
-
-  get outputFmt(): 'json' | undefined {
-    return this._config.outputFmt;
   }
 
   get logLevel(): LevelWithSilent {
