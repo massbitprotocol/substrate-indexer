@@ -4,6 +4,7 @@ import {
   isCustomDatasource,
   isRuntimeDatasource,
   Project,
+  delay,
 } from '@massbit/common';
 import {
   SubstrateCallFilter,
@@ -21,7 +22,6 @@ import { isUndefined, range } from 'lodash';
 import { Config } from '../configure/config';
 import { getLogger } from '../utils/logger';
 import { isBaseHandler, isCustomHandler } from '../utils/project';
-import { delay } from '../utils/promise';
 import * as SubstrateUtil from '../utils/substrate';
 import { ApiService } from './api.service';
 import { BlockedQueue } from './blocked-queue';

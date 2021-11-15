@@ -1,8 +1,8 @@
 import assert from 'assert';
 import path from 'path';
+import { assign } from '@massbit/common';
 import { last } from 'lodash';
 import { LevelWithSilent } from 'pino';
-import { assign } from '../utils/object';
 
 export interface IConfig {
   readonly indexer: string;

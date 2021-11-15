@@ -3,6 +3,7 @@ import {
   isRuntimeDataSourceV0_0_2,
   levelFilter,
   Project,
+  timeout,
 } from '@massbit/common';
 import { Store, Datasource } from '@massbit/types';
 import { Injectable } from '@nestjs/common';
@@ -12,7 +13,6 @@ import { NodeVM, NodeVMOptions, VMScript } from 'vm2';
 import { Config } from '../configure/config';
 import { getLogger } from '../utils/logger';
 import { getProjectEntry } from '../utils/project';
-import { timeout } from '../utils/promise';
 import { ApiService } from './api.service';
 import { StoreService } from './store.service';
 
