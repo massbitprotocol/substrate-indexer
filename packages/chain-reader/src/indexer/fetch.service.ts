@@ -20,11 +20,9 @@ import { ApiPromise } from '@polkadot/api';
 import { isUndefined, range } from 'lodash';
 import { Config } from '../configure/config';
 import { getLogger } from '../utils/logger';
-import { profiler, profilerWrap } from '../utils/profiler';
 import { isBaseHandler, isCustomHandler } from '../utils/project';
 import { delay } from '../utils/promise';
 import * as SubstrateUtil from '../utils/substrate';
-import { getYargsOption } from '../yargs';
 import { ApiService } from './api.service';
 import { BlockedQueue } from './blocked-queue';
 import { DsProcessorService } from './ds-processor.service';
@@ -33,15 +31,6 @@ import { BlockContent, ProjectIndexFilters } from './types';
 
 const logger = getLogger('fetch');
 const BLOCK_TIME_VARIANCE = 5;
-const { argv } = getYargsOption();
-
-const fetchBlocksBatches = argv.profiler
-  ? profilerWrap(
-      SubstrateUtil.fetchBlocksBatches,
-      'SubstrateUtil',
-      'fetchBlocksBatches',
-    )
-  : SubstrateUtil.fetchBlocksBatches;
 
 @Injectable()
 export class FetchService implements OnApplicationShutdown {
@@ -179,7 +168,7 @@ export class FetchService implements OnApplicationShutdown {
   }
 
   @Interval(BLOCK_TIME_VARIANCE * 1000)
-  async getFinalizedBlockHead() {
+  async getFinalizedBlockHead(): Promise<void> {
     if (!this.api) {
       logger.debug(`Skip fetch finalized block until API is ready`);
       return;
@@ -201,7 +190,7 @@ export class FetchService implements OnApplicationShutdown {
   }
 
   @Interval(BLOCK_TIME_VARIANCE * 1000)
-  async getBestBlockHead() {
+  async getBestBlockHead(): Promise<void> {
     if (!this.api) {
       logger.debug(`Skip fetch best block until API is ready`);
       return;
@@ -235,7 +224,7 @@ export class FetchService implements OnApplicationShutdown {
   }
 
   async fillNextBlockBuffer(initBlockHeight: number): Promise<void> {
-    await this.fetchMeta(initBlockHeight);
+    await this.fetchNetworkMeta(initBlockHeight);
 
     let startBlockHeight: number;
 
@@ -270,10 +259,10 @@ export class FetchService implements OnApplicationShutdown {
       }
 
       const bufferBlocks = await this.blockNumberBuffer.takeAll(takeCount);
-      const metadataChanged = await this.fetchMeta(
+      const metadataChanged = await this.fetchNetworkMeta(
         bufferBlocks[bufferBlocks.length - 1],
       );
-      const blocks = await fetchBlocksBatches(
+      const blocks = await SubstrateUtil.fetchBlocksBatches(
         this.api,
         bufferBlocks,
         metadataChanged ? undefined : this.parentSpecVersion,
@@ -290,8 +279,7 @@ export class FetchService implements OnApplicationShutdown {
     }
   }
 
-  @profiler(argv.profiler)
-  async fetchMeta(height: number): Promise<boolean> {
+  async fetchNetworkMeta(height: number): Promise<boolean> {
     const parentBlockHash = await this.api.rpc.chain.getBlockHash(
       Math.max(height - 1, 0),
     );

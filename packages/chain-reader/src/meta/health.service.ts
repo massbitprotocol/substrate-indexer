@@ -16,7 +16,7 @@ export class HealthService {
   private currentProcessingHeight?: number;
   private currentProcessingTimestamp?: number;
   private blockTime = 6000;
-  private healthTimeout: number;
+  private readonly healthTimeout: number;
 
   constructor(protected nodeConfig: Config) {
     this.healthTimeout = Math.max(
@@ -26,7 +26,7 @@ export class HealthService {
   }
 
   @OnEvent(IndexerEvent.BlockTarget)
-  handleTargetBlock(blockPayload: TargetBlockPayload) {
+  handleTargetBlock(blockPayload: TargetBlockPayload): void {
     if (this.recordBlockHeight !== blockPayload.height) {
       this.recordBlockHeight = blockPayload.height;
       this.recordBlockTimestamp = Date.now();
@@ -41,7 +41,7 @@ export class HealthService {
     }
   }
 
-  getHealth() {
+  getHealth(): void {
     if (
       this.recordBlockTimestamp &&
       Date.now() - this.recordBlockTimestamp > this.blockTime * 10

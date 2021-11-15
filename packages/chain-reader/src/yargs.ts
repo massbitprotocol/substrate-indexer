@@ -36,12 +36,6 @@ export function getYargsOption() {
       type: 'boolean',
       default: false,
     },
-    profiler: {
-      demandOption: false,
-      describe: 'Show profiler information to console output',
-      type: 'boolean',
-      default: false,
-    },
     'output-fmt': {
       demandOption: false,
       describe: 'Print log as json or plain text',
