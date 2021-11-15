@@ -9,7 +9,7 @@ export class HealthController {
   constructor(private healthService: HealthService) {}
 
   @Get()
-  getHealth() {
+  getHealth(): void {
     try {
       this.healthService.getHealth();
     } catch (e) {

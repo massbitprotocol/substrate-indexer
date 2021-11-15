@@ -11,6 +11,7 @@ import {
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { version: polkadotSdkVersion } = require('@polkadot/api/package.json');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { version: packageVersion } = require('../../package.json');
 
 @Injectable()

@@ -7,7 +7,7 @@ import {
 } from '@massbit/types';
 import {Type} from 'class-transformer';
 import {Equals, IsArray, IsObject, IsOptional, IsString, ValidateNested} from 'class-validator';
-import {CustomDataSourceBase, Mapping, RuntimeDataSourceBase} from '../../models';
+import {CustomDataSourceBase, Mapping, RuntimeDataSource} from '../../models';
 import {BaseManifest} from '../base';
 import {IManifestV0_0_2, IRuntimeDataSourceV0_0_2, SubstrateMappingV0_0_2} from './types';
 
@@ -35,7 +35,7 @@ export class IndexerMappingV0_0_2 extends Mapping {
 }
 
 export class RuntimeDataSourceV0_0_2
-  extends RuntimeDataSourceBase<SubstrateMappingV0_0_2<SubstrateRuntimeHandler>>
+  extends RuntimeDataSource<SubstrateMappingV0_0_2<SubstrateRuntimeHandler>>
   implements IRuntimeDataSourceV0_0_2
 {
   @Type(() => IndexerMappingV0_0_2)

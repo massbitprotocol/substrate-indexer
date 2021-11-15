@@ -11,7 +11,7 @@ import {
   SubstrateHandlerKind,
   SubstrateMapping,
   SubstrateNetworkFilter,
-  ISubstrateRuntimeDatasource,
+  SubstrateRuntimeDatasource,
   SubstrateRuntimeHandler,
 } from '@massbit/types';
 import {RegisteredTypes, RegistryTypes, OverrideModuleType, OverrideBundleType} from '@polkadot/types/types';
@@ -44,6 +44,12 @@ export class EventFilter extends BlockFilter implements SubstrateEventFilter {
   method?: string;
 }
 
+export class CallFilter extends EventFilter implements SubstrateCallFilter {
+  @IsOptional()
+  @IsBoolean()
+  success?: boolean;
+}
+
 export class ChainTypes implements RegisteredTypes {
   @IsObject()
   @IsOptional()
@@ -60,12 +66,6 @@ export class ChainTypes implements RegisteredTypes {
   @IsObject()
   @IsOptional()
   typesSpec?: Record<string, RegistryTypes>;
-}
-
-export class CallFilter extends EventFilter implements SubstrateCallFilter {
-  @IsOptional()
-  @IsBoolean()
-  success?: boolean;
 }
 
 export class BlockHandler {
@@ -146,8 +146,8 @@ export class SubstrateNetworkFilterImpl implements SubstrateNetworkFilter {
   specName?: string;
 }
 
-export class RuntimeDataSourceBase<M extends SubstrateMapping<SubstrateRuntimeHandler>>
-  implements ISubstrateRuntimeDatasource<M>
+export class RuntimeDataSource<M extends SubstrateMapping<SubstrateRuntimeHandler>>
+  implements SubstrateRuntimeDatasource<M>
 {
   @IsEnum(DatasourceKind, {groups: [DatasourceKind.Runtime]})
   kind: DatasourceKind.Runtime;

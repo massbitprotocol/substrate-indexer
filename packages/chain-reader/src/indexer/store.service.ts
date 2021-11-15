@@ -5,7 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { camelCase, flatten, upperFirst } from 'lodash';
 import { QueryTypes, Sequelize, Transaction, Utils } from 'sequelize';
 import { Config } from '../configure/config';
-import { MetadataFactory, MetadataRepo } from '../entities/metadata.entity';
+import { MetadataFactory, MetadataRepo } from '../entities';
 import { modelsTypeToModelAttributes } from '../utils/graphql';
 import { getLogger } from '../utils/logger';
 import { camelCaseObjectKey } from '../utils/object';
@@ -15,7 +15,6 @@ import {
   getFkConstraint,
   smartTags,
 } from '../utils/sync-helper';
-import { StoreOperations } from './store-operations';
 
 const logger = getLogger('store');
 

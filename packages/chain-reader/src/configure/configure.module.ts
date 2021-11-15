@@ -1,4 +1,3 @@
-import assert from 'assert';
 import path from 'path';
 import { INetworkConfig, Project } from '@massbit/common';
 import { DynamicModule, Global, Module } from '@nestjs/common';
@@ -46,13 +45,10 @@ export class ConfigureModule {
     const yargsOptions = getYargsOption();
     const { argv } = yargsOptions;
     if (!argv.indexer) {
-      logger.error(
-        'indexer path is missing neither in cli options nor in config file',
-      );
+      logger.error('indexer path is missing neither in cli options');
       yargsOptions.showHelp();
       process.exit(1);
     }
-    assert(argv.indexer, 'indexer path is missing');
     const config = new Config(defaultIndexerName(yargsToIConfig(argv)));
 
     if (config.debug) {
@@ -60,7 +56,6 @@ export class ConfigureModule {
     }
 
     const projectPath = path.resolve('.', config.indexer);
-
     const project = async () => {
       const p = await Project.create(
         projectPath,
@@ -71,7 +66,7 @@ export class ConfigureModule {
           isNil,
         ),
       ).catch((err) => {
-        logger.error(err, 'Create network indexer from given path failed!');
+        logger.error(err, 'Create project from given path failed!');
         process.exit(1);
       });
 

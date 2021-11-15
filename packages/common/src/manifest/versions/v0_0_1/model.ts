@@ -1,7 +1,7 @@
 import {SubstrateMapping, SubstrateRuntimeHandler} from '@massbit/types';
 import {Type} from 'class-transformer';
 import {Equals, IsArray, IsObject, IsOptional, IsString, ValidateNested} from 'class-validator';
-import {RuntimeDataSourceBase, ChainTypes} from '../../models';
+import {RuntimeDataSource, ChainTypes} from '../../models';
 import {INetworkConfig} from '../../types';
 import {BaseManifest} from '../base';
 import {IManifestV0_0_1, IRuntimeDataSourceV0_0_1} from './types';
@@ -15,7 +15,7 @@ export class IndexerNetworkV0_0_1 extends ChainTypes implements INetworkConfig {
 }
 
 export class RuntimeDataSourceV0_0_1
-  extends RuntimeDataSourceBase<SubstrateMapping<SubstrateRuntimeHandler>>
+  extends RuntimeDataSource<SubstrateMapping<SubstrateRuntimeHandler>>
   implements IRuntimeDataSourceV0_0_1
 {
   @IsString()

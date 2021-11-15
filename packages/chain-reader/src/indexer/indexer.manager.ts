@@ -16,8 +16,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApiPromise } from '@polkadot/api';
 import { QueryTypes, Sequelize } from 'sequelize';
 import { Config } from '../configure/config';
-import { IndexerModel, IndexerRepo } from '../entities';
-import { MetadataFactory } from '../entities/metadata.entity';
+import { IndexerModel, IndexerRepo, MetadataFactory } from '../entities';
 import { getLogger } from '../utils/logger';
 import { profiler } from '../utils/profiler';
 import * as SubstrateUtil from '../utils/substrate';
@@ -67,7 +66,7 @@ export class IndexerManager {
     try {
       const isUpgraded = block.specVersion !== this.prevSpecVersion;
       // if parentBlockHash injected, which means we need to check runtime upgrade
-      await this.apiService.setBlockhash(
+      await this.apiService.setBlockHash(
         block.block.hash,
         isUpgraded ? block.block.header.parentHash : undefined,
       );

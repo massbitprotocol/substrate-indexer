@@ -5,7 +5,7 @@ import {IManifest} from '../types';
 import {ManifestV0_0_1} from './v0_0_1';
 import {ManifestV0_0_2} from './v0_0_2';
 
-export type VersionedManifest = {specVersion: string};
+export type ManifestVersioned = {specVersion: string};
 
 const SUPPORTED_VERSIONS = {
   '0.0.1': ManifestV0_0_1,
@@ -24,35 +24,19 @@ export function manifestIsV0_0_2(manifest: IManifest): manifest is ManifestV0_0_
   return manifest.specVersion === '0.0.2';
 }
 
-export class ManifestVersioned implements IManifest {
+export class VersionedManifest implements IManifest {
   private readonly _manifest: Manifest;
 
-  constructor(manifest: VersionedManifest) {
+  constructor(manifest: ManifestVersioned) {
     const klass = SUPPORTED_VERSIONS[manifest.specVersion as Versions];
     if (!klass) {
       throw new Error('specVersion not supported for this manifest');
     }
-    this._manifest = plainToClass<Manifest, VersionedManifest>(klass, manifest);
+    this._manifest = plainToClass<Manifest, ManifestVersioned>(klass, manifest);
   }
 
   get asImpl(): IManifest {
     return this._manifest;
-  }
-
-  get isV0_0_1(): boolean {
-    return this.specVersion === '0.0.1';
-  }
-
-  get asV0_0_1(): ManifestV0_0_1 {
-    return this._manifest as ManifestV0_0_1;
-  }
-
-  get isV0_0_2(): boolean {
-    return this.specVersion === '0.2.0';
-  }
-
-  get asV0_0_2(): ManifestV0_0_2 {
-    return this._manifest as ManifestV0_0_2;
   }
 
   validate(): void {

@@ -5,7 +5,7 @@ import {
   DatasourceKind,
   SubstrateHandlerKind,
   SubstrateNetworkFilter,
-  ISubstrateRuntimeDatasource,
+  SubstrateRuntimeDatasource,
 } from '@massbit/types';
 
 export function isBlockHandlerProcessor<T extends SubstrateNetworkFilter, E>(
@@ -26,12 +26,12 @@ export function isCallHandlerProcessor<T extends SubstrateNetworkFilter, E>(
   return hp.baseHandlerKind === SubstrateHandlerKind.Call;
 }
 
+export function isRuntimeDatasource(ds: Datasource): ds is SubstrateRuntimeDatasource {
+  return ds.kind === DatasourceKind.Runtime;
+}
+
 export function isCustomDatasource<F extends SubstrateNetworkFilter>(
   ds: Datasource
 ): ds is SubstrateCustomDatasource<string, F> {
   return ds.kind !== DatasourceKind.Runtime && !!(ds as SubstrateCustomDatasource<string, F>).processor;
-}
-
-export function isRuntimeDatasource(ds: Datasource): ds is ISubstrateRuntimeDatasource {
-  return ds.kind === DatasourceKind.Runtime;
 }

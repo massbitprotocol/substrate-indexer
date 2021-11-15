@@ -122,7 +122,7 @@ export class ApiService implements OnApplicationShutdown {
     (this.patchedApi as any).isPatched = true;
   }
 
-  async setBlockhash(
+  async setBlockHash(
     blockHash: BlockHash,
     parentBlockHash?: BlockHash,
   ): Promise<void> {
@@ -137,7 +137,7 @@ export class ApiService implements OnApplicationShutdown {
     }
     const apiAt = await this.api.at(blockHash);
     this.patchApiQuery(this.patchedApi, apiAt);
-    ApiService.patchApiFind(this.patchedApi, apiAt);
+    this.patchApiFind(this.patchedApi, apiAt);
     this.patchApiQueryMulti(this.patchedApi, apiAt);
   }
 
@@ -203,7 +203,7 @@ export class ApiService implements OnApplicationShutdown {
     return ret;
   }
 
-  private static patchApiFind(
+  private patchApiFind(
     api: ApiPromise,
     apiAt: ApiDecoration<'promise' | 'rxjs'>,
   ): void {

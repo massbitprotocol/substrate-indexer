@@ -6,6 +6,4 @@ export type MetaData = {
   specName: string;
   genesisHash: string;
   indexerHealthy: boolean;
-  indexerNodeVersion: string;
-  queryNodeVersion: string;
 };
