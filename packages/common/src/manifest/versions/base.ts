@@ -4,6 +4,7 @@ export class BaseManifest {
   @IsString()
   name: string;
   @Allow()
+  // eslint-disable-next-line @typescript-eslint/ban-types
   definitions: object;
   @IsString()
   description: string;

@@ -99,7 +99,7 @@ interface ISubstrateDatasource<M extends SubstrateMapping, F extends SubstrateNe
   mapping: M;
 }
 
-export interface ISubstrateRuntimeDatasource<
+export interface SubstrateRuntimeDatasource<
   M extends SubstrateMapping<SubstrateRuntimeHandler> = SubstrateMapping<SubstrateRuntimeHandler>
 > extends ISubstrateDatasource<M> {
   kind: DatasourceKind.Runtime;
@@ -140,4 +140,4 @@ export interface SecondLayerHandlerProcessor<K extends SubstrateHandlerKind, F, 
   filterProcessor: (filter: F, input: E, ds: SubstrateCustomDatasource<string, SubstrateNetworkFilter>) => boolean;
 }
 
-export type Datasource = ISubstrateRuntimeDatasource | SubstrateCustomDatasource;
+export type Datasource = SubstrateRuntimeDatasource | SubstrateCustomDatasource;

@@ -8,14 +8,14 @@ import {
   loadProjectManifest,
   manifestIsV0_0_1,
   manifestIsV0_0_2,
-  ManifestVersioned,
+  VersionedManifest,
   parseChainTypes,
 } from '../manifest';
 import {prepareProjectDir} from '../utils';
 
 export class Project {
   private readonly _path: string;
-  private readonly _manifest: ManifestVersioned;
+  private readonly _manifest: VersionedManifest;
 
   static async create(path: string, networkOverrides?: Partial<INetworkConfig>): Promise<Project> {
     const projectPath = await prepareProjectDir(path);
@@ -23,7 +23,7 @@ export class Project {
     return new Project(projectManifest, projectPath, networkOverrides);
   }
 
-  constructor(manifest: ManifestVersioned, path: string, private networkOverrides?: Partial<INetworkConfig>) {
+  constructor(manifest: VersionedManifest, path: string, private networkOverrides?: Partial<INetworkConfig>) {
     this._manifest = manifest;
     this._path = path;
 
@@ -34,7 +34,7 @@ export class Project {
     });
   }
 
-  get manifest(): ManifestVersioned {
+  get manifest(): VersionedManifest {
     return this._manifest;
   }
 
@@ -53,11 +53,9 @@ export class Project {
         ...impl.network,
         ...this.networkOverrides,
       };
-
       if (!network.endpoint) {
         throw new Error(`Network endpoint must be provided for network. genesisHash="${network.genesisHash}"`);
       }
-
       return network;
     }
 
