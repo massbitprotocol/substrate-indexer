@@ -18,7 +18,6 @@ import { QueryTypes, Sequelize } from 'sequelize';
 import { Config } from '../configure/config';
 import { IndexerModel, IndexerRepo, MetadataFactory } from '../entities';
 import { getLogger } from '../utils/logger';
-import { profiler } from '../utils/profiler';
 import * as SubstrateUtil from '../utils/substrate';
 import { getYargsOption } from '../yargs';
 import { ApiService } from './api.service';
@@ -52,7 +51,6 @@ export class IndexerManager {
     private eventEmitter: EventEmitter2,
   ) {}
 
-  @profiler(argv.profiler)
   async indexBlock(blockContent: BlockContent): Promise<void> {
     const { block } = blockContent;
     const blockHeight = block.block.header.number.toNumber();

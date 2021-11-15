@@ -1,5 +1,8 @@
 import assert from 'assert';
-import { GraphQLModelsRelationsEnums } from '@massbit/common';
+import {
+  GraphQLModelsRelationsEnums,
+  camelCaseObjectKey,
+} from '@massbit/common';
 import { Entity, Store } from '@massbit/types';
 import { Injectable } from '@nestjs/common';
 import { camelCase, flatten, upperFirst } from 'lodash';
@@ -8,7 +11,6 @@ import { Config } from '../configure/config';
 import { MetadataFactory, MetadataRepo } from '../entities';
 import { modelsTypeToModelAttributes } from '../utils/graphql';
 import { getLogger } from '../utils/logger';
-import { camelCaseObjectKey } from '../utils/object';
 import {
   commentConstraintQuery,
   createUniqueIndexQuery,
