@@ -24,9 +24,7 @@ import {isUndefined, range} from 'lodash';
 import Pino from 'pino';
 import {Config} from '../configure/config';
 import {getLogger} from '../utils/logger';
-import {profiler, profilerWrap} from '../utils/profiler';
 import * as SubstrateUtil from '../utils/substrate';
-import {getYargsOption} from '../yargs';
 import {ApiService} from './api.service';
 import {BlockedQueue} from './blocked-queue';
 import {DsProcessorService} from './ds-processor.service';
@@ -36,11 +34,6 @@ import {BlockContent, IndexerFilters} from './types';
 
 const BLOCK_TIME_VARIANCE = 5;
 const NETWORK_INDEXER_MAX_QUERY_SIZE = 10000;
-const {argv} = getYargsOption();
-
-const fetchBlocksBatches = argv.profiler
-  ? profilerWrap(SubstrateUtil.fetchBlocksBatches, 'SubstrateUtil', 'fetchBlocksBatches')
-  : SubstrateUtil.fetchBlocksBatches;
 
 export class FetchService implements OnApplicationShutdown {
   private latestBestHeight: number;
@@ -180,7 +173,7 @@ export class FetchService implements OnApplicationShutdown {
   }
 
   @Interval(BLOCK_TIME_VARIANCE * 1000)
-  async getFinalizedBlockHead() {
+  async getFinalizedBlockHead(): Promise<void> {
     if (!this.api) {
       this.logger.debug(`Skip fetch finalized block until API is ready`);
       return;
@@ -201,7 +194,7 @@ export class FetchService implements OnApplicationShutdown {
   }
 
   @Interval(BLOCK_TIME_VARIANCE * 1000)
-  async getBestBlockHead() {
+  async getBestBlockHead(): Promise<void> {
     if (!this.api) {
       this.logger.debug(`Skip fetch best block until API is ready`);
       return;
@@ -289,7 +282,7 @@ export class FetchService implements OnApplicationShutdown {
 
       const bufferBlocks = await this.blockNumberBuffer.takeAll(takeCount);
       const metadataChanged = await this.fetchMeta(bufferBlocks[bufferBlocks.length - 1]);
-      const blocks = await fetchBlocksBatches(
+      const blocks = await SubstrateUtil.fetchBlocksBatches(
         this.api,
         bufferBlocks,
         metadataChanged ? undefined : this.parentSpecVersion
@@ -304,7 +297,6 @@ export class FetchService implements OnApplicationShutdown {
     }
   }
 
-  @profiler(argv.profiler)
   async fetchMeta(height: number): Promise<boolean> {
     const parentBlockHash = await this.api.rpc.chain.getBlockHash(Math.max(height - 1, 0));
     const runtimeVersion = await this.api.rpc.state.getRuntimeVersion(parentBlockHash);

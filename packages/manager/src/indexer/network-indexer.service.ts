@@ -4,8 +4,6 @@ import {SubstrateCallFilter, SubstrateEventFilter} from '@massbit/types';
 import {OnApplicationShutdown} from '@nestjs/common';
 import fetch from 'node-fetch';
 import {getLogger} from '../utils/logger';
-import {profiler} from '../utils/profiler';
-import {getYargsOption} from '../yargs';
 import {IndexerFilters} from './types';
 
 export type NetworkIndexer = {
@@ -14,7 +12,6 @@ export type NetworkIndexer = {
 };
 
 const logger = getLogger('network-indexer');
-const {argv} = getYargsOption();
 
 export class NetworkIndexerService implements OnApplicationShutdown {
   protected project: Project;
@@ -35,7 +32,6 @@ export class NetworkIndexerService implements OnApplicationShutdown {
    * @param batchSize
    * @param filters
    */
-  @profiler(argv.profiler)
   async getNetworkIndexer(
     startBlock: number,
     queryEndBlock: number,

@@ -251,6 +251,7 @@ export class ApiService implements OnApplicationShutdown {
       {}
     );
   }
+
   private patchApiQueryMulti(api: ApiPromise, apiAt: ApiDecoration<'promise' | 'rxjs'>): void {
     (api as any)._queryMulti = apiAt.queryMulti;
     (api as any).rx.queryMulti = NOT_SUPPORT('api.rx.queryMulti');

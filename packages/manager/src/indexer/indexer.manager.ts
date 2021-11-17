@@ -7,9 +7,7 @@ import {QueryTypes, Sequelize} from 'sequelize';
 import {Config} from '../configure/config';
 import {IndexerModel, IndexerRepo, MetadataFactory} from '../entities';
 import {getLogger} from '../utils/logger';
-import {profiler} from '../utils/profiler';
 import * as SubstrateUtil from '../utils/substrate';
-import {getYargsOption} from '../yargs';
 import {ApiService} from './api.service';
 import {DsProcessorService} from './ds-processor.service';
 import {IndexerEvent} from './events';
@@ -19,10 +17,7 @@ import {IndexerSandbox, SandboxService} from './sandbox.service';
 import {StoreService} from './store.service';
 import {BlockContent} from './types';
 
-const DEFAULT_DB_SCHEMA = 'public';
-
 const logger = getLogger('indexer-manager');
-const {argv} = getYargsOption();
 
 export class IndexerManager {
   private readonly apiService: ApiService;
@@ -71,7 +66,6 @@ export class IndexerManager {
   }
 
   async start(): Promise<void> {
-    this.dsProcessorService.validateCustomDs();
     await this.apiService.init();
     await this.fetchService.init();
     this.api = this.apiService.getApi();
@@ -87,7 +81,6 @@ export class IndexerManager {
     this.fetchService.register((block) => this.indexBlock(block));
   }
 
-  @profiler(argv.profiler)
   async indexBlock(blockContent: BlockContent): Promise<void> {
     const {block} = blockContent;
     const blockHeight = block.block.header.number.toNumber();
@@ -153,17 +146,11 @@ export class IndexerManager {
     });
     const {chain, genesisHash} = this.apiService.networkMeta;
     if (!indexer) {
-      let indexerSchema: string;
-      if (this.nodeConfig.localMode) {
-        // create tables in default schema if local mode is enabled
-        indexerSchema = DEFAULT_DB_SCHEMA;
-      } else {
-        const suffix = await this.nextIndexerSchemaSuffix();
-        indexerSchema = `indexer_${suffix}`;
-        const schemas = await this.sequelize.showAllSchemas(undefined);
-        if (!(schemas as unknown as string[]).includes(indexerSchema)) {
-          await this.sequelize.createSchema(indexerSchema, undefined);
-        }
+      const suffix = await this.nextIndexerSchemaSuffix();
+      const indexerSchema = `indexer_${suffix}`;
+      const schemas = await this.sequelize.showAllSchemas(undefined);
+      if (!(schemas as unknown as string[]).includes(indexerSchema)) {
+        await this.sequelize.createSchema(indexerSchema, undefined);
       }
 
       indexer = await this.indexerRepo.create({

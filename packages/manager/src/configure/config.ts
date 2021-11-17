@@ -1,10 +1,7 @@
-import path from 'path';
-import {loadFromJsonOrYaml, assign} from '@massbit/common';
+import {assign} from '@massbit/common';
 import {LevelWithSilent} from 'pino';
 
 export interface IConfig {
-  readonly configDir?: string;
-  readonly localMode: boolean;
   readonly batchSize: number;
   readonly timeout: number;
   readonly debug: boolean;
@@ -19,7 +16,6 @@ export interface IConfig {
 }
 
 const DEFAULT_CONFIG = {
-  localMode: false,
   batchSize: 100,
   timeout: 900,
   preferRange: false,
@@ -32,25 +28,8 @@ const DEFAULT_CONFIG = {
 export class Config implements IConfig {
   private readonly _config: IConfig;
 
-  static fromFile(filePath: string, configFromArgs?: Partial<IConfig>): Config {
-    const fileInfo = path.parse(filePath);
-
-    const config = assign(loadFromJsonOrYaml(filePath), configFromArgs, {
-      configDir: fileInfo.dir,
-    }) as IConfig;
-    return new Config(config);
-  }
-
   constructor(config: IConfig) {
     this._config = assign({}, DEFAULT_CONFIG, config);
-  }
-
-  get configDir(): string {
-    return this._config.configDir;
-  }
-
-  get localMode(): boolean {
-    return this._config.localMode;
   }
 
   get batchSize(): number {
