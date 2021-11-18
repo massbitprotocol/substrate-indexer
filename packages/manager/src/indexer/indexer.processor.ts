@@ -28,8 +28,7 @@ export class IndexerProcessor {
   @Process()
   async handleIndexer(job: Job): Promise<void> {
     logger.info('fetch project from GitHub');
-    const {id, url} = job.data;
-    const projectPath = this.cloneProject(url);
+    const projectPath = this.cloneProject(job.data.repository);
 
     const project = await Project.create(
       projectPath,
@@ -53,7 +52,7 @@ export class IndexerProcessor {
 
     logger.info('start indexer');
     const indexer = new IndexerManager(project, this.sequelize, this.nodeConfig, this.indexerRepo, this.eventEmitter);
-    await indexer.start(id);
+    await indexer.start(job.data);
   }
 
   cloneProject(url: string): string {

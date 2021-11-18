@@ -5,6 +5,7 @@ import {EventEmitter2} from '@nestjs/event-emitter';
 import {ApiPromise} from '@polkadot/api';
 import {QueryTypes, Sequelize} from 'sequelize';
 import {Config} from '../configure/config';
+import {DeployIndexerDto} from '../dto';
 import {IndexerModel, IndexerRepo, MetadataFactory} from '../entities';
 import {getLogger} from '../utils/logger';
 import * as SubstrateUtil from '../utils/substrate';
@@ -65,11 +66,11 @@ export class IndexerManager {
     this.sandboxService = new SandboxService(this.project, this.nodeConfig, this.apiService, this.storeService);
   }
 
-  async start(id: string): Promise<void> {
+  async start(data: DeployIndexerDto): Promise<void> {
     await this.apiService.init();
     await this.fetchService.init();
     this.api = this.apiService.getApi();
-    this.indexerState = await this.createIndexer(id, this.project.manifest.name);
+    this.indexerState = await this.createIndexer(data);
     await this.initDbSchema();
     await this.ensureMetadata(this.indexerState.dbSchema);
 
@@ -140,7 +141,8 @@ export class IndexerManager {
     }
   }
 
-  private async createIndexer(id: string, name: string): Promise<IndexerModel> {
+  private async createIndexer(data: DeployIndexerDto): Promise<IndexerModel> {
+    const {description, id, name, repository} = data;
     let indexer = await this.indexerRepo.findOne({
       where: {name},
     });
@@ -156,6 +158,8 @@ export class IndexerManager {
       indexer = await this.indexerRepo.create({
         id,
         name,
+        description,
+        repository,
         dbSchema: indexerSchema,
         hash: '0x',
         nextBlockHeight: this.getStartBlockFromDataSources(),

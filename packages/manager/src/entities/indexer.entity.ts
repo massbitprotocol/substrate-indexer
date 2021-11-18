@@ -8,6 +8,8 @@ interface IndexerModelAttributes extends IndexerCreationAttributes {
 interface IndexerCreationAttributes {
   id: string;
   name: string;
+  description: string;
+  repository: string;
   dbSchema: string;
   version?: string;
   hash: string;
@@ -36,6 +38,14 @@ export function IndexerFactory(sequelize: Sequelize): IndexerRepo {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,
+      },
+      description: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      repository: {
+        type: DataTypes.STRING,
+        allowNull: false,
       },
       dbSchema: {
         type: DataTypes.STRING,

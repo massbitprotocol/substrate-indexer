@@ -1,11 +1,14 @@
 import {Expose} from 'class-transformer';
 
 export class DeployIndexerDto {
-  url: string;
+  id: string;
+  name: string;
+  description: string;
+  repository: string;
 }
 
-export class DeployIndexerResponse {
-  constructor(partial: Partial<DeployIndexerResponse>) {
+export class DeployIndexerResponseDto {
+  constructor(partial: Partial<DeployIndexerResponseDto>) {
     Object.assign(this, partial);
   }
 
@@ -22,4 +25,10 @@ export class IndexerDto {
 
   @Expose()
   name!: string;
+
+  @Expose()
+  description!: string;
+
+  @Expose()
+  repository!: string;
 }
