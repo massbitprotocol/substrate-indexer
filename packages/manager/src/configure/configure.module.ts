@@ -17,6 +17,7 @@ function yargsToIConfig(yargs: Args): Partial<IConfig> {
         throw new Error('Argument `network-registry` is not valid JSON');
       }
     }
+
     acc[camelCase(key)] = value;
     return acc;
   }, {});

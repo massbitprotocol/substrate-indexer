@@ -20,7 +20,7 @@ const logger = getLogger('indexer-manager');
 export class IndexerProcessor {
   constructor(
     private sequelize: Sequelize,
-    private nodeConfig: Config,
+    private config: Config,
     @Inject('Indexer') protected indexerRepo: IndexerRepo,
     private eventEmitter: EventEmitter2
   ) {}
@@ -34,8 +34,8 @@ export class IndexerProcessor {
       projectPath,
       omitBy<INetworkConfig>(
         {
-          endpoint: this.nodeConfig.networkEndpoint,
-          networkIndexer: this.nodeConfig.networkIndexer,
+          endpoint: this.config.networkEndpoint,
+          networkIndexer: this.config.networkIndexer,
         },
         isNil
       )
@@ -51,7 +51,7 @@ export class IndexerProcessor {
     this.runCmd(projectPath, `npm run build`);
 
     logger.info('start indexer');
-    const indexer = new IndexerManager(project, this.sequelize, this.nodeConfig, this.indexerRepo, this.eventEmitter);
+    const indexer = new IndexerManager(project, this.sequelize, this.config, this.indexerRepo, this.eventEmitter);
     await indexer.start(job.data);
   }
 

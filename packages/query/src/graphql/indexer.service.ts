@@ -14,7 +14,7 @@ export class IndexerService {
       [name]
     );
     if (rows.length === 0) {
-      throw new Error(`unknown indexer name ${this.config.get('name')}`);
+      throw new Error(`unknown indexer name ${name}`);
     }
     return rows[0].db_schema;
   }

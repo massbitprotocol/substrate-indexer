@@ -18,11 +18,8 @@ export class HealthService {
   private blockTime = 6000;
   private readonly healthTimeout: number;
 
-  constructor(protected nodeConfig: Config) {
-    this.healthTimeout = Math.max(
-      DEFAULT_TIMEOUT,
-      this.nodeConfig.timeout * 1000,
-    );
+  constructor(protected config: Config) {
+    this.healthTimeout = Math.max(DEFAULT_TIMEOUT, this.config.timeout * 1000);
   }
 
   @OnEvent(IndexerEvent.BlockTarget)

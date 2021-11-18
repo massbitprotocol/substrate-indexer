@@ -98,11 +98,11 @@ export class SandboxService {
   private apiService: ApiService;
   private storeService: StoreService;
   private project: Project;
-  private readonly nodeConfig: Config;
+  private readonly config: Config;
 
-  constructor(project: Project, nodeConfig: Config, apiService: ApiService, storeService: StoreService) {
+  constructor(project: Project, config: Config, apiService: ApiService, storeService: StoreService) {
     this.project = project;
-    this.nodeConfig = nodeConfig;
+    this.config = config;
     this.apiService = apiService;
     this.storeService = storeService;
   }
@@ -118,7 +118,7 @@ export class SandboxService {
           root: this.project.path,
           store: this.storeService.getStore(),
         },
-        this.nodeConfig
+        this.config
       );
     }
 

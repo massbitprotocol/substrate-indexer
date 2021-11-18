@@ -49,27 +49,27 @@ export class FetchService implements OnApplicationShutdown {
   private readonly project: Project;
   private apiService: ApiService;
   private dsProcessorService: DsProcessorService;
-  private nodeConfig: Config;
+  private config: Config;
   private networkIndexerService: NetworkIndexerService;
   private eventEmitter: EventEmitter2;
   private logger: Pino.Logger;
 
   constructor(
     project: Project,
-    nodeConfig: Config,
+    config: Config,
     apiService: ApiService,
     dsProcessorService: DsProcessorService,
     networkIndexerService: NetworkIndexerService,
     eventEmitter: EventEmitter2
   ) {
-    this.nodeConfig = nodeConfig;
+    this.config = config;
     this.project = project;
     this.eventEmitter = eventEmitter;
     this.apiService = apiService;
     this.networkIndexerService = networkIndexerService;
     this.dsProcessorService = dsProcessorService;
-    this.blockBuffer = new BlockedQueue<BlockContent>(this.nodeConfig.batchSize * 3);
-    this.blockNumberBuffer = new BlockedQueue<number>(this.nodeConfig.batchSize * 3);
+    this.blockBuffer = new BlockedQueue<BlockContent>(this.config.batchSize * 3);
+    this.blockNumberBuffer = new BlockedQueue<number>(this.config.batchSize * 3);
     this.logger = getLogger(`[fetch] [${project.manifest.name}]`);
   }
 
@@ -231,10 +231,7 @@ export class FetchService implements OnApplicationShutdown {
 
     while (!this.isShutdown) {
       startBlockHeight = this.latestBufferedHeight ? this.latestBufferedHeight + 1 : initBlockHeight;
-      if (
-        this.blockNumberBuffer.freeSize < this.nodeConfig.batchSize ||
-        startBlockHeight > this.latestFinalizedHeight
-      ) {
+      if (this.blockNumberBuffer.freeSize < this.config.batchSize || startBlockHeight > this.latestFinalizedHeight) {
         await delay(1);
         continue;
       }
@@ -244,7 +241,7 @@ export class FetchService implements OnApplicationShutdown {
           const networkIndexer = await this.networkIndexerService.getNetworkIndexer(
             startBlockHeight,
             queryEndBlock,
-            this.nodeConfig.batchSize,
+            this.config.batchSize,
             this.indexerFilters
           );
           if (networkIndexer && this.validateNetworkIndexer(networkIndexer, startBlockHeight)) {
@@ -273,7 +270,7 @@ export class FetchService implements OnApplicationShutdown {
 
   async fillBlockBuffer(): Promise<void> {
     while (!this.isShutdown) {
-      const takeCount = Math.min(this.blockBuffer.freeSize, this.nodeConfig.batchSize);
+      const takeCount = Math.min(this.blockBuffer.freeSize, this.config.batchSize);
 
       if (this.blockNumberBuffer.size === 0 || takeCount === 0) {
         await delay(1);
@@ -311,7 +308,7 @@ export class FetchService implements OnApplicationShutdown {
   }
 
   private nextEndBlockHeight(startBlockHeight: number): number {
-    let endBlockHeight = startBlockHeight + this.nodeConfig.batchSize - 1;
+    let endBlockHeight = startBlockHeight + this.config.batchSize - 1;
     if (endBlockHeight > this.latestFinalizedHeight) {
       endBlockHeight = this.latestFinalizedHeight;
     }
