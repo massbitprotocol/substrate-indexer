@@ -133,6 +133,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@assemblyscript/loader@npm:^0.10.1":
+  version: 0.10.1
+  resolution: "@assemblyscript/loader@npm:0.10.1"
+  checksum: 7594fcd1432023948a7d45e0a2977d923f5afc095cee7c113332679ac78466554fb4b11c8b31673d79ef2ec7aaa375c6e79dd787e103f117048d3a15ec533da0
+  languageName: node
+  linkType: hard
+
 "@babel/code-frame@npm:7.12.11":
   version: 7.12.11
   resolution: "@babel/code-frame@npm:7.12.11"
@@ -2195,6 +2202,7 @@ __metadata:
     lodash: ^4.17.21
     pino: ^6.13.1
     reflect-metadata: ^0.1.13
+    tar: ^6.1.0
   languageName: unknown
   linkType: soft
 
@@ -2214,22 +2222,23 @@ __metadata:
     "@nestjs/schematics": ^7.2.7
     "@nestjs/testing": ^7.6.9
     "@polkadot/api": 6.6.1
-    "@types/adm-zip": ^0.4.34
     "@types/app-module-path": ^2.2.0
     "@types/bull": ^3.15.5
     "@types/express": ^4.17.12
     "@types/jest": ^26.0.23
     "@types/lodash": ^4.14.170
     "@types/multer": ^1.4.7
+    "@types/nodegit": ^0
     "@types/pino": ^6.3.8
     "@types/sequelize": ^4.28.9
     "@types/supertest": ^2.0.10
     "@types/tar": ^4.0.4
+    "@types/uuid": ^8
     "@types/yargs": ^16.0.4
     "@willsoto/nestjs-prometheus": ^3.0.0
-    adm-zip: ^0.5.9
     app-module-path: ^2.2.0
     bull: ^3.29.3
+    class-transformer: ^0.4.0
     dayjs: ^1.10.5
     dotenv: ^10.0.0
     lodash: ^4.17.21
@@ -2238,6 +2247,7 @@ __metadata:
     parse-json: ^5.2.0
     pg: ^8.6.0
     pino: ^6.11.3
+    piscina: ^3.1.0
     pm2: ^5.1.2
     prom-client: ^13.1.0
     reflect-metadata: ^0.1.13
@@ -2247,6 +2257,7 @@ __metadata:
     supertest: ^6.1.3
     tar: ^6.1.0
     typescript: ^4.1.3
+    uuid: ^8.3.2
     vm2: ^3.9.5
     yargs: ^16.2.0
   bin:
@@ -3610,6 +3621,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/nodegit@npm:^0":
+  version: 0.27.5
+  resolution: "@types/nodegit@npm:0.27.5"
+  dependencies:
+    "@types/node": "*"
+  checksum: 6316f591bbe5b62cdbef2a6f1d713914abfe3009f6ced3a06ebacef16678550ae9ed7c514d544857b768ecf1e0d49a770238739fd293763dffe136cf02291ff7
+  languageName: node
+  linkType: hard
+
 "@types/normalize-package-data@npm:^2.4.0":
   version: 2.4.0
   resolution: "@types/normalize-package-data@npm:2.4.0"
@@ -3792,6 +3812,13 @@ __metadata:
     "@types/minipass": "*"
     "@types/node": "*"
   checksum: 69a55c1b7c4240201bcc95c705fdbea8d86abf175cb33b1edc04e294b9e635960cbc0d81240c7db3c778f872a5b92c8880d13d2c6f448371fc367b219e132e81
+  languageName: node
+  linkType: hard
+
+"@types/uuid@npm:^8":
+  version: 8.3.3
+  resolution: "@types/uuid@npm:8.3.3"
+  checksum: 00fe65db03dec42b05cc19dc13e743cb2a32b52373c9006aacc05a9bbe01731e3b3e3e4ca1f6cea70ab4fc7149530b3c04a0ba101bd8f2b347e7345c7217b0a1
   languageName: node
   linkType: hard
 
@@ -5244,7 +5271,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"base64-js@npm:^1.3.1, base64-js@npm:^1.5.1":
+"base64-js@npm:^1.2.0, base64-js@npm:^1.3.1, base64-js@npm:^1.5.1":
   version: 1.5.1
   resolution: "base64-js@npm:1.5.1"
   checksum: c1b41a26ddc6620eb7f1ee6c29c812f5942a4e328e74263f995872cfb8ca3aee08542beb25cd10fd7ef16e4f16603e25c35a26e776c01fd55277e5035e829e0e
@@ -5868,6 +5895,13 @@ __metadata:
   version: 0.3.1
   resolution: "class-transformer@npm:0.3.1"
   checksum: 3ae3ef2510d2822766a97d31eb7ca550dabda56cbfe70968f295420531667ca95b4d84cddfe2dc302abc41c8e26d667d43235b0f4759eee09a007741cc307bc8
+  languageName: node
+  linkType: hard
+
+"class-transformer@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "class-transformer@npm:0.4.0"
+  checksum: 915db337796f6a4d0c2c09bf1c0214eff01e1247836524fdaa170f0c3457f4b5f9ece1068cdb2667e42e01572aa1b08b9995c298f2956d1c8a84884c8d5ea5ff
   languageName: node
   linkType: hard
 
@@ -7747,6 +7781,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"eventemitter-asyncresource@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "eventemitter-asyncresource@npm:1.0.0"
+  checksum: 18e7f33d0abb110c1fb8de8cc13d768a5c7c10e35b9a01f2b898815bf21036668bc45c14b0d407e4508881b4cc489538f30a1455814dbb9ad5b1418625ac9a31
+  languageName: node
+  linkType: hard
+
 "eventemitter2@npm:5.0.1, eventemitter2@npm:~5.0.1":
   version: 5.0.1
   resolution: "eventemitter2@npm:5.0.1"
@@ -9104,6 +9145,24 @@ fsevents@~2.3.1:
     inherits: ^2.0.3
     minimalistic-assert: ^1.0.1
   checksum: fceb7fb87e224f4b399212f902d3a34c3ed8512560868b56dde92f617fac9c66b501e583bab2996ed7493be5ab3385e05a69d2209fa6a9144391b22e1c2d245b
+  languageName: node
+  linkType: hard
+
+"hdr-histogram-js@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "hdr-histogram-js@npm:2.0.1"
+  dependencies:
+    "@assemblyscript/loader": ^0.10.1
+    base64-js: ^1.2.0
+    pako: ^1.0.3
+  checksum: abd367485e73790fa2731486ae5f9b58376e3b6ab3a3bdc14e360ce476f6d79786b29d69d53f8927c8428f12f1c4e22e059f551376726d99aa120ef8b093c7b3
+  languageName: node
+  linkType: hard
+
+"hdr-histogram-percentiles-obj@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "hdr-histogram-percentiles-obj@npm:3.0.0"
+  checksum: 9b6a82bc95765db040c6964f804247360a4d1d0b7f2ac097be9233587653ada0c5d4506e8b2d618b5d3314430bbd9cd6e1cac5df6a4548dfe69e1805c0e14b9d
   languageName: node
   linkType: hard
 
@@ -12156,10 +12215,30 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
+"nice-napi@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "nice-napi@npm:1.0.2"
+  dependencies:
+    node-addon-api: ^3.0.0
+    node-gyp: latest
+    node-gyp-build: ^4.2.2
+  checksum: 205adca06ce853b043534053fd12f0ca3418c337c5205d5631bf7d8f48eaa6d92befcc4efd053fa3d426fd346fc00c4d24b8011a77c01f04f6c97c50db8ca705
+  languageName: node
+  linkType: hard
+
 "nice-try@npm:^1.0.4":
   version: 1.0.5
   resolution: "nice-try@npm:1.0.5"
   checksum: 330f190bf68146a560008b661e1ddbb2eac667c16990b6bf791516d89cceb707ec67901ad647d2b32674bfa816b916489cead5c2fb6e96864c659573ab5aa3bb
+  languageName: node
+  linkType: hard
+
+"node-addon-api@npm:^3.0.0":
+  version: 3.2.1
+  resolution: "node-addon-api@npm:3.2.1"
+  dependencies:
+    node-gyp: latest
+  checksum: b4c69283fc7baa813e7f38085ee8cd3bd9fd1463a11621eb7e9be12cd494bfabd83b1e7880dc7f7a8d664f8545238ce310d61301b3c4ae608e6e49f4862c41e5
   languageName: node
   linkType: hard
 
@@ -12194,6 +12273,17 @@ fsevents@~2.3.1:
     node-gyp-build-optional: optional.js
     node-gyp-build-test: build-test.js
   checksum: 8512c25498b1605dbe9d2605cac7f8996d18c35097b3079b232674b0f3b8f1559be6f531ec3a00a94f90a0a69ccc452edb62f8f6dfff8caa3abe4b729cc21b06
+  languageName: node
+  linkType: hard
+
+"node-gyp-build@npm:^4.2.2":
+  version: 4.3.0
+  resolution: "node-gyp-build@npm:4.3.0"
+  bin:
+    node-gyp-build: bin.js
+    node-gyp-build-optional: optional.js
+    node-gyp-build-test: build-test.js
+  checksum: 4d52eeecc8e4f3bf8d49dc0b2fd2c5bb4be33f529492f02ddf2a6e8d82501c83880bdcdd8be1f4117edf201419bf42f7ed281f9958bf6debf2c12f2ba1b3a925
   languageName: node
   linkType: hard
 
@@ -12792,6 +12882,13 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
+"pako@npm:^1.0.3":
+  version: 1.0.11
+  resolution: "pako@npm:1.0.11"
+  checksum: 71c60150b68220ec52a404f3c39a4ed38f750e42452b88fe0eb2e6b5c98e91f73f706444359b097aca1e6db83ef8fef50b5a9ec100e30a606cda6da8d45e5439
+  languageName: node
+  linkType: hard
+
 "parent-module@npm:^1.0.0":
   version: 1.0.1
   resolution: "parent-module@npm:1.0.1"
@@ -13144,6 +13241,21 @@ fsevents@~2.3.1:
   dependencies:
     node-modules-regexp: ^1.0.0
   checksum: 21604008c36ab6e14ac458e1a267dd7322cfd36b9e1042e9e277dd064582717e30b9aba8c0a47d738bf004ee7946ed27f6b982d30968534f2c6b5b168a52b555
+  languageName: node
+  linkType: hard
+
+"piscina@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "piscina@npm:3.1.0"
+  dependencies:
+    eventemitter-asyncresource: ^1.0.0
+    hdr-histogram-js: ^2.0.1
+    hdr-histogram-percentiles-obj: ^3.0.0
+    nice-napi: ^1.0.2
+  dependenciesMeta:
+    nice-napi:
+      optional: true
+  checksum: 08aed64477ff90ce4fcb530d0ba05423c87b422969e44a8965a39187ae015ae3fe01b43e80c3271695d346bd3dcba8e7920da58e597f7f2b5cee8111f04de87c
   languageName: node
   linkType: hard
 
@@ -16214,7 +16326,7 @@ typescript@^4.1.3:
   languageName: node
   linkType: hard
 
-"uuid@npm:8.3.2, uuid@npm:^8.0.0, uuid@npm:^8.1.0, uuid@npm:^8.3.0":
+"uuid@npm:8.3.2, uuid@npm:^8.0.0, uuid@npm:^8.1.0, uuid@npm:^8.3.0, uuid@npm:^8.3.2":
   version: 8.3.2
   resolution: "uuid@npm:8.3.2"
   bin:

@@ -1,6 +1,6 @@
 {
   "name": "@massbit/common",
-  "version": "1.0.1",
+  "version": "0.2.0",
   "scripts": {
     "build": "rm -rf dist && tsc -b"
   },
@@ -14,7 +14,8 @@
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
     "pino": "^6.13.1",
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13",
+    "tar": "^6.1.0"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.1",

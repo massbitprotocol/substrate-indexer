@@ -66,8 +66,8 @@ export class IndexerSandbox extends Sandbox {
   }
 
   async securedExec(funcName: string, args: unknown[]): Promise<void> {
-    this.setGlobal('args', args);
     this.setGlobal('funcName', funcName);
+    this.setGlobal('args', args);
     try {
       await this.runTimeout(this.config.timeout);
     } catch (e) {

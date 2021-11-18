@@ -5,7 +5,6 @@ import {ScheduleModule} from '@nestjs/schedule';
 import {ConfigureModule} from './configure/configure.module';
 import {DbModule} from './db/db.module';
 import {IndexerModule} from './indexer/indexer.module';
-import {MetaModule} from './meta/meta.module';
 
 export class NodeOption {}
 
@@ -28,7 +27,6 @@ export class NodeOption {}
     ConfigureModule.register(),
     ScheduleModule.forRoot(),
     IndexerModule,
-    MetaModule,
   ],
   controllers: [],
 })

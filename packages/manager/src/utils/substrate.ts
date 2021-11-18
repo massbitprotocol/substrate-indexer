@@ -1,6 +1,3 @@
-import {ApiPromise} from '@polkadot/api';
-import {Option, Vec} from '@polkadot/types';
-import {BlockHash, EventRecord, LastRuntimeUpgradeInfo, RuntimeVersion, SignedBlock} from '@polkadot/types/interfaces';
 import {
   SpecVersionRange,
   SubstrateBlockFilter,
@@ -10,6 +7,9 @@ import {
   SubstrateEvent,
   SubstrateExtrinsic,
 } from '@massbit/types';
+import {ApiPromise} from '@polkadot/api';
+import {Option, Vec} from '@polkadot/types';
+import {BlockHash, EventRecord, LastRuntimeUpgradeInfo, RuntimeVersion, SignedBlock} from '@polkadot/types/interfaces';
 import {last, merge, range} from 'lodash';
 import {BlockContent} from '../indexer/types';
 import {getLogger} from './logger';
@@ -153,11 +153,11 @@ export async function fetchBlocks(
   overallSpecVer?: number
 ): Promise<BlockContent[]> {
   const blocks = await fetchBlocksRange(api, startHeight, endHeight);
-  const blockHashs = blocks.map((b) => b.block.header.hash);
-  const parentBlockHashs = blocks.map((b) => b.block.header.parentHash);
+  const blockHashes = blocks.map((b) => b.block.header.hash);
+  const parentBlockHashes = blocks.map((b) => b.block.header.parentHash);
   const [blockEvents, runtimeVersions] = await Promise.all([
-    fetchEventsRange(api, blockHashs),
-    overallSpecVer ? undefined : fetchRuntimeVersionRange(api, parentBlockHashs),
+    fetchEventsRange(api, blockHashes),
+    overallSpecVer ? undefined : fetchRuntimeVersionRange(api, parentBlockHashes),
   ]);
   return blocks.map((block, idx) => {
     const events = blockEvents[idx];
@@ -248,11 +248,11 @@ export async function fetchBlocksBatches(
   // specVersionMap?: number[],
 ): Promise<BlockContent[]> {
   const blocks = await fetchBlocksArray(api, blockArray);
-  const blockHashs = blocks.map((b) => b.block.header.hash);
-  const parentBlockHashs = blocks.map((b) => b.block.header.parentHash);
+  const blockHashes = blocks.map((b) => b.block.header.hash);
+  const parentBlockHashes = blocks.map((b) => b.block.header.parentHash);
   const [blockEvents, runtimeVersions] = await Promise.all([
-    fetchEventsRange(api, blockHashs),
-    overallSpecVer ? undefined : fetchRuntimeVersionRange(api, parentBlockHashs),
+    fetchEventsRange(api, blockHashes),
+    overallSpecVer ? undefined : fetchRuntimeVersionRange(api, parentBlockHashes),
   ]);
   return blocks.map((block, idx) => {
     const events = blockEvents[idx];

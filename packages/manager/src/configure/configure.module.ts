@@ -4,10 +4,6 @@ import {setLevel} from '../utils/logger';
 import {getYargsOption} from '../yargs';
 import {IConfig, Config} from './config';
 
-const YargsNameMapping = {
-  local: 'localMode',
-};
-
 type Args = ReturnType<typeof getYargsOption>['argv'];
 
 function yargsToIConfig(yargs: Args): Partial<IConfig> {
@@ -21,7 +17,7 @@ function yargsToIConfig(yargs: Args): Partial<IConfig> {
         throw new Error('Argument `network-registry` is not valid JSON');
       }
     }
-    acc[YargsNameMapping[key] ?? camelCase(key)] = value;
+    acc[camelCase(key)] = value;
     return acc;
   }, {});
 }
@@ -32,12 +28,7 @@ export class ConfigureModule {
   static register(): DynamicModule {
     const yargsOptions = getYargsOption();
     const {argv} = yargsOptions;
-    let config: Config;
-    if (argv.config) {
-      config = Config.fromFile(argv.config, yargsToIConfig(argv));
-    } else {
-      config = new Config({...yargsToIConfig(argv)} as IConfig);
-    }
+    const config = new Config({...yargsToIConfig(argv)} as IConfig);
 
     if (config.debug) {
       setLevel('debug');

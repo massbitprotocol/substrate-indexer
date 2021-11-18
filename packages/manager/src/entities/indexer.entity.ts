@@ -1,13 +1,15 @@
 import {BuildOptions, DataTypes, Model, Sequelize} from 'sequelize';
 
 interface IndexerModelAttributes extends IndexerCreationAttributes {
-  id: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 interface IndexerCreationAttributes {
+  id: string;
   name: string;
+  description: string;
+  repository: string;
   dbSchema: string;
   version?: string;
   hash: string;
@@ -29,14 +31,21 @@ export function IndexerFactory(sequelize: Sequelize): IndexerRepo {
     'Indexer',
     {
       id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.STRING,
         primaryKey: true,
       },
       name: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,
+      },
+      description: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      repository: {
+        type: DataTypes.STRING,
+        allowNull: false,
       },
       dbSchema: {
         type: DataTypes.STRING,

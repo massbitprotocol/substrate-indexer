@@ -19,7 +19,6 @@ import { Config } from '../configure/config';
 import { IndexerModel, IndexerRepo, MetadataFactory } from '../entities';
 import { getLogger } from '../utils/logger';
 import * as SubstrateUtil from '../utils/substrate';
-import { getYargsOption } from '../yargs';
 import { ApiService } from './api.service';
 import { DsProcessorService } from './ds-processor.service';
 import { IndexerEvent } from './events';
@@ -29,7 +28,6 @@ import { StoreService } from './store.service';
 import { BlockContent } from './types';
 
 const logger = getLogger('indexer');
-const { argv } = getYargsOption();
 
 @Injectable()
 export class IndexerManager {
