@@ -65,11 +65,11 @@ export class IndexerManager {
     this.sandboxService = new SandboxService(this.project, this.nodeConfig, this.apiService, this.storeService);
   }
 
-  async start(): Promise<void> {
+  async start(id: string): Promise<void> {
     await this.apiService.init();
     await this.fetchService.init();
     this.api = this.apiService.getApi();
-    this.indexerState = await this.createIndexer(this.project.manifest.name);
+    this.indexerState = await this.createIndexer(id, this.project.manifest.name);
     await this.initDbSchema();
     await this.ensureMetadata(this.indexerState.dbSchema);
 
@@ -140,7 +140,7 @@ export class IndexerManager {
     }
   }
 
-  private async createIndexer(name: string): Promise<IndexerModel> {
+  private async createIndexer(id: string, name: string): Promise<IndexerModel> {
     let indexer = await this.indexerRepo.findOne({
       where: {name},
     });
@@ -154,6 +154,7 @@ export class IndexerManager {
       }
 
       indexer = await this.indexerRepo.create({
+        id,
         name,
         dbSchema: indexerSchema,
         hash: '0x',

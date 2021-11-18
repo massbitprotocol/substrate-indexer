@@ -7,12 +7,12 @@ import {Inject, Injectable} from '@nestjs/common';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {Job} from 'bull';
 import {isNil, omitBy} from 'lodash';
-import Piscina from 'piscina';
 import {Sequelize} from 'sequelize';
 import {Config} from '../configure/config';
 import {IndexerRepo} from '../entities';
 import {getLogger} from '../utils/logger';
 import {IndexerManager} from './indexer.manager';
+
 const logger = getLogger('indexer-manager');
 
 @Injectable()
@@ -27,9 +27,10 @@ export class IndexerProcessor {
 
   @Process()
   async handleIndexer(job: Job): Promise<void> {
-    logger.info('handle indexer deployment');
-    const {url} = job.data;
+    logger.info('fetch project from GitHub');
+    const {id, url} = job.data;
     const projectPath = this.cloneProject(url);
+
     const project = await Project.create(
       projectPath,
       omitBy<INetworkConfig>(
@@ -44,17 +45,15 @@ export class IndexerProcessor {
       process.exit(1);
     });
 
-    const piscina = new Piscina({
-      filename: path.resolve(__dirname, 'worker.js'),
-    });
+    logger.info("install indexer's dependencies...");
+    this.runCmd(projectPath, `npm install`);
 
     logger.info('build indexer...');
-    await (async function () {
-      await piscina.run({projectPath});
-    })();
+    this.runCmd(projectPath, `npm run build`);
 
-    // const indexer = new IndexerManager(project, this.sequelize, this.nodeConfig, this.indexerRepo, this.eventEmitter);
-    // await indexer.start();
+    logger.info('start indexer');
+    const indexer = new IndexerManager(project, this.sequelize, this.nodeConfig, this.indexerRepo, this.eventEmitter);
+    await indexer.start(id);
   }
 
   cloneProject(url: string): string {
@@ -69,7 +68,7 @@ export class IndexerProcessor {
 
   runCmd(srcDir: string, cmd: string): void {
     try {
-      execSync(cmd, {cwd: srcDir, stdio: 'ignore'});
+      execSync(cmd, {cwd: srcDir, stdio: 'inherit'});
     } catch (e) {
       logger.error(`failed to run command \`${cmd}\`: ${e}`);
     }
