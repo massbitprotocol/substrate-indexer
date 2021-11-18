@@ -8,6 +8,7 @@ async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule, {
       logger: debug ? new NestLogger() : false,
+      cors: true,
     });
     await app.init();
     await app.listen(parseInt(process.env.PORT, 10) || 3000);
