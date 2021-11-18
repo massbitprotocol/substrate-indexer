@@ -20,10 +20,3 @@ export const setAsyncInterval = (cb, interval) => {
     throw new Error('Callback must be a function');
   }
 };
-
-const clearAsyncInterval = (intervalIndex) => {
-  if (asyncIntervals[intervalIndex].run) {
-    clearTimeout(asyncIntervals[intervalIndex].id);
-    asyncIntervals[intervalIndex].run = false;
-  }
-};

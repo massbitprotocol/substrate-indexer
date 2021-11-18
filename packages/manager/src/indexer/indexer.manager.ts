@@ -26,7 +26,7 @@ export class IndexerManager {
   private sandboxService: SandboxService;
   private readonly storeService: StoreService;
   private readonly sequelize: Sequelize;
-  private readonly nodeConfig: Config;
+  private readonly config: Config;
   private readonly dsProcessorService: DsProcessorService;
   private readonly eventEmitter: EventEmitter2;
   private readonly networkIndexerService: NetworkIndexerService;
@@ -41,13 +41,13 @@ export class IndexerManager {
   constructor(
     project: Project,
     sequelize: Sequelize,
-    nodeConfig: Config,
+    config: Config,
     indexerRepo: IndexerRepo,
     eventEmitter: EventEmitter2
   ) {
     this.project = project;
     this.sequelize = sequelize;
-    this.nodeConfig = nodeConfig;
+    this.config = config;
     this.indexerRepo = indexerRepo;
     this.eventEmitter = eventEmitter;
 
@@ -56,14 +56,14 @@ export class IndexerManager {
     this.dsProcessorService = new DsProcessorService(this.project);
     this.fetchService = new FetchService(
       this.project,
-      this.nodeConfig,
+      this.config,
       this.apiService,
       this.dsProcessorService,
       this.networkIndexerService,
       this.eventEmitter
     );
-    this.storeService = new StoreService(this.sequelize, this.nodeConfig);
-    this.sandboxService = new SandboxService(this.project, this.nodeConfig, this.apiService, this.storeService);
+    this.storeService = new StoreService(this.sequelize, this.config);
+    this.sandboxService = new SandboxService(this.project, this.config, this.apiService, this.storeService);
   }
 
   async start(data: DeployIndexerDto): Promise<void> {

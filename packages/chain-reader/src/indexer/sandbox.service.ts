@@ -107,7 +107,7 @@ export class SandboxService {
   constructor(
     private readonly apiService: ApiService,
     private readonly storeService: StoreService,
-    private readonly nodeConfig: Config,
+    private readonly config: Config,
     private readonly project: Project,
   ) {}
 
@@ -122,7 +122,7 @@ export class SandboxService {
           root: this.project.path,
           store: this.storeService.getStore(),
         },
-        this.nodeConfig,
+        this.config,
       );
     }
 

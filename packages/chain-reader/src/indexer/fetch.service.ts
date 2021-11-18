@@ -46,16 +46,16 @@ export class FetchService implements OnApplicationShutdown {
 
   constructor(
     private apiService: ApiService,
-    private nodeConfig: Config,
+    private config: Config,
     private project: Project,
     private dsProcessorService: DsProcessorService,
     private eventEmitter: EventEmitter2,
   ) {
     this.blockBuffer = new BlockedQueue<BlockContent>(
-      this.nodeConfig.batchSize * 3,
+      this.config.batchSize * 3,
     );
     this.blockNumberBuffer = new BlockedQueue<number>(
-      this.nodeConfig.batchSize * 3,
+      this.config.batchSize * 3,
     );
   }
 
@@ -233,7 +233,7 @@ export class FetchService implements OnApplicationShutdown {
         ? this.latestBufferedHeight + 1
         : initBlockHeight;
       if (
-        this.blockNumberBuffer.freeSize < this.nodeConfig.batchSize ||
+        this.blockNumberBuffer.freeSize < this.config.batchSize ||
         startBlockHeight > this.latestFinalizedHeight
       ) {
         await delay(1);
@@ -250,7 +250,7 @@ export class FetchService implements OnApplicationShutdown {
     while (!this.isShutdown) {
       const takeCount = Math.min(
         this.blockBuffer.freeSize,
-        this.nodeConfig.batchSize,
+        this.config.batchSize,
       );
 
       if (this.blockNumberBuffer.size === 0 || takeCount === 0) {
@@ -297,7 +297,7 @@ export class FetchService implements OnApplicationShutdown {
   }
 
   private nextEndBlockHeight(startBlockHeight: number): number {
-    let endBlockHeight = startBlockHeight + this.nodeConfig.batchSize - 1;
+    let endBlockHeight = startBlockHeight + this.config.batchSize - 1;
     if (endBlockHeight > this.latestFinalizedHeight) {
       endBlockHeight = this.latestFinalizedHeight;
     }

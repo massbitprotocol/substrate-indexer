@@ -5,9 +5,9 @@ import yargs from 'yargs/yargs';
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function getYargsOption() {
   return yargs(hideBin(process.argv)).options({
-    name: {
+    'indexer-name': {
       alias: 'n',
-      describe: 'project name',
+      describe: 'indexer name',
       type: 'string',
       demandOption: false,
     },
@@ -30,7 +30,7 @@ export function getYargsOption() {
       default: 'info',
       choices: ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'],
     },
-    indexer: {
+    'metadata-endpoint': {
       demandOption: false,
       describe: 'Url that allow query to access indexer metadata',
       type: 'string',
