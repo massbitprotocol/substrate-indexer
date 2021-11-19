@@ -11,7 +11,7 @@ export class ConfigureModule {
     const {argv: opts} = getYargsOption();
 
     const config = new Config({
-      name: opts.name,
+      name: opts['indexer-name'],
       playground: opts.playground ?? false,
     });
 

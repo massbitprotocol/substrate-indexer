@@ -40,8 +40,8 @@ export class GraphqlModule implements OnModuleInit, OnModuleDestroy {
     const httpServer = this.httpAdapterHost.httpAdapter.getHttpServer();
 
     let dbSchema: string;
-    if (this.config.get('indexer-name')) {
-      dbSchema = await this.projectService.getIndexerSchema(this.config.get('indexer-name'));
+    if (this.config.get('name')) {
+      dbSchema = await this.projectService.getIndexerSchema(this.config.get('name'));
     } else {
       dbSchema = DEFAULT_DB_SCHEMA;
     }
