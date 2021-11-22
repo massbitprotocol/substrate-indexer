@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { Interval } from '@nestjs/schedule';
 import {
   BestBlockPayload,
   EventPayload,
@@ -8,11 +9,9 @@ import {
   ProcessBlockPayload,
   TargetBlockPayload,
 } from '../indexer/events';
+import { StoreService } from '../indexer/store.service';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { version: polkadotSdkVersion } = require('@polkadot/api/package.json');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { version: packageVersion } = require('../../package.json');
+const SYNC_HEIGHT_INTERVAL = 60000;
 
 @Injectable()
 export class MetaService {
@@ -26,21 +25,36 @@ export class MetaService {
   private lastProcessedHeight: number;
   private lastProcessedTimestamp: number;
 
+  constructor(private storeService: StoreService) {}
+
   getMeta() {
     return {
       currentProcessingHeight: this.currentProcessingHeight,
       currentProcessingTimestamp: this.currentProcessingTimestamp,
       targetHeight: this.targetHeight,
       bestHeight: this.bestHeight,
-      indexerNodeVersion: packageVersion,
       lastProcessedHeight: this.lastProcessedHeight,
       lastProcessedTimestamp: this.lastProcessedTimestamp,
       uptime: process.uptime(),
-      polkadotSdkVersion,
       apiConnected: this.apiConnected,
       injectedApiConnected: this.injectedApiConnected,
       ...this.networkMeta,
     };
+  }
+
+  @Interval(SYNC_HEIGHT_INTERVAL)
+  async syncHeightMetadata(): Promise<void> {
+    await Promise.all([
+      this.storeService.setMetadata(
+        'lastProcessedHeight',
+        this.lastProcessedHeight,
+      ),
+      this.storeService.setMetadata(
+        'lastProcessedTimestamp',
+        this.lastProcessedTimestamp,
+      ),
+      this.storeService.setMetadata('targetHeight', this.targetHeight),
+    ]);
   }
 
   @OnEvent(IndexerEvent.BlockProcessing)

@@ -206,9 +206,17 @@ export class StoreService {
     }
   }
 
-  setTransaction(tx: Transaction) {
+  setTransaction(tx: Transaction): void {
     this.tx = tx;
     tx.afterCommit(() => (this.tx = undefined));
+  }
+
+  async setMetadata(
+    key: string,
+    value: string | number | boolean,
+  ): Promise<void> {
+    assert(this.metaDataRepo, `model _metadata does not exist`);
+    await this.metaDataRepo.upsert({ key, value });
   }
 
   private async getAllIndexFields(schema: string) {

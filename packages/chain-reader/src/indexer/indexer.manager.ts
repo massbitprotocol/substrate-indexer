@@ -2,7 +2,6 @@ import path from 'path';
 import {
   buildSchema,
   getAllEntitiesRelations,
-  isCustomDatasource,
   isRuntimeDatasource,
   Project,
 } from '@massbit/common';
@@ -20,7 +19,6 @@ import { IndexerModel, IndexerRepo, MetadataFactory } from '../entities';
 import { getLogger } from '../utils/logger';
 import * as SubstrateUtil from '../utils/substrate';
 import { ApiService } from './api.service';
-import { DsProcessorService } from './ds-processor.service';
 import { IndexerEvent } from './events';
 import { FetchService } from './fetch.service';
 import { IndexerSandbox, SandboxService } from './sandbox.service';
@@ -44,7 +42,6 @@ export class IndexerManager {
     private project: Project,
     private config: Config,
     private sandboxService: SandboxService,
-    private dsProcessorService: DsProcessorService,
     @Inject('Indexer') protected indexerRepo: IndexerRepo,
     private eventEmitter: EventEmitter2,
   ) {}
@@ -62,14 +59,14 @@ export class IndexerManager {
     try {
       const isUpgraded = block.specVersion !== this.prevSpecVersion;
       // if parentBlockHash injected, which means we need to check runtime upgrade
-      await this.apiService.setBlockHash(
+      const apiAt = await this.apiService.getPatchedApi(
         block.block.hash,
         isUpgraded ? block.block.header.parentHash : undefined,
       );
       for (const ds of this.filteredDataSources) {
-        const vm = await this.sandboxService.getDsProcessor(ds);
+        const vm = this.sandboxService.getDatasourceProcessor(ds, apiAt);
         if (isRuntimeDatasource(ds)) {
-          await IndexerManager.indexBlockForRuntimeDs(
+          await IndexerManager.indexBlockForRuntimeDatasource(
             vm,
             ds.mapping.handlers,
             blockContent,
@@ -93,7 +90,6 @@ export class IndexerManager {
   }
 
   async start(): Promise<void> {
-    await this.apiService.init();
     await this.fetchService.init();
     this.api = this.apiService.getApi();
     this.indexerState = await this.createIndexer(this.config.indexerName);
@@ -125,17 +121,42 @@ export class IndexerManager {
 
   private async ensureMetadata(schema: string) {
     const metadataRepo = MetadataFactory(this.sequelize, schema);
-    // block offset should only been create once, never update.
-    // if change offset will require re-index
-    const blockOffset = await metadataRepo.findOne({
-      where: { key: 'blockOffset' },
+    const { chain, genesisHash, specName } = this.apiService.networkMeta;
+
+    this.eventEmitter.emit(
+      IndexerEvent.NetworkMetadata,
+      this.apiService.networkMeta,
+    );
+
+    const keys = ['blockOffset', 'chain', 'specName', 'genesisHash'] as const;
+    const entries = await metadataRepo.findAll({
+      where: {
+        key: keys,
+      },
     });
-    if (!blockOffset) {
+
+    const keyValue = entries.reduce((arr, curr) => {
+      arr[curr.key] = curr.value;
+      return arr;
+    }, {} as { [key in typeof keys[number]]: string | boolean | number });
+
+    // blockOffset and genesisHash should only been create once, never update
+    // if blockOffset is changed, will require re-index.
+    if (!keyValue.blockOffset) {
       const offsetValue = (this.getStartBlockFromDataSources() - 1).toString();
-      await metadataRepo.create({
-        key: 'blockOffset',
-        value: offsetValue,
-      });
+      await this.storeService.setMetadata('blockOffset', offsetValue);
+    }
+
+    if (!keyValue.genesisHash) {
+      await this.storeService.setMetadata('genesisHash', genesisHash);
+    }
+
+    if (keyValue.chain !== chain) {
+      await this.storeService.setMetadata('chain', chain);
+    }
+
+    if (keyValue.specName !== specName) {
+      await this.storeService.setMetadata('specName', specName);
     }
   }
 
@@ -217,6 +238,7 @@ export class IndexerManager {
       );
       process.exit(1);
     }
+
     filteredDs = filteredDs.filter(
       (ds) => ds.startBlock <= this.indexerState.nextBlockHeight,
     );
@@ -226,16 +248,6 @@ export class IndexerManager {
       );
       process.exit(1);
     }
-    // perform filter for custom ds
-    filteredDs = filteredDs.filter((ds) => {
-      if (isCustomDatasource(ds)) {
-        return this.dsProcessorService
-          .getDsProcessor(ds)
-          .dsFilterProcessor(ds, this.api);
-      } else {
-        return true;
-      }
-    });
 
     if (!filteredDs.length) {
       logger.error(`Did not find any datasources with associated processor`);
@@ -252,7 +264,7 @@ export class IndexerManager {
     );
   }
 
-  private static async indexBlockForRuntimeDs(
+  private static async indexBlockForRuntimeDatasource(
     vm: IndexerSandbox,
     handlers: SubstrateRuntimeHandler[],
     { block, events, extrinsics }: BlockContent,
