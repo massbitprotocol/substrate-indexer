@@ -1,19 +1,4 @@
-import {
-  isRuntimeDataSourceV0_0_2,
-  IRuntimeDataSourceV0_0_1,
-  isCustomDatasource,
-  isRuntimeDatasource,
-  Project,
-  delay,
-} from '@massbit/common';
-import {
-  SubstrateCallFilter,
-  SubstrateEventFilter,
-  SubstrateHandlerKind,
-  SubstrateHandler,
-  Datasource,
-  SubstrateHandlerFilter,
-} from '@massbit/types';
+import { Project, delay } from '@massbit/common';
 import { Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Interval } from '@nestjs/schedule';
@@ -21,13 +6,11 @@ import { ApiPromise } from '@polkadot/api';
 import { isUndefined, range } from 'lodash';
 import { Config } from '../configure/config';
 import { getLogger } from '../utils/logger';
-import { isBaseHandler, isCustomHandler } from '../utils/project';
 import * as SubstrateUtil from '../utils/substrate';
 import { ApiService } from './api.service';
 import { BlockedQueue } from './blocked-queue';
-import { DsProcessorService } from './ds-processor.service';
 import { IndexerEvent } from './events';
-import { BlockContent, ProjectIndexFilters } from './types';
+import { BlockContent } from './types';
 
 const logger = getLogger('fetch');
 const BLOCK_TIME_VARIANCE = 5;
@@ -42,13 +25,11 @@ export class FetchService implements OnApplicationShutdown {
   private blockNumberBuffer: BlockedQueue<number>;
   private isShutdown = false;
   private parentSpecVersion: number;
-  private projectIndexFilters: ProjectIndexFilters;
 
   constructor(
     private apiService: ApiService,
     private config: Config,
     private project: Project,
-    private dsProcessorService: DsProcessorService,
     private eventEmitter: EventEmitter2,
   ) {
     this.blockBuffer = new BlockedQueue<BlockContent>(
@@ -65,72 +46,6 @@ export class FetchService implements OnApplicationShutdown {
 
   get api(): ApiPromise {
     return this.apiService.getApi();
-  }
-
-  getIndexFilters(): ProjectIndexFilters | undefined {
-    const eventFilters: SubstrateEventFilter[] = [];
-    const extrinsicFilters: SubstrateCallFilter[] = [];
-    const dataSources = this.project.dataSources.filter(
-      (ds) =>
-        isRuntimeDataSourceV0_0_2(ds) ||
-        !(ds as IRuntimeDataSourceV0_0_1).filter?.specName ||
-        (ds as IRuntimeDataSourceV0_0_1).filter.specName ===
-          this.api.runtimeVersion.specName.toString(),
-    );
-    for (const ds of dataSources) {
-      for (const handler of ds.mapping.handlers) {
-        const baseHandlerKind = this.getBaseHandlerKind(ds, handler);
-        const filterList = isRuntimeDatasource(ds)
-          ? [handler.filter as SubstrateHandlerFilter].filter(Boolean)
-          : this.getBaseHandlerFilters<SubstrateHandlerFilter>(
-              ds,
-              handler.kind,
-            );
-        if (!filterList.length) return;
-        switch (baseHandlerKind) {
-          case SubstrateHandlerKind.Block:
-            return;
-          case SubstrateHandlerKind.Call: {
-            for (const filter of filterList as SubstrateCallFilter[]) {
-              if (
-                filter.module !== undefined &&
-                filter.method !== undefined &&
-                extrinsicFilters.findIndex(
-                  (extrinsic) =>
-                    extrinsic.module === filter.module &&
-                    extrinsic.method === filter.method,
-                ) < 0
-              ) {
-                extrinsicFilters.push(handler.filter);
-              } else {
-                return;
-              }
-            }
-            break;
-          }
-          case SubstrateHandlerKind.Event: {
-            for (const filter of filterList as SubstrateEventFilter[]) {
-              if (
-                filter.module !== undefined &&
-                filter.method !== undefined &&
-                eventFilters.findIndex(
-                  (event) =>
-                    event.module === filter.module &&
-                    event.method === filter.method,
-                ) < 0
-              ) {
-                eventFilters.push(handler.filter);
-              } else {
-                return;
-              }
-            }
-            break;
-          }
-          default:
-        }
-      }
-    }
-    return { eventFilters, extrinsicFilters };
   }
 
   register(next: (value: BlockContent) => Promise<void>): () => void {
@@ -162,7 +77,6 @@ export class FetchService implements OnApplicationShutdown {
   }
 
   async init(): Promise<void> {
-    this.projectIndexFilters = this.getIndexFilters();
     await this.getFinalizedBlockHead();
     await this.getBestBlockHead();
   }
@@ -185,7 +99,7 @@ export class FetchService implements OnApplicationShutdown {
         });
       }
     } catch (e) {
-      logger.error(e, `Having a problem when get finalized block`);
+      logger.error(e, `Get finalized block failed`);
     }
   }
 
@@ -205,7 +119,7 @@ export class FetchService implements OnApplicationShutdown {
         });
       }
     } catch (e) {
-      logger.error(e, `Having a problem when get best block`);
+      logger.error(e, `Get best block failed`);
     }
   }
 
@@ -227,7 +141,6 @@ export class FetchService implements OnApplicationShutdown {
     await this.fetchNetworkMeta(initBlockHeight);
 
     let startBlockHeight: number;
-
     while (!this.isShutdown) {
       startBlockHeight = this.latestBufferedHeight
         ? this.latestBufferedHeight + 1
@@ -309,39 +222,5 @@ export class FetchService implements OnApplicationShutdown {
     this.eventEmitter.emit(IndexerEvent.BlocknumberQueueSize, {
       value: this.blockNumberBuffer.size,
     });
-  }
-
-  private getBaseHandlerKind(
-    ds: Datasource,
-    handler: SubstrateHandler,
-  ): SubstrateHandlerKind {
-    if (isRuntimeDatasource(ds) && isBaseHandler(handler)) {
-      return handler.kind;
-    } else if (isCustomDatasource(ds) && isCustomHandler(handler)) {
-      const plugin = this.dsProcessorService.getDsProcessor(ds);
-      const baseHandler =
-        plugin.handlerProcessors[handler.kind]?.baseHandlerKind;
-      if (!baseHandler) {
-        throw new Error(
-          `handler type ${handler.kind} not found in processor for ${ds.kind}`,
-        );
-      }
-      return baseHandler;
-    }
-  }
-
-  private getBaseHandlerFilters<T extends SubstrateHandlerFilter>(
-    ds: Datasource,
-    handlerKind: string,
-  ): T[] {
-    if (isCustomDatasource(ds)) {
-      const plugin = this.dsProcessorService.getDsProcessor(ds);
-      const processor = plugin.handlerProcessors[handlerKind];
-      return processor.baseFilter instanceof Array
-        ? (processor.baseFilter as T[])
-        : ([processor.baseFilter] as T[]);
-    } else {
-      throw new Error(`expect custom datasource here`);
-    }
   }
 }

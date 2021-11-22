@@ -4,21 +4,20 @@ import {
   levelFilter,
   Project,
   timeout,
+  getProjectEntry,
 } from '@massbit/common';
 import { Store, Datasource } from '@massbit/types';
 import { Injectable } from '@nestjs/common';
-import { ApiPromise } from '@polkadot/api';
 import { merge } from 'lodash';
 import { NodeVM, NodeVMOptions, VMScript } from 'vm2';
 import { Config } from '../configure/config';
 import { getLogger } from '../utils/logger';
-import { getProjectEntry } from '../utils/project';
 import { ApiService } from './api.service';
 import { StoreService } from './store.service';
+import { ApiAt } from './types';
 
 export interface SandboxOption {
   store?: Store;
-  api?: ApiPromise;
   root: string;
   entry: string;
 }
@@ -89,12 +88,9 @@ export class IndexerSandbox extends Sandbox {
     }
   }
 
-  private injectGlobals({ api, store }: SandboxOption) {
+  private injectGlobals({ store }: SandboxOption) {
     if (store) {
       this.freeze(store, 'store');
-    }
-    if (api) {
-      this.freeze(api, 'api');
     }
     this.freeze(logger, 'logger');
   }
@@ -111,22 +107,22 @@ export class SandboxService {
     private readonly project: Project,
   ) {}
 
-  async getDsProcessor(ds: Datasource): Promise<IndexerSandbox> {
+  getDatasourceProcessor(ds: Datasource, api: ApiAt): IndexerSandbox {
     const entry = this.getDataSourceEntry(ds);
-
-    if (!this.processorCache[entry]) {
-      this.processorCache[entry] = new IndexerSandbox(
+    let processor = this.processorCache[entry];
+    if (!processor) {
+      processor = new IndexerSandbox(
         {
-          api: await this.apiService.getPatchedApi(),
           entry,
           root: this.project.path,
           store: this.storeService.getStore(),
         },
         this.config,
       );
+      this.processorCache[entry] = processor;
     }
-
-    return this.processorCache[entry];
+    processor.freeze(api, 'api');
+    return processor;
   }
 
   private getDataSourceEntry(ds: Datasource): string {

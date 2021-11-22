@@ -45,7 +45,7 @@ export class ConfigureModule {
     const yargsOptions = getYargsOption();
     const { argv } = yargsOptions;
     if (!argv.indexer) {
-      logger.error('indexer path is missing neither in cli options');
+      logger.error('indexer path is missing neither in CLI options');
       yargsOptions.showHelp();
       process.exit(1);
     }

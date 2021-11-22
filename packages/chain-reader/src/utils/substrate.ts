@@ -293,10 +293,10 @@ export async function fetchBlocksArray(
 
 export async function fetchEventsRange(
   api: ApiPromise,
-  hashs: BlockHash[],
+  hashes: BlockHash[],
 ): Promise<Vec<EventRecord>[]> {
   return Promise.all(
-    hashs.map((hash) =>
+    hashes.map((hash) =>
       api.query.system.events.at(hash).catch((e) => {
         logger.error(`failed to fetch events at block ${hash}`);
         throw e;
@@ -307,10 +307,10 @@ export async function fetchEventsRange(
 
 export async function fetchRuntimeVersionRange(
   api: ApiPromise,
-  hashs: BlockHash[],
+  hashes: BlockHash[],
 ): Promise<RuntimeVersion[]> {
   return Promise.all(
-    hashs.map((hash) =>
+    hashes.map((hash) =>
       api.rpc.state.getRuntimeVersion(hash).catch((e) => {
         logger.error(`failed to fetch RuntimeVersion at block ${hash}`);
         throw e;
@@ -326,13 +326,13 @@ export async function fetchBlocksBatches(
   // specVersionMap?: number[],
 ): Promise<BlockContent[]> {
   const blocks = await fetchBlocksArray(api, blockArray);
-  const blockHashs = blocks.map((b) => b.block.header.hash);
-  const parentBlockHashs = blocks.map((b) => b.block.header.parentHash);
+  const blockHashes = blocks.map((b) => b.block.header.hash);
+  const parentBlockHashes = blocks.map((b) => b.block.header.parentHash);
   const [blockEvents, runtimeVersions] = await Promise.all([
-    fetchEventsRange(api, blockHashs),
+    fetchEventsRange(api, blockHashes),
     overallSpecVer
       ? undefined
-      : fetchRuntimeVersionRange(api, parentBlockHashs),
+      : fetchRuntimeVersionRange(api, parentBlockHashes),
   ]);
   return blocks.map((block, idx) => {
     const events = blockEvents[idx];

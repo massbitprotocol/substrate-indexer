@@ -1,11 +1,10 @@
 import {
-  Entity,
-  SubstrateCallFilter,
-  SubstrateEventFilter,
   SubstrateBlock,
   SubstrateEvent,
   SubstrateExtrinsic,
 } from '@massbit/types';
+import { ApiPromise } from '@polkadot/api';
+import { ApiDecoration } from '@polkadot/api/types';
 
 export interface BlockContent {
   block: SubstrateBlock;
@@ -13,18 +12,4 @@ export interface BlockContent {
   events: SubstrateEvent[];
 }
 
-export interface ProjectIndexFilters {
-  eventFilters: SubstrateEventFilter[];
-  extrinsicFilters: SubstrateCallFilter[];
-}
-
-export enum OperationType {
-  Set = 'Set',
-  Remove = 'Remove',
-}
-
-export type OperationEntity = {
-  operation: OperationType;
-  entityType: string;
-  data: Entity | string;
-};
+export type ApiAt = ApiDecoration<'promise'> & { rpc: ApiPromise['rpc'] };
