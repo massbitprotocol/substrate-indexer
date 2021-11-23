@@ -1,8 +1,9 @@
 import path from 'path';
-import {buildSchema, getAllEntitiesRelations, isCustomDatasource, isRuntimeDatasource, Project} from '@massbit/common';
+import {buildSchema, getAllEntitiesRelations, isRuntimeDatasource, Project} from '@massbit/common';
 import {Datasource, SubstrateHandlerKind, SubstrateRuntimeHandler} from '@massbit/types';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {ApiPromise} from '@polkadot/api';
+import Pino from 'pino';
 import {QueryTypes, Sequelize} from 'sequelize';
 import {Config} from '../configure/config';
 import {DeployIndexerDto} from '../dto';
@@ -10,7 +11,6 @@ import {IndexerModel, IndexerRepo, MetadataFactory} from '../entities';
 import {getLogger} from '../utils/logger';
 import * as SubstrateUtil from '../utils/substrate';
 import {ApiService} from './api.service';
-import {DsProcessorService} from './ds-processor.service';
 import {IndexerEvent} from './events';
 import {FetchService} from './fetch.service';
 import {NetworkIndexerService} from './network-indexer.service';
@@ -18,19 +18,17 @@ import {IndexerSandbox, SandboxService} from './sandbox.service';
 import {StoreService} from './store.service';
 import {BlockContent} from './types';
 
-const logger = getLogger('indexer-manager');
-
-export class IndexerManager {
+export class IndexerInstance {
   private readonly apiService: ApiService;
   private fetchService: FetchService;
   private sandboxService: SandboxService;
   private readonly storeService: StoreService;
   private readonly sequelize: Sequelize;
   private readonly config: Config;
-  private readonly dsProcessorService: DsProcessorService;
   private readonly eventEmitter: EventEmitter2;
   private readonly networkIndexerService: NetworkIndexerService;
   protected indexerRepo: IndexerRepo;
+  logger: Pino.Logger;
 
   private api: ApiPromise;
   private indexerState: IndexerModel;
@@ -53,17 +51,16 @@ export class IndexerManager {
 
     this.networkIndexerService = new NetworkIndexerService(this.project);
     this.apiService = new ApiService(this.project, this.eventEmitter);
-    this.dsProcessorService = new DsProcessorService(this.project);
     this.fetchService = new FetchService(
       this.project,
       this.config,
       this.apiService,
-      this.dsProcessorService,
       this.networkIndexerService,
       this.eventEmitter
     );
     this.storeService = new StoreService(this.sequelize, this.config);
     this.sandboxService = new SandboxService(this.project, this.config, this.apiService, this.storeService);
+    this.logger = getLogger(this.project.name);
   }
 
   async start(data: DeployIndexerDto): Promise<void> {
@@ -75,7 +72,7 @@ export class IndexerManager {
     await this.ensureMetadata(this.indexerState.dbSchema);
 
     void this.fetchService.startLoop(this.indexerState.nextBlockHeight).catch((err) => {
-      logger.error(err, 'failed to fetch block');
+      this.logger.error(err, 'failed to fetch block');
       process.exit(1);
     });
     this.filteredDataSources = this.filterDataSources();
@@ -93,11 +90,16 @@ export class IndexerManager {
     this.storeService.setTransaction(tx);
 
     try {
-      await this.apiService.setBlockHash(block.block.hash);
+      const isUpgraded = block.specVersion !== this.prevSpecVersion;
+      // if parentBlockHash injected, which means we need to check runtime upgrade
+      const apiAt = await this.apiService.getPatchedApi(
+        block.block.hash,
+        isUpgraded ? block.block.header.parentHash : undefined
+      );
       for (const ds of this.filteredDataSources) {
-        const vm = await this.sandboxService.getDatasourceProcessor(ds);
+        const vm = this.sandboxService.getDatasourceProcessor(ds, apiAt);
         if (isRuntimeDatasource(ds)) {
-          await IndexerManager.indexBlockForRuntimeDs(vm, ds.mapping.handlers, blockContent);
+          await IndexerInstance.indexBlockForRuntimeDs(vm, ds.mapping.handlers, blockContent);
         }
       }
       this.indexerState.nextBlockHeight = block.block.header.number.toNumber() + 1;
@@ -118,7 +120,7 @@ export class IndexerManager {
   private getStartBlockFromDataSources() {
     const startBlocksList = this.getDataSourcesForSpecName().map((item) => item.startBlock ?? 1);
     if (startBlocksList.length === 0) {
-      logger.error(`Failed to find a valid datasource, Please check your endpoint if specName filter is used.`);
+      this.logger.error(`Failed to find a valid datasource, Please check your endpoint if specName filter is used.`);
       process.exit(1);
     } else {
       return Math.min(...startBlocksList);
@@ -172,7 +174,7 @@ export class IndexerManager {
         indexer.networkGenesis = genesisHash;
         await indexer.save();
       } else if (indexer.networkGenesis !== genesisHash) {
-        logger.error(
+        this.logger.error(
           `Not same network: genesisHash different. expected="${indexer.networkGenesis}"" actual="${genesisHash}"`
         );
         process.exit(1);
@@ -210,24 +212,16 @@ export class IndexerManager {
   private filterDataSources(): Datasource[] {
     let filteredDs = this.getDataSourcesForSpecName();
     if (filteredDs.length === 0) {
-      logger.error(`Did not find any dataSource match with network specName ${this.api.runtimeVersion.specName}`);
+      this.logger.error(`Did not find any dataSource match with network specName ${this.api.runtimeVersion.specName}`);
       process.exit(1);
     }
     filteredDs = filteredDs.filter((ds) => ds.startBlock <= this.indexerState.nextBlockHeight);
     if (filteredDs.length === 0) {
-      logger.error(
+      this.logger.error(
         `Your start block is greater than the current indexed block height in your database. Either change your startBlock (project.yaml) to <= ${this.indexerState.nextBlockHeight} or delete your database and start again from the currently specified startBlock`
       );
       process.exit(1);
     }
-    // perform filter for custom ds
-    filteredDs = filteredDs.filter((ds) => {
-      if (isCustomDatasource(ds)) {
-        return this.dsProcessorService.getDsProcessor(ds).dsFilterProcessor(ds, this.api);
-      } else {
-        return true;
-      }
-    });
     return filteredDs;
   }
 

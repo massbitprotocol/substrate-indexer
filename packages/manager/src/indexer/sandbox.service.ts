@@ -8,6 +8,7 @@ import {Config} from '../configure/config';
 import {getLogger} from '../utils/logger';
 import {ApiService} from './api.service';
 import {StoreService} from './store.service';
+import {ApiAt} from './types';
 
 export interface SandboxOption {
   store?: Store;
@@ -107,22 +108,22 @@ export class SandboxService {
     this.storeService = storeService;
   }
 
-  async getDatasourceProcessor(ds: Datasource): Promise<IndexerSandbox> {
+  getDatasourceProcessor(ds: Datasource, api: ApiAt): IndexerSandbox {
     const entry = this.getDataSourceEntry(ds);
-
-    if (!this.processorCache[entry]) {
-      this.processorCache[entry] = new IndexerSandbox(
+    let processor = this.processorCache[entry];
+    if (!processor) {
+      processor = new IndexerSandbox(
         {
-          api: await this.apiService.getPatchedApi(),
           entry,
           root: this.project.path,
           store: this.storeService.getStore(),
         },
         this.config
       );
+      this.processorCache[entry] = processor;
     }
-
-    return this.processorCache[entry];
+    processor.freeze(api, 'api');
+    return processor;
   }
 
   private getDataSourceEntry(ds: Datasource): string {

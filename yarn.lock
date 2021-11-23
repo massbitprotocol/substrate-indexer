@@ -2213,7 +2213,6 @@ __metadata:
     "@apollo/client": ^3.4.16
     "@massbit/common": "workspace:*"
     "@massbit/types": "workspace:*"
-    "@nestjs/bull": ^0.4.2
     "@nestjs/common": ^7.6.9
     "@nestjs/core": ^7.6.1
     "@nestjs/event-emitter": ^0.0.2
@@ -2223,7 +2222,6 @@ __metadata:
     "@nestjs/testing": ^7.6.9
     "@polkadot/api": 6.6.1
     "@types/app-module-path": ^2.2.0
-    "@types/bull": ^3.15.5
     "@types/express": ^4.17.12
     "@types/jest": ^26.0.23
     "@types/lodash": ^4.14.170
@@ -2313,17 +2311,6 @@ __metadata:
     "@polkadot/api": ^6
   languageName: unknown
   linkType: soft
-
-"@nestjs/bull@npm:^0.4.2":
-  version: 0.4.2
-  resolution: "@nestjs/bull@npm:0.4.2"
-  peerDependencies:
-    "@nestjs/common": ^6.10.11 || ^7.0.0 || ^8.0.0
-    "@nestjs/core": ^6.10.11 || ^7.0.0 || ^8.0.0
-    bull: ^3.3 || ^3.22.0
-  checksum: 9bdd23b65edb202e6d1ea98ef12dbf2b0046e3cc624ac3306f24517969397a74ae2d48d53118cd908edbb6995ebd6064b6ba8729d9392dc420832f4be1c0ff47
-  languageName: node
-  linkType: hard
 
 "@nestjs/common@npm:^7.6.9":
   version: 7.6.18
@@ -3221,15 +3208,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/bull@npm:^3.15.5":
-  version: 3.15.5
-  resolution: "@types/bull@npm:3.15.5"
-  dependencies:
-    "@types/ioredis": "*"
-  checksum: 974f4033d19d56aad16e03e6a23e2eae21965a77ce559af1910eef5ab84fa8ce022bb3fb284a60a10f9581219da1bd4be190325e7392ee51dbe28ee2cde1edc9
-  languageName: node
-  linkType: hard
-
 "@types/connect@npm:*":
   version: 3.4.34
   resolution: "@types/connect@npm:3.4.34"
@@ -3400,15 +3378,6 @@ __metadata:
   version: 1.8.1
   resolution: "@types/http-errors@npm:1.8.1"
   checksum: 394d9c07ff713f1d96903716bfeb51ed4e08add5f2e9c65d45ace3668f4fb8314be1f82282259770a0893c9d693d9ba637e4cf6a1b8ec1ee7e38a1b01845acba
-  languageName: node
-  linkType: hard
-
-"@types/ioredis@npm:*":
-  version: 4.27.8
-  resolution: "@types/ioredis@npm:4.27.8"
-  dependencies:
-    "@types/node": "*"
-  checksum: a07b4d46e6b6d64782047bc1a69460f74c2e18d0bde568e5492c2c797b4436e9fe4621b7f1f28338d9cf7eb26a50c22c53bd0e0aebcff08a47ddba4c9b0f7eb0
   languageName: node
   linkType: hard
 

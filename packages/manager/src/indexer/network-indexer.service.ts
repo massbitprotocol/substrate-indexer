@@ -126,8 +126,6 @@ export class NetworkIndexerService implements OnApplicationShutdown {
       specName
       genesisHash
       indexerHealthy
-      indexerNodeVersion
-      queryNodeVersion
     }`;
     const specVersionQuery = `
     specVersions {

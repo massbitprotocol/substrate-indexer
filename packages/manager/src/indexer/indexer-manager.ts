@@ -2,22 +2,21 @@ import {execSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import {INetworkConfig, Project} from '@massbit/common';
-import {Process, Processor} from '@nestjs/bull';
 import {Inject, Injectable} from '@nestjs/common';
-import {EventEmitter2} from '@nestjs/event-emitter';
-import {Job} from 'bull';
+import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {isNil, omitBy} from 'lodash';
 import {Sequelize} from 'sequelize';
 import {Config} from '../configure/config';
+import {DeployIndexerDto} from '../dto';
 import {IndexerRepo} from '../entities';
 import {getLogger} from '../utils/logger';
-import {IndexerManager} from './indexer.manager';
+import {IndexerEvent} from './events';
+import {IndexerInstance} from './indexer';
 
 const logger = getLogger('indexer-manager');
 
 @Injectable()
-@Processor('indexer')
-export class IndexerProcessor {
+export class IndexerManager {
   constructor(
     private sequelize: Sequelize,
     private config: Config,
@@ -25,10 +24,10 @@ export class IndexerProcessor {
     private eventEmitter: EventEmitter2
   ) {}
 
-  @Process()
-  async handleIndexer(job: Job): Promise<void> {
+  @OnEvent(IndexerEvent.IndexerDeployed, {async: true})
+  async handleIndexerDeployment(data: DeployIndexerDto): Promise<void> {
     logger.info('fetch project from GitHub');
-    const projectPath = this.cloneProject(job.data.repository);
+    const projectPath = this.cloneProject(data.repository);
 
     const project = await Project.create(
       projectPath,
@@ -44,15 +43,15 @@ export class IndexerProcessor {
       process.exit(1);
     });
 
-    logger.info("install indexer's dependencies...");
+    logger.info(`install indexer's dependencies...`);
     this.runCmd(projectPath, `npm install`);
 
     logger.info('build indexer...');
     this.runCmd(projectPath, `npm run build`);
 
-    logger.info('start indexer');
-    const indexer = new IndexerManager(project, this.sequelize, this.config, this.indexerRepo, this.eventEmitter);
-    await indexer.start(job.data);
+    logger.info(`start indexer ${project.name}`);
+    const indexer = new IndexerInstance(project, this.sequelize, this.config, this.indexerRepo, this.eventEmitter);
+    await indexer.start(data);
   }
 
   cloneProject(url: string): string {

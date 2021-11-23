@@ -1,2 +1,2 @@
 export * from './indexer.entity';
-export * from './metadata.entity';
+export * from '../indexer/entities/metadata.entity';

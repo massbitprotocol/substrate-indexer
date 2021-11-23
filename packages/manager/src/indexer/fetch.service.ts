@@ -1,21 +1,5 @@
-import {
-  isRuntimeDataSourceV0_0_2,
-  IRuntimeDataSourceV0_0_1,
-  delay,
-  isBaseHandler,
-  isCustomDatasource,
-  isCustomHandler,
-  isRuntimeDatasource,
-  Project,
-} from '@massbit/common';
-import {
-  SubstrateCallFilter,
-  SubstrateEventFilter,
-  SubstrateHandlerKind,
-  SubstrateHandler,
-  Datasource,
-  SubstrateHandlerFilter,
-} from '@massbit/types';
+import {isRuntimeDataSourceV0_0_2, IRuntimeDataSourceV0_0_1, delay, Project} from '@massbit/common';
+import {SubstrateCallFilter, SubstrateEventFilter, SubstrateHandlerKind, SubstrateHandlerFilter} from '@massbit/types';
 import {OnApplicationShutdown} from '@nestjs/common';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {Interval} from '@nestjs/schedule';
@@ -27,7 +11,6 @@ import {getLogger} from '../utils/logger';
 import * as SubstrateUtil from '../utils/substrate';
 import {ApiService} from './api.service';
 import {BlockedQueue} from './blocked-queue';
-import {DsProcessorService} from './ds-processor.service';
 import {IndexerEvent} from './events';
 import {NetworkIndexer, NetworkIndexerService} from './network-indexer.service';
 import {BlockContent, IndexerFilters} from './types';
@@ -48,7 +31,6 @@ export class FetchService implements OnApplicationShutdown {
   private indexerFilters: IndexerFilters;
   private readonly project: Project;
   private apiService: ApiService;
-  private dsProcessorService: DsProcessorService;
   private config: Config;
   private networkIndexerService: NetworkIndexerService;
   private eventEmitter: EventEmitter2;
@@ -58,7 +40,6 @@ export class FetchService implements OnApplicationShutdown {
     project: Project,
     config: Config,
     apiService: ApiService,
-    dsProcessorService: DsProcessorService,
     networkIndexerService: NetworkIndexerService,
     eventEmitter: EventEmitter2
   ) {
@@ -67,10 +48,9 @@ export class FetchService implements OnApplicationShutdown {
     this.eventEmitter = eventEmitter;
     this.apiService = apiService;
     this.networkIndexerService = networkIndexerService;
-    this.dsProcessorService = dsProcessorService;
     this.blockBuffer = new BlockedQueue<BlockContent>(this.config.batchSize * 3);
     this.blockNumberBuffer = new BlockedQueue<number>(this.config.batchSize * 3);
-    this.logger = getLogger(`[fetch] [${project.manifest.name}]`);
+    this.logger = getLogger(project.manifest.name);
   }
 
   async init(): Promise<void> {
@@ -99,10 +79,8 @@ export class FetchService implements OnApplicationShutdown {
     );
     for (const ds of dataSources) {
       for (const handler of ds.mapping.handlers) {
-        const baseHandlerKind = this.getBaseHandlerKind(ds, handler);
-        const filterList = isRuntimeDatasource(ds)
-          ? [handler.filter as SubstrateHandlerFilter].filter(Boolean)
-          : this.getBaseHandlerFilters<SubstrateHandlerFilter>(ds, handler.kind);
+        const baseHandlerKind = handler.kind;
+        const filterList = [handler.filter as SubstrateHandlerFilter].filter(Boolean);
         if (!filterList.length) return;
         switch (baseHandlerKind) {
           case SubstrateHandlerKind.Block:
@@ -258,7 +236,7 @@ export class FetchService implements OnApplicationShutdown {
             continue; // skip nextBlockRange() way
           }
         } catch (e) {
-          this.logger.debug(`Fetch network indexer stopped: ${e.message}`);
+          this.logger.debug(`fetch network indexer stopped: ${e.message}`);
         }
       }
       // the original method: fill next batch size of blocks
@@ -285,7 +263,9 @@ export class FetchService implements OnApplicationShutdown {
         metadataChanged ? undefined : this.parentSpecVersion
       );
       this.logger.info(
-        `fetch block [${bufferBlocks[0]},${bufferBlocks[bufferBlocks.length - 1]}], total ${bufferBlocks.length} blocks`
+        `fetch block in range [${bufferBlocks[0]},${bufferBlocks[bufferBlocks.length - 1]}], total ${
+          bufferBlocks.length
+        } blocks`
       );
       this.blockBuffer.putAll(blocks);
       this.eventEmitter.emit(IndexerEvent.BlockQueueSize, {
@@ -333,28 +313,5 @@ export class FetchService implements OnApplicationShutdown {
     this.eventEmitter.emit(IndexerEvent.BlocknumberQueueSize, {
       value: this.blockNumberBuffer.size,
     });
-  }
-
-  private getBaseHandlerKind(ds: Datasource, handler: SubstrateHandler): SubstrateHandlerKind {
-    if (isRuntimeDatasource(ds) && isBaseHandler(handler)) {
-      return handler.kind;
-    } else if (isCustomDatasource(ds) && isCustomHandler(handler)) {
-      const plugin = this.dsProcessorService.getDsProcessor(ds);
-      const baseHandler = plugin.handlerProcessors[handler.kind]?.baseHandlerKind;
-      if (!baseHandler) {
-        throw new Error(`handler type ${handler.kind} not found in processor for ${ds.kind}`);
-      }
-      return baseHandler;
-    }
-  }
-
-  private getBaseHandlerFilters<T extends SubstrateHandlerFilter>(ds: Datasource, handlerKind: string): T[] {
-    if (isCustomDatasource(ds)) {
-      const plugin = this.dsProcessorService.getDsProcessor(ds);
-      const processor = plugin.handlerProcessors[handlerKind];
-      return processor.baseFilter instanceof Array ? (processor.baseFilter as T[]) : ([processor.baseFilter] as T[]);
-    } else {
-      throw new Error(`expect custom datasource here`);
-    }
   }
 }
