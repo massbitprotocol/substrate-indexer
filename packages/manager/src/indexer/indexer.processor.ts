@@ -2,21 +2,20 @@ import {execSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import {INetworkConfig, Project} from '@massbit/common';
-import {Process, Processor} from '@nestjs/bull';
 import {Inject, Injectable} from '@nestjs/common';
-import {EventEmitter2} from '@nestjs/event-emitter';
-import {Job} from 'bull';
+import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {isNil, omitBy} from 'lodash';
 import {Sequelize} from 'sequelize';
 import {Config} from '../configure/config';
+import {DeployIndexerDto} from '../dto';
 import {IndexerRepo} from '../entities';
 import {getLogger} from '../utils/logger';
+import {IndexerEvent} from './events';
 import {IndexerManager} from './indexer.manager';
 
 const logger = getLogger('indexer-manager');
 
 @Injectable()
-@Processor('indexer')
 export class IndexerProcessor {
   constructor(
     private sequelize: Sequelize,
@@ -25,10 +24,10 @@ export class IndexerProcessor {
     private eventEmitter: EventEmitter2
   ) {}
 
-  @Process()
-  async handleIndexer(job: Job): Promise<void> {
+  @OnEvent(IndexerEvent.IndexerDeployed, {async: true})
+  async handleIndexerDeployment(data: DeployIndexerDto): Promise<void> {
     logger.info('fetch project from GitHub');
-    const projectPath = this.cloneProject(job.data.repository);
+    const projectPath = this.cloneProject(data.repository);
 
     const project = await Project.create(
       projectPath,
@@ -52,7 +51,7 @@ export class IndexerProcessor {
 
     logger.info('start indexer');
     const indexer = new IndexerManager(project, this.sequelize, this.config, this.indexerRepo, this.eventEmitter);
-    await indexer.start(job.data);
+    await indexer.start(data);
   }
 
   cloneProject(url: string): string {

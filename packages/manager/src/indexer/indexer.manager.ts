@@ -1,5 +1,5 @@
 import path from 'path';
-import {buildSchema, getAllEntitiesRelations, isCustomDatasource, isRuntimeDatasource, Project} from '@massbit/common';
+import {buildSchema, getAllEntitiesRelations, isRuntimeDatasource, Project} from '@massbit/common';
 import {Datasource, SubstrateHandlerKind, SubstrateRuntimeHandler} from '@massbit/types';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {ApiPromise} from '@polkadot/api';
@@ -89,9 +89,14 @@ export class IndexerManager {
     this.storeService.setTransaction(tx);
 
     try {
-      await this.apiService.setBlockHash(block.block.hash);
+      const isUpgraded = block.specVersion !== this.prevSpecVersion;
+      // if parentBlockHash injected, which means we need to check runtime upgrade
+      const apiAt = await this.apiService.getPatchedApi(
+        block.block.hash,
+        isUpgraded ? block.block.header.parentHash : undefined
+      );
       for (const ds of this.filteredDataSources) {
-        const vm = await this.sandboxService.getDatasourceProcessor(ds);
+        const vm = this.sandboxService.getDatasourceProcessor(ds, apiAt);
         if (isRuntimeDatasource(ds)) {
           await IndexerManager.indexBlockForRuntimeDs(vm, ds.mapping.handlers, blockContent);
         }

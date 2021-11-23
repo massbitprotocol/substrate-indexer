@@ -5,6 +5,8 @@ import {
   SubstrateEvent,
   SubstrateExtrinsic,
 } from '@massbit/types';
+import {ApiPromise} from '@polkadot/api';
+import {ApiDecoration} from '@polkadot/api/types';
 
 export interface BlockContent {
   block: SubstrateBlock;
@@ -16,3 +18,5 @@ export interface IndexerFilters {
   eventFilters: SubstrateEventFilter[];
   extrinsicFilters: SubstrateCallFilter[];
 }
+
+export type ApiAt = ApiDecoration<'promise'> & {rpc: ApiPromise['rpc']};
