@@ -1,11 +1,11 @@
 import {Module} from '@nestjs/common';
 import {DbModule} from '../db/db.module';
+import {IndexerManager} from './indexer-manager';
 import {IndexerController} from './indexer.controller';
-import {IndexerProcessor} from './indexer.processor';
 
 @Module({
   imports: [DbModule.forFeature(['Indexer'])],
-  providers: [IndexerProcessor],
+  providers: [IndexerManager],
   controllers: [IndexerController],
   exports: [],
 })

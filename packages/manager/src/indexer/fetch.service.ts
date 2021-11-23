@@ -1,21 +1,5 @@
-import {
-  isRuntimeDataSourceV0_0_2,
-  IRuntimeDataSourceV0_0_1,
-  delay,
-  isBaseHandler,
-  isCustomDatasource,
-  isCustomHandler,
-  isRuntimeDatasource,
-  Project,
-} from '@massbit/common';
-import {
-  SubstrateCallFilter,
-  SubstrateEventFilter,
-  SubstrateHandlerKind,
-  SubstrateHandler,
-  Datasource,
-  SubstrateHandlerFilter,
-} from '@massbit/types';
+import {isRuntimeDataSourceV0_0_2, IRuntimeDataSourceV0_0_1, delay, Project} from '@massbit/common';
+import {SubstrateCallFilter, SubstrateEventFilter, SubstrateHandlerKind, SubstrateHandlerFilter} from '@massbit/types';
 import {OnApplicationShutdown} from '@nestjs/common';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {Interval} from '@nestjs/schedule';
@@ -66,7 +50,7 @@ export class FetchService implements OnApplicationShutdown {
     this.networkIndexerService = networkIndexerService;
     this.blockBuffer = new BlockedQueue<BlockContent>(this.config.batchSize * 3);
     this.blockNumberBuffer = new BlockedQueue<number>(this.config.batchSize * 3);
-    this.logger = getLogger(`[fetch] [${project.manifest.name}]`);
+    this.logger = getLogger(project.manifest.name);
   }
 
   async init(): Promise<void> {
@@ -252,7 +236,7 @@ export class FetchService implements OnApplicationShutdown {
             continue; // skip nextBlockRange() way
           }
         } catch (e) {
-          this.logger.debug(`Fetch network indexer stopped: ${e.message}`);
+          this.logger.debug(`fetch network indexer stopped: ${e.message}`);
         }
       }
       // the original method: fill next batch size of blocks
@@ -279,7 +263,9 @@ export class FetchService implements OnApplicationShutdown {
         metadataChanged ? undefined : this.parentSpecVersion
       );
       this.logger.info(
-        `fetch block [${bufferBlocks[0]},${bufferBlocks[bufferBlocks.length - 1]}], total ${bufferBlocks.length} blocks`
+        `fetch block in range [${bufferBlocks[0]},${bufferBlocks[bufferBlocks.length - 1]}], total ${
+          bufferBlocks.length
+        } blocks`
       );
       this.blockBuffer.putAll(blocks);
       this.eventEmitter.emit(IndexerEvent.BlockQueueSize, {
@@ -327,11 +313,5 @@ export class FetchService implements OnApplicationShutdown {
     this.eventEmitter.emit(IndexerEvent.BlocknumberQueueSize, {
       value: this.blockNumberBuffer.size,
     });
-  }
-
-  private getBaseHandlerKind(ds: Datasource, handler: SubstrateHandler): SubstrateHandlerKind {
-    if (isRuntimeDatasource(ds) && isBaseHandler(handler)) {
-      return handler.kind;
-    }
   }
 }

@@ -11,12 +11,12 @@ import {DeployIndexerDto} from '../dto';
 import {IndexerRepo} from '../entities';
 import {getLogger} from '../utils/logger';
 import {IndexerEvent} from './events';
-import {IndexerManager} from './indexer.manager';
+import {IndexerInstance} from './indexer';
 
 const logger = getLogger('indexer-manager');
 
 @Injectable()
-export class IndexerProcessor {
+export class IndexerManager {
   constructor(
     private sequelize: Sequelize,
     private config: Config,
@@ -43,14 +43,14 @@ export class IndexerProcessor {
       process.exit(1);
     });
 
-    logger.info("install indexer's dependencies...");
+    logger.info(`install indexer's dependencies...`);
     this.runCmd(projectPath, `npm install`);
 
     logger.info('build indexer...');
     this.runCmd(projectPath, `npm run build`);
 
-    logger.info('start indexer');
-    const indexer = new IndexerManager(project, this.sequelize, this.config, this.indexerRepo, this.eventEmitter);
+    logger.info(`start indexer ${project.name}`);
+    const indexer = new IndexerInstance(project, this.sequelize, this.config, this.indexerRepo, this.eventEmitter);
     await indexer.start(data);
   }
 
