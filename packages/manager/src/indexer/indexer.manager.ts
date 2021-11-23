@@ -10,7 +10,6 @@ import {IndexerModel, IndexerRepo, MetadataFactory} from '../entities';
 import {getLogger} from '../utils/logger';
 import * as SubstrateUtil from '../utils/substrate';
 import {ApiService} from './api.service';
-import {DsProcessorService} from './ds-processor.service';
 import {IndexerEvent} from './events';
 import {FetchService} from './fetch.service';
 import {NetworkIndexerService} from './network-indexer.service';
@@ -27,7 +26,6 @@ export class IndexerManager {
   private readonly storeService: StoreService;
   private readonly sequelize: Sequelize;
   private readonly config: Config;
-  private readonly dsProcessorService: DsProcessorService;
   private readonly eventEmitter: EventEmitter2;
   private readonly networkIndexerService: NetworkIndexerService;
   protected indexerRepo: IndexerRepo;
@@ -53,12 +51,10 @@ export class IndexerManager {
 
     this.networkIndexerService = new NetworkIndexerService(this.project);
     this.apiService = new ApiService(this.project, this.eventEmitter);
-    this.dsProcessorService = new DsProcessorService(this.project);
     this.fetchService = new FetchService(
       this.project,
       this.config,
       this.apiService,
-      this.dsProcessorService,
       this.networkIndexerService,
       this.eventEmitter
     );
@@ -220,14 +216,6 @@ export class IndexerManager {
       );
       process.exit(1);
     }
-    // perform filter for custom ds
-    filteredDs = filteredDs.filter((ds) => {
-      if (isCustomDatasource(ds)) {
-        return this.dsProcessorService.getDsProcessor(ds).dsFilterProcessor(ds, this.api);
-      } else {
-        return true;
-      }
-    });
     return filteredDs;
   }
 

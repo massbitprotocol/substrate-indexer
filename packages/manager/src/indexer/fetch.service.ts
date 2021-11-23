@@ -27,7 +27,6 @@ import {getLogger} from '../utils/logger';
 import * as SubstrateUtil from '../utils/substrate';
 import {ApiService} from './api.service';
 import {BlockedQueue} from './blocked-queue';
-import {DsProcessorService} from './ds-processor.service';
 import {IndexerEvent} from './events';
 import {NetworkIndexer, NetworkIndexerService} from './network-indexer.service';
 import {BlockContent, IndexerFilters} from './types';
@@ -48,7 +47,6 @@ export class FetchService implements OnApplicationShutdown {
   private indexerFilters: IndexerFilters;
   private readonly project: Project;
   private apiService: ApiService;
-  private dsProcessorService: DsProcessorService;
   private config: Config;
   private networkIndexerService: NetworkIndexerService;
   private eventEmitter: EventEmitter2;
@@ -58,7 +56,6 @@ export class FetchService implements OnApplicationShutdown {
     project: Project,
     config: Config,
     apiService: ApiService,
-    dsProcessorService: DsProcessorService,
     networkIndexerService: NetworkIndexerService,
     eventEmitter: EventEmitter2
   ) {
@@ -67,7 +64,6 @@ export class FetchService implements OnApplicationShutdown {
     this.eventEmitter = eventEmitter;
     this.apiService = apiService;
     this.networkIndexerService = networkIndexerService;
-    this.dsProcessorService = dsProcessorService;
     this.blockBuffer = new BlockedQueue<BlockContent>(this.config.batchSize * 3);
     this.blockNumberBuffer = new BlockedQueue<number>(this.config.batchSize * 3);
     this.logger = getLogger(`[fetch] [${project.manifest.name}]`);
@@ -99,10 +95,8 @@ export class FetchService implements OnApplicationShutdown {
     );
     for (const ds of dataSources) {
       for (const handler of ds.mapping.handlers) {
-        const baseHandlerKind = this.getBaseHandlerKind(ds, handler);
-        const filterList = isRuntimeDatasource(ds)
-          ? [handler.filter as SubstrateHandlerFilter].filter(Boolean)
-          : this.getBaseHandlerFilters<SubstrateHandlerFilter>(ds, handler.kind);
+        const baseHandlerKind = handler.kind;
+        const filterList = [handler.filter as SubstrateHandlerFilter].filter(Boolean);
         if (!filterList.length) return;
         switch (baseHandlerKind) {
           case SubstrateHandlerKind.Block:
@@ -338,23 +332,6 @@ export class FetchService implements OnApplicationShutdown {
   private getBaseHandlerKind(ds: Datasource, handler: SubstrateHandler): SubstrateHandlerKind {
     if (isRuntimeDatasource(ds) && isBaseHandler(handler)) {
       return handler.kind;
-    } else if (isCustomDatasource(ds) && isCustomHandler(handler)) {
-      const plugin = this.dsProcessorService.getDsProcessor(ds);
-      const baseHandler = plugin.handlerProcessors[handler.kind]?.baseHandlerKind;
-      if (!baseHandler) {
-        throw new Error(`handler type ${handler.kind} not found in processor for ${ds.kind}`);
-      }
-      return baseHandler;
-    }
-  }
-
-  private getBaseHandlerFilters<T extends SubstrateHandlerFilter>(ds: Datasource, handlerKind: string): T[] {
-    if (isCustomDatasource(ds)) {
-      const plugin = this.dsProcessorService.getDsProcessor(ds);
-      const processor = plugin.handlerProcessors[handlerKind];
-      return processor.baseFilter instanceof Array ? (processor.baseFilter as T[]) : ([processor.baseFilter] as T[]);
-    } else {
-      throw new Error(`expect custom datasource here`);
     }
   }
 }

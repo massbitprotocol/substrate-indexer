@@ -1,4 +1,4 @@
-import { BuildOptions, DataTypes, Model, Sequelize } from 'sequelize';
+import {BuildOptions, DataTypes, Model, Sequelize} from 'sequelize';
 
 export interface Metadata {
   key: string;
@@ -11,10 +11,7 @@ export type MetadataRepo = typeof Model & {
   new (values?: unknown, options?: BuildOptions): MetadataModel;
 };
 
-export function MetadataFactory(
-  sequelize: Sequelize,
-  schema: string,
-): MetadataRepo {
+export function MetadataFactory(sequelize: Sequelize, schema: string): MetadataRepo {
   return <MetadataRepo>sequelize.define(
     `_metadata`,
     {
@@ -26,6 +23,6 @@ export function MetadataFactory(
         type: DataTypes.JSONB,
       },
     },
-    { freezeTableName: true, schema: schema },
+    {freezeTableName: true, schema: schema}
   );
 }
