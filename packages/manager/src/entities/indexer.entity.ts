@@ -10,12 +10,13 @@ interface IndexerCreationAttributes {
   name: string;
   description: string;
   repository: string;
-  dbSchema: string;
+  imageUrl: string;
+  dbSchema?: string;
   version?: string;
-  hash: string;
+  hash?: string;
   nextBlockHeight?: number;
-  network: string;
-  networkGenesis: string;
+  network?: string;
+  networkGenesis?: string;
 }
 
 export interface IndexerModel
@@ -41,28 +42,32 @@ export function IndexerFactory(sequelize: Sequelize): IndexerRepo {
       },
       description: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       repository: {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      imageUrl: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       dbSchema: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       version: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
         defaultValue: 0,
       },
       hash: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       nextBlockHeight: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
         defaultValue: 1,
       },
       network: {

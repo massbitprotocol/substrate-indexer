@@ -134,7 +134,6 @@ export function filterEvents(
   );
 }
 
-// TODO: prefetch all known runtime upgrades at once
 export async function prefetchMetadata(api: ApiPromise, hash: BlockHash): Promise<void> {
   await api.getBlockRegistry(hash);
 }
@@ -243,7 +242,7 @@ export async function fetchRuntimeVersionRange(api: ApiPromise, hashs: BlockHash
 
 export async function fetchBlocksBatches(
   api: ApiPromise,
-  blockArray,
+  blockArray: number[],
   overallSpecVer?: number
   // specVersionMap?: number[],
 ): Promise<BlockContent[]> {

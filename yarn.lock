@@ -2241,6 +2241,7 @@ __metadata:
     dotenv: ^10.0.0
     lodash: ^4.17.21
     merkle-tools: ^1.4.1
+    node-worker-threads-pool: ^1.5.1
     nodemon: ^2.0.7
     parse-json: ^5.2.0
     pg: ^8.6.0
@@ -12315,6 +12316,13 @@ fsevents@~2.3.1:
   version: 2.0.1
   resolution: "node-releases@npm:2.0.1"
   checksum: 4113fdc41979e65416d84e0cf0456c3097a045dfa0a10196689f07c32de854204e3f4e1631bb06f4e903cc68c12455b8525e92e19956f64364b7202ca93846d6
+  languageName: node
+  linkType: hard
+
+"node-worker-threads-pool@npm:^1.5.1":
+  version: 1.5.1
+  resolution: "node-worker-threads-pool@npm:1.5.1"
+  checksum: dec38da85fb7fc4105e3804116c2a44e0cc9420b2a6e145d9f0e5aef13445d0542486531ee88f8feef8b5a45b29965d80adb0b22115d5bd4c47befb8481461a3
   languageName: node
   linkType: hard
 
