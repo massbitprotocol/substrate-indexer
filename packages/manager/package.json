@@ -30,6 +30,7 @@
     "dayjs": "^1.10.5",
     "lodash": "^4.17.21",
     "merkle-tools": "^1.4.1",
+    "node-worker-threads-pool": "^1.5.1",
     "parse-json": "^5.2.0",
     "pg": "^8.6.0",
     "pino": "^6.11.3",

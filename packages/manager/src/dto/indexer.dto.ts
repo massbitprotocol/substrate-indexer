@@ -1,10 +1,9 @@
-import {Expose} from 'class-transformer';
-
 export class DeployIndexerDto {
   id: string;
   name: string;
   description: string;
   repository: string;
+  imageUrl: string;
 }
 
 export class DeployIndexerResponseDto {
@@ -20,15 +19,9 @@ export class IndexerDto {
     Object.assign(this, partial);
   }
 
-  @Expose()
-  id!: string;
-
-  @Expose()
-  name!: string;
-
-  @Expose()
-  description!: string;
-
-  @Expose()
-  repository!: string;
+  id: string;
+  name: string;
+  description: string;
+  repository: string;
+  imageUrl: string;
 }

@@ -11,8 +11,16 @@ export class IndexerController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  createIndexer(@Body() data: DeployIndexerDto): DeployIndexerResponseDto {
+  async createIndexer(@Body() data: DeployIndexerDto): Promise<DeployIndexerResponseDto> {
     data.id = uuidv4();
+    const {name} = data;
+    const indexer = await this.indexerRepo.findOne({
+      where: {name},
+    });
+    if (indexer) {
+      throw new Error(`indexer with name ${name} is already existed`);
+    }
+    await this.indexerRepo.create(data);
     this.eventEmitter.emit(IndexerEvent.IndexerDeployed, data);
     return new DeployIndexerResponseDto({id: data.id});
   }
@@ -21,8 +29,8 @@ export class IndexerController {
   @HttpCode(HttpStatus.OK)
   async getIndexerList(): Promise<IndexerDto[]> {
     const indexers = await this.indexerRepo.findAll();
-    return indexers.map(({description, id, name, repository}) => {
-      return new IndexerDto({id, name, description, repository});
+    return indexers.map(({description, id, imageUrl, name, repository}) => {
+      return new IndexerDto({id, name, description, repository, imageUrl});
     });
   }
 
@@ -30,7 +38,7 @@ export class IndexerController {
   @HttpCode(HttpStatus.OK)
   async getIndexerById(@Param('id') id: string): Promise<IndexerDto> {
     const indexer = await this.indexerRepo.findOne({where: {id}});
-    const {description, name, repository} = indexer;
-    return new IndexerDto({id, name, description, repository});
+    const {description, imageUrl, name, repository} = indexer;
+    return new IndexerDto({id, name, description, repository, imageUrl});
   }
 }

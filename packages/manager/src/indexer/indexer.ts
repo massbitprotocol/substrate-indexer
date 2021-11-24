@@ -120,7 +120,7 @@ export class IndexerInstance {
   private getStartBlockFromDataSources() {
     const startBlocksList = this.getDataSourcesForSpecName().map((item) => item.startBlock ?? 1);
     if (startBlocksList.length === 0) {
-      this.logger.error(`Failed to find a valid datasource, Please check your endpoint if specName filter is used.`);
+      this.logger.error(`failed to find a valid datasource`);
       process.exit(1);
     } else {
       return Math.min(...startBlocksList);
@@ -144,7 +144,7 @@ export class IndexerInstance {
   }
 
   private async createIndexer(data: DeployIndexerDto): Promise<IndexerModel> {
-    const {description, id, name, repository} = data;
+    const {description, id, imageUrl, name, repository} = data;
     let indexer = await this.indexerRepo.findOne({
       where: {name},
     });
@@ -156,12 +156,12 @@ export class IndexerInstance {
       if (!(schemas as unknown as string[]).includes(indexerSchema)) {
         await this.sequelize.createSchema(indexerSchema, undefined);
       }
-
-      indexer = await this.indexerRepo.create({
+      [indexer] = await this.indexerRepo.upsert({
         id,
         name,
         description,
         repository,
+        imageUrl,
         dbSchema: indexerSchema,
         hash: '0x',
         nextBlockHeight: this.getStartBlockFromDataSources(),

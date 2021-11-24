@@ -5,6 +5,7 @@ import {INetworkConfig, Project} from '@massbit/common';
 import {Inject, Injectable} from '@nestjs/common';
 import {EventEmitter2, OnEvent} from '@nestjs/event-emitter';
 import {isNil, omitBy} from 'lodash';
+import {StaticPool} from 'node-worker-threads-pool';
 import {Sequelize} from 'sequelize';
 import {Config} from '../configure/config';
 import {DeployIndexerDto} from '../dto';
@@ -26,35 +27,38 @@ export class IndexerManager {
 
   @OnEvent(IndexerEvent.IndexerDeployed, {async: true})
   async handleIndexerDeployment(data: DeployIndexerDto): Promise<void> {
-    logger.info('fetch project from GitHub');
-    const projectPath = this.cloneProject(data.repository);
+    try {
+      logger.info('fetch project from GitHub repository...');
+      const projectPath = this.cloneGithubRepo(data.repository);
 
-    const project = await Project.create(
-      projectPath,
-      omitBy<INetworkConfig>(
-        {
-          endpoint: this.config.networkEndpoint,
-          networkIndexer: this.config.networkIndexer,
-        },
-        isNil
-      )
-    ).catch((err) => {
-      logger.error(err, 'Create project from given path failed!');
-      process.exit(1);
-    });
+      const project = await Project.create(
+        projectPath,
+        omitBy<INetworkConfig>(
+          {
+            endpoint: this.config.networkEndpoint,
+            networkIndexer: this.config.networkIndexer,
+          },
+          isNil
+        )
+      );
 
-    logger.info(`install indexer's dependencies...`);
-    this.runCmd(projectPath, `npm install`);
+      const pool = new StaticPool({
+        size: 1,
+        task: path.resolve(__dirname, 'worker.js'),
+      });
 
-    logger.info('build indexer...');
-    this.runCmd(projectPath, `npm run build`);
+      logger.info(`install dependencies and build indexer...`);
+      await pool.exec(projectPath);
 
-    logger.info(`start indexer ${project.name}`);
-    const indexer = new IndexerInstance(project, this.sequelize, this.config, this.indexerRepo, this.eventEmitter);
-    await indexer.start(data);
+      logger.info(`start indexer ${project.name}`);
+      const indexer = new IndexerInstance(project, this.sequelize, this.config, this.indexerRepo, this.eventEmitter);
+      await indexer.start(data);
+    } catch (err) {
+      logger.error(err, `deploy indexer ${data.id} failed`);
+    }
   }
 
-  cloneProject(url: string): string {
+  cloneGithubRepo(url: string): string {
     const projectsDir = path.resolve(process.env.PROJECTS_DIR ?? '../../../projects');
     if (!fs.existsSync(projectsDir)) {
       fs.mkdirSync(projectsDir);
@@ -65,10 +69,6 @@ export class IndexerManager {
   }
 
   runCmd(srcDir: string, cmd: string): void {
-    try {
-      execSync(cmd, {cwd: srcDir, stdio: 'inherit'});
-    } catch (e) {
-      logger.error(`failed to run command \`${cmd}\`: ${e}`);
-    }
+    execSync(cmd, {cwd: srcDir, stdio: 'ignore'});
   }
 }
