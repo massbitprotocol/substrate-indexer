@@ -2,7 +2,6 @@ import {makeExtendSchemaPlugin, gql} from 'graphile-utils';
 import fetch from 'node-fetch';
 import {setAsyncInterval} from '../../utils/async-interval';
 import {argv} from '../../yargs';
-const {version: packageVersion} = require('../../../package.json');
 
 const indexerUrl = argv('indexer') as string | undefined;
 
@@ -14,13 +13,9 @@ type Metadata = {
   specName: string;
   genesisHash: string;
   indexerHealthy: boolean;
-  indexerNodeVersion: string;
-  queryNodeVersion: string;
 };
 
-const metaCache = {
-  queryNodeVersion: packageVersion,
-} as Metadata;
+const metaCache = {} as Metadata;
 
 export const GetMetadataPlugin = makeExtendSchemaPlugin((build) => {
   setAsyncInterval(async () => {
@@ -32,7 +27,6 @@ export const GetMetadataPlugin = makeExtendSchemaPlugin((build) => {
       Object.assign(metaCache, result);
     } catch (e) {
       metaCache.indexerHealthy = false;
-      console.warn(`Failed to fetch indexer meta, `, e.message);
     }
 
     try {
@@ -40,7 +34,6 @@ export const GetMetadataPlugin = makeExtendSchemaPlugin((build) => {
       metaCache.indexerHealthy = !!health.ok;
     } catch (e) {
       metaCache.indexerHealthy = false;
-      console.warn(`Failed to fetch indexer health, `, e.message);
     }
   }, 10000);
 
@@ -54,8 +47,6 @@ export const GetMetadataPlugin = makeExtendSchemaPlugin((build) => {
         specName: String
         genesisHash: String
         indexerHealthy: Boolean
-        indexerNodeVersion: String
-        queryNodeVersion: String
       }
       extend type Query {
         _metadata: _Metadata
