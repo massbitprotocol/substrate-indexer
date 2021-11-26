@@ -149,37 +149,37 @@ export class IndexerInstance {
       where: {name},
     });
     const {chain, genesisHash} = this.apiService.networkMeta;
-    if (!indexer) {
-      const suffix = await this.nextIndexerSchemaSuffix();
-      const indexerSchema = `indexer_${suffix}`;
-      const schemas = await this.sequelize.showAllSchemas(undefined);
-      if (!(schemas as unknown as string[]).includes(indexerSchema)) {
-        await this.sequelize.createSchema(indexerSchema, undefined);
-      }
-      [indexer] = await this.indexerRepo.upsert({
-        id,
-        name,
-        description,
-        repository,
-        imageUrl,
-        dbSchema: indexerSchema,
-        hash: '0x',
-        nextBlockHeight: this.getStartBlockFromDataSources(),
-        network: chain,
-        networkGenesis: genesisHash,
-      });
-    } else {
-      if (!indexer.networkGenesis || !indexer.network) {
-        indexer.network = chain;
-        indexer.networkGenesis = genesisHash;
-        await indexer.save();
-      } else if (indexer.networkGenesis !== genesisHash) {
-        this.logger.error(
-          `Not same network: genesisHash different. expected="${indexer.networkGenesis}"" actual="${genesisHash}"`
-        );
-        process.exit(1);
-      }
+    // if (!indexer) {
+    const suffix = await this.nextIndexerSchemaSuffix();
+    const indexerSchema = `indexer_${suffix}`;
+    const schemas = await this.sequelize.showAllSchemas(undefined);
+    if (!(schemas as unknown as string[]).includes(indexerSchema)) {
+      await this.sequelize.createSchema(indexerSchema, undefined);
     }
+    [indexer] = await this.indexerRepo.upsert({
+      id,
+      name,
+      description,
+      repository,
+      imageUrl,
+      dbSchema: indexerSchema,
+      hash: '0x',
+      nextBlockHeight: this.getStartBlockFromDataSources(),
+      network: chain,
+      networkGenesis: genesisHash,
+    });
+    // } else {
+    //   if (!indexer.networkGenesis || !indexer.network) {
+    //     indexer.network = chain;
+    //     indexer.networkGenesis = genesisHash;
+    //     await indexer.save();
+    //   } else if (indexer.networkGenesis !== genesisHash) {
+    //     this.logger.error(
+    //       `Not same network: genesisHash different. expected="${indexer.networkGenesis}"" actual="${genesisHash}"`
+    //     );
+    //     process.exit(1);
+    //   }
+    // }
     return indexer;
   }
 
