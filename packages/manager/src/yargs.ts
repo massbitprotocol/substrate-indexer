@@ -4,17 +4,6 @@ import yargs from 'yargs/yargs';
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function getYargsOption() {
   return yargs(hideBin(process.argv)).options({
-    config: {
-      alias: 'c',
-      demandOption: false,
-      describe: 'Specify configuration file',
-      type: 'string',
-    },
-    local: {
-      type: 'boolean',
-      demandOption: false,
-      describe: 'Use local mode',
-    },
     'batch-size': {
       demandOption: false,
       describe: 'Batch size of blocks to fetch in one round',
@@ -47,12 +36,6 @@ export function getYargsOption() {
       describe: 'Specify log level to print. Ignored when --debug is used',
       type: 'string',
       choices: ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'],
-    },
-    migrate: {
-      demandOption: false,
-      describe: 'Migrate db schema (for management tables only)',
-      type: 'boolean',
-      default: false,
     },
     'timestamp-field': {
       demandOption: false,

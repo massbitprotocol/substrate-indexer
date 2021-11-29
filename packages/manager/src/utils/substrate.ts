@@ -232,19 +232,18 @@ export async function fetchBlocksArray(api: ApiPromise, blockArray: number[]): P
   );
 }
 
-export async function fetchEventsRange(api: ApiPromise, hashs: BlockHash[]): Promise<Vec<EventRecord>[]> {
-  return Promise.all(hashs.map((hash) => api.query.system.events.at(hash)));
+export async function fetchEventsRange(api: ApiPromise, hashes: BlockHash[]): Promise<Vec<EventRecord>[]> {
+  return Promise.all(hashes.map((hash) => api.query.system.events.at(hash)));
 }
 
-export async function fetchRuntimeVersionRange(api: ApiPromise, hashs: BlockHash[]): Promise<RuntimeVersion[]> {
-  return Promise.all(hashs.map((hash) => api.rpc.state.getRuntimeVersion(hash)));
+export async function fetchRuntimeVersionRange(api: ApiPromise, hashes: BlockHash[]): Promise<RuntimeVersion[]> {
+  return Promise.all(hashes.map((hash) => api.rpc.state.getRuntimeVersion(hash)));
 }
 
 export async function fetchBlocksBatches(
   api: ApiPromise,
   blockArray: number[],
   overallSpecVer?: number
-  // specVersionMap?: number[],
 ): Promise<BlockContent[]> {
   const blocks = await fetchBlocksArray(api, blockArray);
   const blockHashes = blocks.map((b) => b.block.header.hash);
