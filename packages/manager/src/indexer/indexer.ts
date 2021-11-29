@@ -73,7 +73,7 @@ export class IndexerInstance {
     await this.ensureMetadata(this.indexerState.dbSchema);
 
     void this.fetchService.startLoop(this.indexerState.nextBlockHeight).catch((err) => {
-      this.logger.error(err, 'failed to fetch block');
+      this.logger.error(err, 'fetch block');
       process.exit(1);
     });
     this.filteredDataSources = this.filterDataSources();
