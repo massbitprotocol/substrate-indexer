@@ -1,10 +1,10 @@
-import {isRuntimeDataSourceV0_0_2, IRuntimeDataSourceV0_0_1, delay, Project} from '@massbit/common';
+import {isRuntimeDataSourceV0_0_2, delay, Project, RuntimeDataSourceV0_0_1} from '@massbit/common';
 import {SubstrateCallFilter, SubstrateEventFilter, SubstrateHandlerKind, SubstrateHandlerFilter} from '@massbit/types';
 import {OnApplicationShutdown} from '@nestjs/common';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {Interval} from '@nestjs/schedule';
 import {ApiPromise} from '@polkadot/api';
-import {isUndefined, range} from 'lodash';
+import {isUndefined, range, sortBy, uniqBy} from 'lodash';
 import Pino from 'pino';
 import {Config} from '../configure/config';
 import {getLogger} from '../utils/logger';
@@ -12,11 +12,37 @@ import * as SubstrateUtil from '../utils/substrate';
 import {ApiService} from './api.service';
 import {BlockedQueue} from './blocked-queue';
 import {IndexerEvent} from './events';
-import {NetworkIndexer, NetworkIndexerService} from './network-indexer.service';
-import {BlockContent, IndexerFilters} from './types';
+import {NetworkIndexerQueryEntry, NetworkIndexer, NetworkIndexerService} from './network-indexer.service';
+import {BlockContent} from './types';
 
 const BLOCK_TIME_VARIANCE = 5;
 const NETWORK_INDEXER_MAX_QUERY_SIZE = 10000;
+
+function eventFilterToQueryEntry(filter: SubstrateEventFilter): NetworkIndexerQueryEntry {
+  return {
+    entity: 'events',
+    conditions: [
+      {field: 'module', value: filter.module},
+      {
+        field: 'event',
+        value: filter.method,
+      },
+    ],
+  };
+}
+
+function callFilterToQueryEntry(filter: SubstrateCallFilter): NetworkIndexerQueryEntry {
+  return {
+    entity: 'extrinsics',
+    conditions: [
+      {field: 'module', value: filter.module},
+      {
+        field: 'call',
+        value: filter.method,
+      },
+    ],
+  };
+}
 
 export class FetchService implements OnApplicationShutdown {
   private latestBestHeight: number;
@@ -28,7 +54,7 @@ export class FetchService implements OnApplicationShutdown {
   private isShutdown = false;
   private parentSpecVersion: number;
   private useNetworkIndexer: boolean;
-  private indexerFilters: IndexerFilters;
+  private networkIndexerQueryEntries?: NetworkIndexerQueryEntry[];
   private readonly project: Project;
   private apiService: ApiService;
   private config: Config;
@@ -54,8 +80,8 @@ export class FetchService implements OnApplicationShutdown {
   }
 
   async init(): Promise<void> {
-    this.indexerFilters = this.getIndexFilters();
-    this.useNetworkIndexer = !!this.indexerFilters && !!this.project.network.networkIndexer;
+    this.networkIndexerQueryEntries = this.getDictionaryQueryEntries();
+    this.useNetworkIndexer = !!this.networkIndexerQueryEntries?.length && !!this.project.network.networkIndexer;
     await this.getFinalizedBlockHead();
     await this.getBestBlockHead();
   }
@@ -68,49 +94,39 @@ export class FetchService implements OnApplicationShutdown {
     return this.apiService.getApi();
   }
 
-  getIndexFilters(): IndexerFilters | undefined {
-    const eventFilters: SubstrateEventFilter[] = [];
-    const extrinsicFilters: SubstrateCallFilter[] = [];
+  getDictionaryQueryEntries(): NetworkIndexerQueryEntry[] {
+    const queryEntries: NetworkIndexerQueryEntry[] = [];
+
     const dataSources = this.project.dataSources.filter(
       (ds) =>
         isRuntimeDataSourceV0_0_2(ds) ||
-        !(ds as IRuntimeDataSourceV0_0_1).filter?.specName ||
-        (ds as IRuntimeDataSourceV0_0_1).filter.specName === this.api.runtimeVersion.specName.toString()
+        !(ds as RuntimeDataSourceV0_0_1).filter?.specName ||
+        (ds as RuntimeDataSourceV0_0_1).filter.specName === this.api.runtimeVersion.specName.toString()
     );
     for (const ds of dataSources) {
       for (const handler of ds.mapping.handlers) {
         const baseHandlerKind = handler.kind;
         const filterList = [handler.filter as SubstrateHandlerFilter].filter(Boolean);
-        if (!filterList.length) return;
+        if (!filterList.length) return [];
         switch (baseHandlerKind) {
           case SubstrateHandlerKind.Block:
-            return;
+            return [];
           case SubstrateHandlerKind.Call: {
             for (const filter of filterList as SubstrateCallFilter[]) {
-              if (
-                filter.module !== undefined &&
-                filter.method !== undefined &&
-                extrinsicFilters.findIndex(
-                  (extrinsic) => extrinsic.module === filter.module && extrinsic.method === filter.method
-                ) < 0
-              ) {
-                extrinsicFilters.push(handler.filter);
+              if (filter.module !== undefined && filter.method !== undefined) {
+                queryEntries.push(callFilterToQueryEntry(filter));
               } else {
-                return;
+                return [];
               }
             }
             break;
           }
           case SubstrateHandlerKind.Event: {
             for (const filter of filterList as SubstrateEventFilter[]) {
-              if (
-                filter.module !== undefined &&
-                filter.method !== undefined &&
-                eventFilters.findIndex((event) => event.module === filter.module && event.method === filter.method) < 0
-              ) {
-                eventFilters.push(handler.filter);
+              if (filter.module !== undefined && filter.method !== undefined) {
+                queryEntries.push(eventFilterToQueryEntry(filter));
               } else {
-                return;
+                return [];
               }
             }
             break;
@@ -119,7 +135,8 @@ export class FetchService implements OnApplicationShutdown {
         }
       }
     }
-    return {eventFilters, extrinsicFilters};
+
+    return uniqBy(queryEntries, (item) => `${item.entity}|${JSON.stringify(sortBy(item.conditions, (c) => c.field))}`);
   }
 
   register(next: (value: BlockContent) => Promise<void>): () => void {
@@ -220,7 +237,7 @@ export class FetchService implements OnApplicationShutdown {
             startBlockHeight,
             queryEndBlock,
             this.config.batchSize,
-            this.indexerFilters
+            this.networkIndexerQueryEntries
           );
           if (networkIndexer && this.validateNetworkIndexer(networkIndexer, startBlockHeight)) {
             const {batchBlocks} = networkIndexer;
