@@ -37,8 +37,7 @@ const sequelizeFactory = (option: SequelizeOption) => async () => {
   for (const factoryFn of Object.keys(entities).filter((k) => /Factory$/.exec(k))) {
     entities[factoryFn](sequelize);
   }
-  const {migrate} = getYargsOption().argv;
-  await sequelize.sync({alter: migrate});
+  await sequelize.sync();
   return sequelize;
 };
 

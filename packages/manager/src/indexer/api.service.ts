@@ -5,7 +5,7 @@ import {ApiPromise, HttpProvider, WsProvider} from '@polkadot/api';
 import {ApiOptions, RpcMethodResult} from '@polkadot/api/types';
 import {BlockHash, RuntimeVersion} from '@polkadot/types/interfaces';
 import {AnyFunction} from '@polkadot/types/types';
-import {IndexerEvent, NetworkMetadataPayload} from './events';
+import {NetworkMetadataPayload} from './events';
 import {ApiAt} from './types';
 
 const NOT_SUPPORT = (name: string) => () => {
@@ -47,15 +47,6 @@ export class ApiService implements OnApplicationShutdown {
       ...chainTypes,
     };
     this.api = await ApiPromise.create(this.apiOption);
-
-    this.eventEmitter.emit(IndexerEvent.ApiConnected, {value: 1});
-    this.api.on('connected', () => {
-      this.eventEmitter.emit(IndexerEvent.ApiConnected, {value: 1});
-    });
-    this.api.on('disconnected', () => {
-      this.eventEmitter.emit(IndexerEvent.ApiConnected, {value: 0});
-    });
-
     this.networkMeta = {
       chain: this.api.runtimeChain.toString(),
       specName: this.api.runtimeVersion.specName.toString(),

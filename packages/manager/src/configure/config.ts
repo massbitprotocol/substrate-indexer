@@ -36,6 +36,10 @@ export class Config implements IConfig {
     return this._config.batchSize;
   }
 
+  get timeout(): number {
+    return this._config.timeout;
+  }
+
   get networkEndpoint(): string | undefined {
     return this._config.networkEndpoint;
   }
@@ -44,13 +48,10 @@ export class Config implements IConfig {
     return this._config.networkIndexer;
   }
 
-  get timeout(): number {
-    return this._config.timeout;
-  }
-
   get debug(): boolean {
     return this._config.debug;
   }
+
   get preferRange(): boolean {
     return this._config.preferRange;
   }

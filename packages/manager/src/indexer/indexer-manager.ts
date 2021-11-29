@@ -28,9 +28,7 @@ export class IndexerManager {
   @OnEvent(IndexerEvent.IndexerDeployed, {async: true})
   async handleIndexerDeployment(data: DeployIndexerDto): Promise<void> {
     try {
-      logger.info('fetch project from GitHub repository...');
-      const projectPath = this.cloneGithubRepo(data.repository);
-
+      const projectPath = this.fetchGithubRepo(data.repository);
       const project = await Project.create(
         projectPath,
         omitBy<INetworkConfig>(
@@ -47,7 +45,7 @@ export class IndexerManager {
         task: path.resolve(__dirname, 'worker.js'),
       });
 
-      logger.info(`install dependencies and build indexer...`);
+      logger.info(`install dependencies and build indexer`);
       await pool.exec(projectPath);
 
       logger.info(`start indexer ${project.name}`);
@@ -58,7 +56,8 @@ export class IndexerManager {
     }
   }
 
-  cloneGithubRepo(url: string): string {
+  fetchGithubRepo(url: string): string {
+    logger.info('fetch project from GitHub repository');
     const projectsDir = path.resolve(process.env.PROJECTS_DIR ?? '../../../projects');
     if (!fs.existsSync(projectsDir)) {
       fs.mkdirSync(projectsDir);
