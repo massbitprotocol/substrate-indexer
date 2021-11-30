@@ -5,17 +5,6 @@ import yargs from 'yargs/yargs';
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function getYargsOption() {
   return yargs(hideBin(process.argv)).options({
-    'indexer-name': {
-      alias: 'n',
-      describe: 'indexer name',
-      type: 'string',
-      demandOption: false,
-    },
-    playground: {
-      describe: 'enable graphql playground',
-      type: 'boolean',
-      demandOption: false,
-    },
     'output-fmt': {
       demandOption: false,
       describe: 'Print log as json or plain text',

@@ -2290,6 +2290,7 @@ __metadata:
     lodash: ^4.17.21
     nodemon: ^2.0.7
     pg: ^8.6.0
+    postgraphile: ^4.12.5
     postgraphile-core: ^4.12.1
     postgraphile-plugin-connection-filter: ^2.2.1
     reflect-metadata: ^0.1.13
@@ -3445,6 +3446,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/json5@npm:^0.0.30":
+  version: 0.0.30
+  resolution: "@types/json5@npm:0.0.30"
+  checksum: af9d434f14dc6337e16454944bca5eadbdf5d0e85a0ef59fe5e011eadabfe126f42f3913bf7fee478747cf34efd88061ac0e15ede07b83986ae31aa2ddda6232
+  languageName: node
+  linkType: hard
+
+"@types/jsonwebtoken@npm:^8.3.2":
+  version: 8.5.6
+  resolution: "@types/jsonwebtoken@npm:8.5.6"
+  dependencies:
+    "@types/node": "*"
+  checksum: 11294f8e18342eeac660250052e1f515159596374e88463d6e5d5ad5044cfabbefb60dbfed96b6841674719f775af115c0b94a323eeeccb0578567269bfd1967
+  languageName: node
+  linkType: hard
+
 "@types/keygrip@npm:*":
   version: 1.0.2
   resolution: "@types/keygrip@npm:1.0.2"
@@ -3808,7 +3825,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/ws@npm:^7.0.0":
+"@types/ws@npm:^7.0.0, @types/ws@npm:^7.4.0":
   version: 7.4.7
   resolution: "@types/ws@npm:7.4.7"
   dependencies:
@@ -5350,7 +5367,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"body-parser@npm:1.19.0, body-parser@npm:^1.18.3":
+"body-parser@npm:1.19.0, body-parser@npm:^1.15.2, body-parser@npm:^1.18.3":
   version: 1.19.0
   resolution: "body-parser@npm:1.19.0"
   dependencies:
@@ -6165,7 +6182,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"commander@npm:^2.20.0, commander@npm:^2.20.3":
+"commander@npm:^2.19.0, commander@npm:^2.20.0, commander@npm:^2.20.3":
   version: 2.20.3
   resolution: "commander@npm:2.20.3"
   checksum: b73428e97de7624323f81ba13f8ed9271de487017432d18b4da3f07cfc528ad754bbd199004bd5d14e0ccd67d1fdfe0ec8dbbd4c438b401df3c4cc387bfd1daa
@@ -8210,7 +8227,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"finalhandler@npm:~1.1.2":
+"finalhandler@npm:^1.0.6, finalhandler@npm:~1.1.2":
   version: 1.1.2
   resolution: "finalhandler@npm:1.1.2"
   dependencies:
@@ -8866,7 +8883,7 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"graphile-utils@npm:^4.12.1":
+"graphile-utils@npm:^4.12.1, graphile-utils@npm:^4.12.2":
   version: 4.12.2
   resolution: "graphile-utils@npm:4.12.2"
   dependencies:
@@ -8953,10 +8970,26 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
+"graphql-ws@npm:^5.1.2":
+  version: 5.5.5
+  resolution: "graphql-ws@npm:5.5.5"
+  peerDependencies:
+    graphql: ">=0.11 <=16"
+  checksum: d369a91a1d252edc683e730e257f4552b81a2240c17a469c0fb2b9c752844f410d0be0db4273a236a0e308607bdfa1f44d2b0b599b584fa84a72e7433710f123
+  languageName: node
+  linkType: hard
+
 "graphql@npm:>=0.9 <0.14 || ^14.0.2 || ^15.4.0":
   version: 15.6.1
   resolution: "graphql@npm:15.6.1"
   checksum: b6ce4fd769d0df5d4e501014f169f29c5e5520f8f913d94a907e04fe221280a58699e7c76f959a68a2d29932e13bfb6529af537eb99e56e5424304da02ddb808
+  languageName: node
+  linkType: hard
+
+"graphql@npm:^0.6.0 || ^0.7.0 || ^0.8.0-b || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.2 || ^15.0.0":
+  version: 15.7.2
+  resolution: "graphql@npm:15.7.2"
+  checksum: 95bfd2b7f59cfd3a4d33c98571a982773c0194e0e82c6333fc5497890b647d730b4a0edc00e3e665375b6abdaaf64a6c0a61a96e03f8763d83d326c5291e635f
   languageName: node
   linkType: hard
 
@@ -9232,6 +9265,19 @@ fsevents@~2.3.1:
     statuses: ">= 1.5.0 < 2"
     toidentifier: 1.0.0
   checksum: 563ae4a3f19c89029212922bade6ffcd0e4b7fa52e539f08c8f6941de7eaccb00bf76cb7692662192f2f0d567d4ac1f9d6a3d0ee70b166c8540cf791497f90ea
+  languageName: node
+  linkType: hard
+
+"http-errors@npm:^1.5.1":
+  version: 1.8.1
+  resolution: "http-errors@npm:1.8.1"
+  dependencies:
+    depd: ~1.1.2
+    inherits: 2.0.4
+    setprototypeof: 1.2.0
+    statuses: ">= 1.5.0 < 2"
+    toidentifier: 1.0.1
+  checksum: f8bd2e837a4da9b25c21545de08bf9db2e8014a1bd025707a0d77b8562259e28a4f2b1ec750968e8676b3118668f6da41e5407e7f29055b14cd68fc54cfa6d09
   languageName: node
   linkType: hard
 
@@ -10338,7 +10384,7 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"iterall@npm:^1.1.3, iterall@npm:^1.2.1, iterall@npm:^1.2.2, iterall@npm:^1.3.0":
+"iterall@npm:^1.0.2, iterall@npm:^1.1.3, iterall@npm:^1.2.1, iterall@npm:^1.2.2, iterall@npm:^1.3.0":
   version: 1.3.0
   resolution: "iterall@npm:1.3.0"
   checksum: 25ae2d07cf97fc35d43fa7af814839689416b83d3ade0fec97a62c58b7b9fad5ff89dd0ede99f2d67cae2697ffa6987f0ab10876f40ae6466e802609a05b1006
@@ -11060,7 +11106,7 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"json5@npm:2.x, json5@npm:^2.1.2":
+"json5@npm:2.x, json5@npm:^2.1.1, json5@npm:^2.1.2":
   version: 2.2.0
   resolution: "json5@npm:2.2.0"
   dependencies:
@@ -11114,7 +11160,7 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"jsonwebtoken@npm:^8.5.1":
+"jsonwebtoken@npm:^8.0.0, jsonwebtoken@npm:^8.5.1":
   version: 8.5.1
   resolution: "jsonwebtoken@npm:8.5.1"
   dependencies:
@@ -13014,7 +13060,7 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"pg-connection-string@npm:^2.5.0":
+"pg-connection-string@npm:^2.0.0, pg-connection-string@npm:^2.5.0":
   version: 2.5.0
   resolution: "pg-connection-string@npm:2.5.0"
   checksum: 504f288e5e361a903f8b426efe9d00fc289e1d55e16fcca8e4f70f89c29e3429b60291bdec65636ca9c56496319bea878eb32ea60a0d4949ef6df3d748250818
@@ -13034,6 +13080,15 @@ fsevents@~2.3.1:
   peerDependencies:
     pg: ">=8.0"
   checksum: 25f528a9b72ebe00678bbafe8a196e95c73b6843388619a8fda30878044b45b38ffbaaf69e485354d73c7452ac81f62ea6aa9705014855b60d71f6ef256cfe45
+  languageName: node
+  linkType: hard
+
+"pg-pool@npm:^3.4.1":
+  version: 3.4.1
+  resolution: "pg-pool@npm:3.4.1"
+  peerDependencies:
+    pg: ">=8.0"
+  checksum: 8cf946739d6d395323d5d5059028c56bd0815462f914986ce097ce9be9b194e3b924cf08ef708f413fb73bc647d079c0a2542d7d0eb6013af3b18b0092b3be99
   languageName: node
   linkType: hard
 
@@ -13068,6 +13123,26 @@ fsevents@~2.3.1:
     postgres-date: ~1.0.4
     postgres-interval: ^1.1.0
   checksum: 3c36335465f058de7b075aab93b3db73ae651d6b0f618948aeb47fab74e064d4d9bd183cdaaf172ebcf9496999b2c6e83ae29048a84757eb30eab486aeb6723b
+  languageName: node
+  linkType: hard
+
+"pg@npm:>=6.1.0 <9":
+  version: 8.7.1
+  resolution: "pg@npm:8.7.1"
+  dependencies:
+    buffer-writer: 2.0.0
+    packet-reader: 1.0.0
+    pg-connection-string: ^2.5.0
+    pg-pool: ^3.4.1
+    pg-protocol: ^1.5.0
+    pg-types: ^2.1.0
+    pgpass: 1.x
+  peerDependencies:
+    pg-native: ">=2.0.0"
+  peerDependenciesMeta:
+    pg-native:
+      optional: true
+  checksum: 2ec6f7315bf32524f7cb63d328381963858e6a8d01323297385c9e5501557331d94f9f41a64fb3b6f4401a1b7ca0eeaab1df1acd22890131976b23b9b8bd511b
   languageName: node
   linkType: hard
 
@@ -13392,7 +13467,7 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"postgraphile-core@npm:^4.12.1":
+"postgraphile-core@npm:4.12.2, postgraphile-core@npm:^4.12.1":
   version: 4.12.2
   resolution: "postgraphile-core@npm:4.12.2"
   dependencies:
@@ -13412,6 +13487,43 @@ fsevents@~2.3.1:
   dependencies:
     tslib: ^2.3.0
   checksum: 3fc20b2e6ddec5f51983ff8f9cef3a10d009a7018c086a89caf1d45b4a4211d5bd4ce5de1db79c3cd65577600583938ce83aecfb7af1c7ef5376b88e0d898717
+  languageName: node
+  linkType: hard
+
+"postgraphile@npm:^4.12.5":
+  version: 4.12.5
+  resolution: "postgraphile@npm:4.12.5"
+  dependencies:
+    "@graphile/lru": 4.11.0
+    "@types/json5": ^0.0.30
+    "@types/jsonwebtoken": ^8.3.2
+    "@types/pg": ">=6 <9"
+    "@types/ws": ^7.4.0
+    body-parser: ^1.15.2
+    chalk: ^2.4.2
+    commander: ^2.19.0
+    debug: ^4.1.1
+    finalhandler: ^1.0.6
+    graphile-build: 4.12.2
+    graphile-build-pg: 4.12.2
+    graphile-utils: ^4.12.2
+    graphql: ^0.6.0 || ^0.7.0 || ^0.8.0-b || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.2 || ^15.0.0
+    graphql-ws: ^5.1.2
+    http-errors: ^1.5.1
+    iterall: ^1.0.2
+    json5: ^2.1.1
+    jsonwebtoken: ^8.0.0
+    parseurl: ^1.3.2
+    pg: ">=6.1.0 <9"
+    pg-connection-string: ^2.0.0
+    pg-sql2: 4.12.1
+    postgraphile-core: 4.12.2
+    subscriptions-transport-ws: ^0.9.18
+    tslib: ^2.1.0
+    ws: ^7.4.2
+  bin:
+    postgraphile: cli.js
+  checksum: 86ab254ae0ce66413b3dce73e5194ad90886fb5b50df366eb89995a4d1a1f583ba4e1f1593a6c7245125da93bb093888deb669043f66d021378e9e4a10ee8ac7
   languageName: node
   linkType: hard
 
@@ -15319,7 +15431,7 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"subscriptions-transport-ws@npm:^0.9.19":
+"subscriptions-transport-ws@npm:^0.9.18, subscriptions-transport-ws@npm:^0.9.19":
   version: 0.9.19
   resolution: "subscriptions-transport-ws@npm:0.9.19"
   dependencies:
@@ -15716,6 +15828,13 @@ fsevents@~2.3.1:
   version: 1.0.0
   resolution: "toidentifier@npm:1.0.0"
   checksum: 95720e8a0f98f1525f50ccbecbc2a23f0a1b4e448de03819dbbeda03adf0d2010fe64525fbc9d549765242550d341bb891672e4ac0b2cac58613cdd742324255
+  languageName: node
+  linkType: hard
+
+"toidentifier@npm:1.0.1":
+  version: 1.0.1
+  resolution: "toidentifier@npm:1.0.1"
+  checksum: 2b5c573af97e7c12f91aeade737a40a539da3c123f43099bbddcd40c3365941b9877b482b994a89a3173c4e3f4f70fea887ae44242ade009efb4841f1dad9822
   languageName: node
   linkType: hard
 
@@ -16753,6 +16872,21 @@ typescript@^4.1.3:
     utf-8-validate:
       optional: true
   checksum: 6a89e6b543ee22a145f60f136af34bb082301c38760f21e59a86b3a6d5a1da8c21bb6c7cea3de6c9bc2cc1967384db57a869e00f64af2599956eec8d26586c80
+  languageName: node
+  linkType: hard
+
+"ws@npm:^7.4.2":
+  version: 7.5.6
+  resolution: "ws@npm:7.5.6"
+  peerDependencies:
+    bufferutil: ^4.0.1
+    utf-8-validate: ^5.0.2
+  peerDependenciesMeta:
+    bufferutil:
+      optional: true
+    utf-8-validate:
+      optional: true
+  checksum: 78d1e1112a366ed458ea5c08dc8390ff477b48e2c7ba386b74a12c346443e29d7eba620ea17f6df83451dbe48f8e3568b62c61ae5fb6e5e016b58e92ddede154
   languageName: node
   linkType: hard
 
