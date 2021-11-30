@@ -17,13 +17,13 @@ export class IndexerController {
   ) {}
 
   @Post('/:id/graphql')
-  async query(@Param('id') id: string, @Body() queryRequest: Query): Promise<unknown> {
-    const {operationName} = queryRequest;
+  async query(@Param('id') id: string, @Body() request: Query): Promise<unknown> {
+    const {operationName} = request;
     let query: string;
     if (operationName === 'IntrospectionQuery') {
       query = getIntrospectionQuery();
     } else {
-      query = queryRequest.query;
+      query = request.query;
     }
     const dbSchema = await this.projectService.getIndexerSchema(id);
     const builder = await getPostGraphileBuilder(this.pgPool, [dbSchema], {
