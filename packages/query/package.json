@@ -39,6 +39,7 @@
     "graphql": "^15.5.1",
     "lodash": "^4.17.21",
     "pg": "^8.6.0",
+    "postgraphile": "^4.12.5",
     "postgraphile-core": "^4.12.1",
     "postgraphile-plugin-connection-filter": "^2.2.1",
     "reflect-metadata": "^0.1.13",

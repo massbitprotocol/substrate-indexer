@@ -1,5 +1,4 @@
 import fs from 'fs';
-import path from 'path';
 import {promisify} from 'util';
 import {Command, flags} from '@oclif/command';
 import admZip from 'adm-zip';
