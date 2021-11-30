@@ -1,5 +1,5 @@
-import {Body, Controller, Get, Param, Post} from '@nestjs/common';
-import {graphql, printSchema} from 'graphql';
+import {Body, Controller, Param, Post} from '@nestjs/common';
+import {getIntrospectionQuery, graphql} from 'graphql';
 import {Pool} from 'pg';
 import {withPostGraphileContext} from 'postgraphile';
 import {getPostGraphileBuilder} from 'postgraphile-core';
@@ -16,21 +16,15 @@ export class IndexerController {
     private readonly projectService: IndexerService
   ) {}
 
-  @Get('/:id/graphql/schema')
-  async getSchema(@Param('id') id: string): Promise<unknown> {
-    const dbSchema = await this.projectService.getIndexerSchema(id);
-    const builder = await getPostGraphileBuilder(this.pgPool, [dbSchema], {
-      replaceAllPlugins: plugins,
-      subscriptions: true,
-      dynamicJson: true,
-    });
-    const schema = builder.buildSchema();
-    return {schema: printSchema(schema)};
-  }
-
   @Post('/:id/graphql')
   async query(@Param('id') id: string, @Body() queryRequest: Query): Promise<unknown> {
-    const {query} = queryRequest;
+    const {operationName} = queryRequest;
+    let query: string;
+    if (operationName === 'IntrospectionQuery') {
+      query = getIntrospectionQuery();
+    } else {
+      query = queryRequest.query;
+    }
     const dbSchema = await this.projectService.getIndexerSchema(id);
     const builder = await getPostGraphileBuilder(this.pgPool, [dbSchema], {
       replaceAllPlugins: plugins,
@@ -47,10 +41,9 @@ export class IndexerController {
         {
           ...context,
         },
-        {},
-        null
+        {}
       );
     });
-    return result;
+    return result.data;
   }
 }
