@@ -24,4 +24,5 @@ export class IndexerDto {
   description: string;
   repository: string;
   imageUrl: string;
+  status: string;
 }

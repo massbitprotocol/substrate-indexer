@@ -159,7 +159,6 @@ export class FetchService implements OnApplicationShutdown {
                 e.handler ? `${e.handler}(${e.handlerArgs ?? ''})` : ''
               }`
             );
-            process.exit(1);
           }
         }
       }

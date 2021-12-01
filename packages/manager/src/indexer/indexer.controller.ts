@@ -20,7 +20,7 @@ export class IndexerController {
     if (indexer) {
       throw new Error(`indexer with name ${name} is already existed`);
     }
-    await this.indexerRepo.create(data);
+    await this.indexerRepo.create({...data, status: 'DEPLOYING'});
     this.eventEmitter.emit(IndexerEvent.IndexerDeployed, data);
     return new DeployIndexerResponseDto({id: data.id});
   }
@@ -38,7 +38,7 @@ export class IndexerController {
   @HttpCode(HttpStatus.OK)
   async getIndexerById(@Param('id') id: string): Promise<IndexerDto> {
     const indexer = await this.indexerRepo.findOne({where: {id}});
-    const {description, imageUrl, name, repository} = indexer;
-    return new IndexerDto({id, name, description, repository, imageUrl});
+    const {description, imageUrl, name, repository, status} = indexer;
+    return new IndexerDto({id, name, description, repository, imageUrl, status});
   }
 }

@@ -17,6 +17,7 @@ interface IndexerCreationAttributes {
   nextBlockHeight?: number;
   network?: string;
   networkGenesis?: string;
+  status?: string;
 }
 
 export interface IndexerModel
@@ -75,6 +76,10 @@ export function IndexerFactory(sequelize: Sequelize): IndexerRepo {
         allowNull: true,
       },
       networkGenesis: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      status: {
         type: DataTypes.STRING,
         allowNull: true,
       },
