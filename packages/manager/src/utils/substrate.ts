@@ -8,13 +8,10 @@ import {
   SubstrateExtrinsic,
 } from '@massbit/types';
 import {ApiPromise} from '@polkadot/api';
-import {Option, Vec} from '@polkadot/types';
-import {BlockHash, EventRecord, LastRuntimeUpgradeInfo, RuntimeVersion, SignedBlock} from '@polkadot/types/interfaces';
-import {last, merge, range} from 'lodash';
+import {Vec} from '@polkadot/types';
+import {BlockHash, EventRecord, RuntimeVersion, SignedBlock} from '@polkadot/types/interfaces';
+import {merge} from 'lodash';
 import {BlockContent} from '../indexer/types';
-import {getLogger} from './logger';
-
-const logger = getLogger('fetch');
 
 export function wrapBlock(signedBlock: SignedBlock, events: EventRecord[], specVersion?: number): SubstrateBlock {
   return merge(signedBlock, {
@@ -136,91 +133,6 @@ export function filterEvents(
 
 export async function prefetchMetadata(api: ApiPromise, hash: BlockHash): Promise<void> {
   await api.getBlockRegistry(hash);
-}
-
-/**
- *
- * @param api
- * @param startHeight
- * @param endHeight
- * @param overallSpecVer exists if all blocks in the range have same parant specVersion
- */
-export async function fetchBlocks(
-  api: ApiPromise,
-  startHeight: number,
-  endHeight: number,
-  overallSpecVer?: number
-): Promise<BlockContent[]> {
-  const blocks = await fetchBlocksRange(api, startHeight, endHeight);
-  const blockHashes = blocks.map((b) => b.block.header.hash);
-  const parentBlockHashes = blocks.map((b) => b.block.header.parentHash);
-  const [blockEvents, runtimeVersions] = await Promise.all([
-    fetchEventsRange(api, blockHashes),
-    overallSpecVer ? undefined : fetchRuntimeVersionRange(api, parentBlockHashes),
-  ]);
-  return blocks.map((block, idx) => {
-    const events = blockEvents[idx];
-    const parentSpecVersion = overallSpecVer ? overallSpecVer : runtimeVersions[idx].specVersion.toNumber();
-
-    const wrappedBlock = wrapBlock(block, events.toArray(), parentSpecVersion);
-    const wrappedExtrinsics = wrapExtrinsics(wrappedBlock, events);
-    const wrappedEvents = wrapEvents(wrappedExtrinsics, events, wrappedBlock);
-    return {
-      block: wrappedBlock,
-      extrinsics: wrappedExtrinsics,
-      events: wrappedEvents,
-    };
-  });
-}
-
-export async function fetchBlocksViaRangeQuery(
-  api: ApiPromise,
-  startHeight: number,
-  endHeight: number
-): Promise<BlockContent[]> {
-  const blocks = await fetchBlocksRange(api, startHeight, endHeight);
-  const firstBlockHash = blocks[0].block.header.hash;
-  const endBlockHash = last(blocks).block.header.hash;
-  const [blockEvents, runtimeUpgrades] = await Promise.all([
-    api.query.system.events.range([firstBlockHash, endBlockHash]),
-    api.query.system.lastRuntimeUpgrade.range([firstBlockHash, endBlockHash]),
-  ]);
-
-  let lastEvents: Vec<EventRecord>;
-  let lastRuntimeUpgrade: Option<LastRuntimeUpgradeInfo>;
-  return blocks.map((block, idx) => {
-    const [, events = lastEvents] = blockEvents[idx] ?? [];
-    const [, runtimeUpgrade = lastRuntimeUpgrade] = runtimeUpgrades[idx] ?? [];
-    lastEvents = events;
-    lastRuntimeUpgrade = runtimeUpgrade;
-
-    const wrappedBlock = wrapBlock(block, events, runtimeUpgrade.unwrap()?.specVersion.toNumber());
-    const wrappedExtrinsics = wrapExtrinsics(wrappedBlock, events);
-    const wrappedEvents = wrapEvents(wrappedExtrinsics, events, wrappedBlock);
-    return {
-      block: wrappedBlock,
-      extrinsics: wrappedExtrinsics,
-      events: wrappedEvents,
-    };
-  });
-}
-
-export async function fetchBlocksRange(
-  api: ApiPromise,
-  startHeight: number,
-  endHeight: number
-): Promise<SignedBlock[]> {
-  return Promise.all(
-    range(startHeight, endHeight + 1).map(async (height) => {
-      try {
-        const blockHash = await api.rpc.chain.getBlockHash(height);
-        return await api.rpc.chain.getBlock(blockHash);
-      } catch (err) {
-        logger.error(`failed to fetch block at height ${height}`);
-        throw err;
-      }
-    })
-  );
 }
 
 export async function fetchBlocksArray(api: ApiPromise, blockArray: number[]): Promise<SignedBlock[]> {

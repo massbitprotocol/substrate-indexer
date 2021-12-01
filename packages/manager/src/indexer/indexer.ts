@@ -69,12 +69,11 @@ export class IndexerInstance {
     await this.fetchService.init();
     this.api = this.apiService.getApi();
     this.indexerState = await this.createIndexer(data);
-    await this.initDbSchema();
+    await this.initDbSchema(data.id);
     await this.ensureMetadata(this.indexerState.dbSchema);
 
     void this.fetchService.startLoop(this.indexerState.nextBlockHeight).catch((err) => {
       this.logger.error(err, 'fetch block');
-      process.exit(1);
     });
     this.filteredDataSources = this.filterDataSources();
     this.fetchService.register((block) => this.indexBlock(block));
@@ -130,7 +129,7 @@ export class IndexerInstance {
 
   private async ensureMetadata(schema: string) {
     const metadataRepo = MetadataFactory(this.sequelize, schema);
-    // block offset should only been create once, never update.
+    // block offset should only been created once, never update.
     // if change offset will require re-index
     const blockOffset = await metadataRepo.findOne({
       where: {key: 'blockOffset'},
@@ -145,9 +144,9 @@ export class IndexerInstance {
   }
 
   private async createIndexer(data: DeployIndexerDto): Promise<IndexerModel> {
-    const {description, id, imageUrl, name, repository} = data;
-    let indexer = await this.indexerRepo.findOne({
-      where: {name},
+    const {id} = data;
+    const indexer = await this.indexerRepo.findOne({
+      where: {id},
     });
     const {chain, genesisHash} = this.apiService.networkMeta;
     // if (!indexer) {
@@ -157,12 +156,7 @@ export class IndexerInstance {
     if (!(schemas as unknown as string[]).includes(indexerSchema)) {
       await this.sequelize.createSchema(indexerSchema, undefined);
     }
-    [indexer] = await this.indexerRepo.upsert({
-      id,
-      name,
-      description,
-      repository,
-      imageUrl,
+    await indexer.update({
       dbSchema: indexerSchema,
       hash: '0x',
       nextBlockHeight: this.getStartBlockFromDataSources(),
@@ -184,11 +178,15 @@ export class IndexerInstance {
     return indexer;
   }
 
-  private async initDbSchema(): Promise<void> {
+  private async initDbSchema(id: string): Promise<void> {
     const schema = this.indexerState.dbSchema;
     const graphqlSchema = buildSchema(path.join(this.project.path, this.project.schema));
     const modelsRelations = getAllEntitiesRelations(graphqlSchema);
     await this.storeService.init(modelsRelations, schema);
+    const indexer = await this.indexerRepo.findOne({
+      where: {id},
+    });
+    await indexer.update({status: 'DEPLOYED'});
   }
 
   private async nextIndexerSchemaSuffix(): Promise<number> {
