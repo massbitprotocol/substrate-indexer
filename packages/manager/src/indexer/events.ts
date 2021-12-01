@@ -25,9 +25,3 @@ export interface BestBlockPayload {
 export interface EventPayload<T> {
   value: T;
 }
-
-export interface NetworkMetadataPayload {
-  chain: string;
-  specName: string;
-  genesisHash: string;
-}

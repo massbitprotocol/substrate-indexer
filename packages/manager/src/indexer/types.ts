@@ -9,3 +9,9 @@ export interface BlockContent {
 }
 
 export type ApiAt = ApiDecoration<'promise'> & {rpc: ApiPromise['rpc']};
+
+export interface NetworkMetadata {
+  chain: string;
+  specName: string;
+  genesisHash: string;
+}

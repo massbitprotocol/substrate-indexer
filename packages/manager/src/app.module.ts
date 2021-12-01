@@ -9,6 +9,7 @@ export class NodeOption {}
 
 @Module({
   imports: [
+    ConfigureModule.forRoot(),
     DbModule.forRoot({
       host: process.env.DB_HOST ?? '127.0.0.1',
       port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
@@ -17,7 +18,6 @@ export class NodeOption {}
       database: process.env.DB_DATABASE ?? 'postgres',
     }),
     EventEmitterModule.forRoot(),
-    ConfigureModule.register(),
     ScheduleModule.forRoot(),
     IndexerModule,
   ],
