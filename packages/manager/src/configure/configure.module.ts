@@ -17,7 +17,7 @@ function yargsToIConfig(yargs: Args): Partial<IConfig> {
 @Global()
 @Module({})
 export class ConfigureModule {
-  static register(): DynamicModule {
+  static forRoot(): DynamicModule {
     const yargsOptions = getYargsOption();
     const {argv} = yargsOptions;
     const config = new Config({...yargsToIConfig(argv)} as IConfig);

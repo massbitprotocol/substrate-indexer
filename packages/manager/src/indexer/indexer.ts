@@ -51,7 +51,7 @@ export class IndexerInstance {
     this.eventEmitter = eventEmitter;
 
     this.networkIndexerService = new NetworkIndexerService(this.project);
-    this.apiService = new ApiService(this.project, this.eventEmitter);
+    this.apiService = new ApiService(this.project);
     this.fetchService = new FetchService(
       this.project,
       this.config,
@@ -148,7 +148,7 @@ export class IndexerInstance {
     const indexer = await this.indexerRepo.findOne({
       where: {id},
     });
-    const {chain, genesisHash} = this.apiService.networkMeta;
+    const {chain, genesisHash} = this.apiService.metadata;
     // if (!indexer) {
     const suffix = await this.nextIndexerSchemaSuffix();
     const indexerSchema = `indexer_${suffix}`;

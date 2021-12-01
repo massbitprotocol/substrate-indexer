@@ -28,7 +28,7 @@ export class IndexerManager {
   @OnEvent(IndexerEvent.IndexerDeployed, {async: true})
   async handleIndexerDeployment(data: DeployIndexerDto): Promise<void> {
     try {
-      const projectPath = this.fetchGithubRepo(data.repository);
+      const projectPath = await this.fetchGithubRepo(data.repository);
       const project = await Project.create(
         projectPath,
         omitBy<INetworkConfig>(
@@ -42,7 +42,7 @@ export class IndexerManager {
 
       const pool = new StaticPool({
         size: 1,
-        task: path.resolve(__dirname, 'worker.js'),
+        task: path.resolve(__dirname, 'workers/build.js'),
       });
 
       logger.info(`install dependencies and build indexer`);
@@ -56,18 +56,18 @@ export class IndexerManager {
     }
   }
 
-  fetchGithubRepo(url: string): string {
+  async fetchGithubRepo(url: string): Promise<string> {
     logger.info('fetch project from GitHub repository');
     const projectsDir = path.resolve(process.env.PROJECTS_DIR ?? '../../../projects');
     if (!fs.existsSync(projectsDir)) {
       fs.mkdirSync(projectsDir);
     }
-    const projectName = `${Date.now()}`;
-    this.runCmd(projectsDir, `git clone ${url} ${projectName}`);
-    return path.join(projectsDir, projectName);
-  }
-
-  runCmd(srcDir: string, cmd: string): void {
-    execSync(cmd, {cwd: srcDir, stdio: 'ignore'});
+    const name = `${Date.now()}`;
+    const pool = new StaticPool({
+      size: 1,
+      task: path.resolve(__dirname, 'workers/github.js'),
+    });
+    await pool.exec({projectsDir, url, name});
+    return path.join(projectsDir, name);
   }
 }
