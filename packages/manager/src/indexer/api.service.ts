@@ -13,7 +13,7 @@ const NOT_SUPPORT = (name: string) => () => {
 export class ApiService implements OnApplicationShutdown {
   private readonly project: Project;
 
-  metadata: NetworkMetadata;
+  networkMeta: NetworkMetadata;
   private api: ApiPromise;
   private currentBlockHash: string;
   private currentRuntimeVersion: RuntimeVersion;
@@ -43,15 +43,15 @@ export class ApiService implements OnApplicationShutdown {
       ...chainTypes,
     });
 
-    this.metadata = {
+    this.networkMeta = {
       chain: this.api.runtimeChain.toString(),
       specName: this.api.runtimeVersion.specName.toString(),
       genesisHash: this.api.genesisHash.toString(),
     };
 
-    if (network.genesisHash && network.genesisHash !== this.metadata.genesisHash) {
+    if (network.genesisHash && network.genesisHash !== this.networkMeta.genesisHash) {
       throw new Error(
-        `Network genesisHash ="${network.genesisHash}" doesn't match expected genesisHash "${this.metadata.genesisHash}"`
+        `Network genesisHash ="${network.genesisHash}" doesn't match expected genesisHash "${this.networkMeta.genesisHash}"`
       );
     }
 

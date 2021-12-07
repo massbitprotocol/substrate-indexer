@@ -1,5 +1,12 @@
 import {BuildOptions, DataTypes, Model, Sequelize} from 'sequelize';
 
+export enum IndexerStatus {
+  DRAFT = 'DRAFT',
+  DEPLOYING = 'DEPLOYING',
+  DEPLOYED = 'DEPLOYED',
+  FAILED = 'FAILED',
+}
+
 interface IndexerModelAttributes extends IndexerCreationAttributes {
   createdAt?: Date;
   updatedAt?: Date;
@@ -17,7 +24,8 @@ interface IndexerCreationAttributes {
   nextBlockHeight?: number;
   network?: string;
   networkGenesis?: string;
-  status?: string;
+  status: string;
+  error?: string;
 }
 
 export interface IndexerModel
@@ -43,7 +51,7 @@ export function IndexerFactory(sequelize: Sequelize): IndexerRepo {
       },
       description: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: false,
       },
       repository: {
         type: DataTypes.STRING,
@@ -51,7 +59,7 @@ export function IndexerFactory(sequelize: Sequelize): IndexerRepo {
       },
       imageUrl: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: false,
       },
       dbSchema: {
         type: DataTypes.STRING,
@@ -59,7 +67,7 @@ export function IndexerFactory(sequelize: Sequelize): IndexerRepo {
       },
       version: {
         type: DataTypes.INTEGER,
-        allowNull: true,
+        allowNull: false,
         defaultValue: 0,
       },
       hash: {
@@ -68,7 +76,7 @@ export function IndexerFactory(sequelize: Sequelize): IndexerRepo {
       },
       nextBlockHeight: {
         type: DataTypes.INTEGER,
-        allowNull: true,
+        allowNull: false,
         defaultValue: 1,
       },
       network: {
@@ -80,6 +88,10 @@ export function IndexerFactory(sequelize: Sequelize): IndexerRepo {
         allowNull: true,
       },
       status: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      error: {
         type: DataTypes.STRING,
         allowNull: true,
       },

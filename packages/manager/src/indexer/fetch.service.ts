@@ -183,14 +183,14 @@ export class FetchService implements OnApplicationShutdown {
         });
       }
     } catch (e) {
-      this.logger.error(e, `Having a problem when get finalized block`);
+      this.logger.error(e, `get finalized block`);
     }
   }
 
   @Interval(BLOCK_TIME_VARIANCE * 1000)
   async getBestBlockHead(): Promise<void> {
     if (!this.api) {
-      this.logger.debug(`Skip fetch best block until API is ready`);
+      this.logger.debug(`skip fetch best block until API is ready`);
       return;
     }
     try {
@@ -203,7 +203,7 @@ export class FetchService implements OnApplicationShutdown {
         });
       }
     } catch (e) {
-      this.logger.error(e, `Having a problem when get best block`);
+      this.logger.error(e, `get best block`);
     }
   }
 

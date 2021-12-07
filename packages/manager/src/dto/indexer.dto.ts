@@ -1,17 +1,16 @@
-export class DeployIndexerDto {
-  id: string;
+export class CreateIndexerDto {
   name: string;
   description: string;
   repository: string;
   imageUrl: string;
 }
 
-export class DeployIndexerResponseDto {
-  constructor(partial: Partial<DeployIndexerResponseDto>) {
+export class CreateIndexerResponseDto {
+  constructor(partial: Partial<CreateIndexerResponseDto>) {
     Object.assign(this, partial);
   }
 
-  id!: string;
+  id: string;
 }
 
 export class IndexerDto {
