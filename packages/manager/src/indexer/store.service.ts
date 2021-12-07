@@ -32,18 +32,8 @@ export class StoreService {
   async init(modelsRelations: GraphQLModelsRelationsEnums, schema: string): Promise<void> {
     this.schema = schema;
     this.modelsRelations = modelsRelations;
-    try {
-      await this.syncSchema(this.schema);
-    } catch (e) {
-      logger.error(e, `Having a problem when syncing schema`);
-      process.exit(1);
-    }
-    try {
-      this.modelIndexedFields = await this.getAllIndexFields(this.schema);
-    } catch (e) {
-      logger.error(e, `Having a problem when get indexed fields`);
-      process.exit(1);
-    }
+    await this.syncSchema(this.schema);
+    this.modelIndexedFields = await this.getAllIndexFields(this.schema);
   }
 
   async syncSchema(schema: string): Promise<void> {
@@ -170,6 +160,11 @@ export class StoreService {
   setTransaction(tx: Transaction): void {
     this.tx = tx;
     tx.afterCommit(() => (this.tx = undefined));
+  }
+
+  async setMetadata(key: string, value: string | number | boolean): Promise<void> {
+    assert(this.metaDataRepo, `model _metadata does not exist`);
+    await this.metaDataRepo.upsert({key, value});
   }
 
   private async getAllIndexFields(schema: string) {

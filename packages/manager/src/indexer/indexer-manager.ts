@@ -1,4 +1,3 @@
-import {execSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import {INetworkConfig, Project} from '@massbit/common';
@@ -8,11 +7,10 @@ import {isNil, omitBy} from 'lodash';
 import {StaticPool} from 'node-worker-threads-pool';
 import {Sequelize} from 'sequelize';
 import {Config} from '../configure/config';
-import {DeployIndexerDto} from '../dto';
-import {IndexerRepo} from '../entities';
+import {IndexerRepo, IndexerStatus} from '../entities';
 import {getLogger} from '../utils/logger';
 import {IndexerEvent} from './events';
-import {IndexerInstance} from './indexer';
+import {IndexerInstance} from './indexer-instance';
 
 const logger = getLogger('indexer-manager');
 
@@ -26,9 +24,10 @@ export class IndexerManager {
   ) {}
 
   @OnEvent(IndexerEvent.IndexerDeployed, {async: true})
-  async handleIndexerDeployment(data: DeployIndexerDto): Promise<void> {
+  async handleIndexerDeployment(id: string): Promise<void> {
+    const indexer = await this.indexerRepo.findOne({where: {id}});
     try {
-      const projectPath = await this.fetchGithubRepo(data.repository);
+      const projectPath = await this.fetchGithubRepo(indexer.repository);
       const project = await Project.create(
         projectPath,
         omitBy<INetworkConfig>(
@@ -44,15 +43,24 @@ export class IndexerManager {
         size: 1,
         task: path.resolve(__dirname, 'workers/build.js'),
       });
-
       logger.info(`install dependencies and build indexer`);
       await pool.exec(projectPath);
 
       logger.info(`start indexer ${project.name}`);
-      const indexer = new IndexerInstance(project, this.sequelize, this.config, this.indexerRepo, this.eventEmitter);
-      await indexer.start(data);
+      const instance = new IndexerInstance(
+        project,
+        indexer,
+        this.sequelize,
+        this.config,
+        this.indexerRepo,
+        this.eventEmitter
+      );
+      await instance.start();
     } catch (err) {
-      logger.error(err, `deploy indexer ${data.id} failed`);
+      logger.error(err, `deploy indexer ${id} failed`);
+      indexer.status = IndexerStatus.FAILED;
+      indexer.error = `${err}`;
+      await indexer.save();
     }
   }
 

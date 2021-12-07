@@ -2,7 +2,7 @@ import {BuildOptions, DataTypes, Model, Sequelize} from 'sequelize';
 
 export interface Metadata {
   key: string;
-  value: string;
+  value: number | boolean | string;
 }
 
 export interface MetadataModel extends Model<Metadata>, Metadata {}
