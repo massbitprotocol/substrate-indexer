@@ -42,7 +42,7 @@ export class IndexerController {
     indexer.status = IndexerStatus.DEPLOYING;
     await indexer.save();
 
-    this.eventEmitter.emit(IndexerEvent.IndexerDeployed, id);
+    this.eventEmitter.emit(IndexerEvent.IndexerDeployed, {id});
   }
 
   @Get()

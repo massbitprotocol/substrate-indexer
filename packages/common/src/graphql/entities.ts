@@ -223,7 +223,7 @@ export function setJsonObjectType(
   return graphQLJsonObject;
 }
 
-// Get the type, ready to be convert to string
+// Get the type, ready to be converted to string
 function extractType(type: GraphQLOutputType): string {
   if (isUnionType(type)) {
     throw new Error(`Not support Union type`);

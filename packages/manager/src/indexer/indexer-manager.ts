@@ -9,7 +9,7 @@ import {Sequelize} from 'sequelize';
 import {Config} from '../configure/config';
 import {IndexerRepo, IndexerStatus} from '../entities';
 import {getLogger} from '../utils/logger';
-import {IndexerEvent} from './events';
+import {DeployIndexerPayload, IndexerEvent} from './events';
 import {IndexerInstance} from './indexer-instance';
 
 const logger = getLogger('indexer-manager');
@@ -24,7 +24,8 @@ export class IndexerManager {
   ) {}
 
   @OnEvent(IndexerEvent.IndexerDeployed, {async: true})
-  async handleIndexerDeployment(id: string): Promise<void> {
+  async handleIndexerDeployment(payload: DeployIndexerPayload): Promise<void> {
+    const {id} = payload;
     const indexer = await this.indexerRepo.findOne({where: {id}});
     try {
       const projectPath = await this.fetchGithubRepo(indexer.repository);

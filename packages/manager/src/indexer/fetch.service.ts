@@ -96,7 +96,6 @@ export class FetchService implements OnApplicationShutdown {
 
   getDictionaryQueryEntries(): NetworkIndexerQueryEntry[] {
     const queryEntries: NetworkIndexerQueryEntry[] = [];
-
     const dataSources = this.project.dataSources.filter(
       (ds) =>
         isRuntimeDataSourceV0_0_2(ds) ||
@@ -144,9 +143,6 @@ export class FetchService implements OnApplicationShutdown {
     void (async () => {
       while (!stopper) {
         const block = await this.blockBuffer.take();
-        this.eventEmitter.emit(IndexerEvent.BlockQueueSize, {
-          value: this.blockBuffer.size,
-        });
         let success = false;
         while (!success) {
           try {
@@ -198,9 +194,6 @@ export class FetchService implements OnApplicationShutdown {
       const currentBestHeight = bestHeader.number.toNumber();
       if (this.latestBestHeight !== currentBestHeight) {
         this.latestBestHeight = currentBestHeight;
-        this.eventEmitter.emit(IndexerEvent.BlockBest, {
-          height: this.latestBestHeight,
-        });
       }
     } catch (e) {
       this.logger.error(e, `get best block`);
@@ -246,10 +239,7 @@ export class FetchService implements OnApplicationShutdown {
               this.blockNumberBuffer.putAll(batchBlocks);
               this.setLatestBufferedHeight(batchBlocks[batchBlocks.length - 1]);
             }
-            this.eventEmitter.emit(IndexerEvent.BlocknumberQueueSize, {
-              value: this.blockNumberBuffer.size,
-            });
-            continue; // skip nextBlockRange() way
+            continue;
           }
         } catch (e) {
           this.logger.debug(`fetch network indexer stopped: ${e.message}`);
@@ -284,9 +274,6 @@ export class FetchService implements OnApplicationShutdown {
         } blocks`
       );
       this.blockBuffer.putAll(blocks);
-      this.eventEmitter.emit(IndexerEvent.BlockQueueSize, {
-        value: this.blockBuffer.size,
-      });
     }
   }
 
@@ -326,8 +313,5 @@ export class FetchService implements OnApplicationShutdown {
 
   private setLatestBufferedHeight(height: number): void {
     this.latestBufferedHeight = height;
-    this.eventEmitter.emit(IndexerEvent.BlocknumberQueueSize, {
-      value: this.blockNumberBuffer.size,
-    });
   }
 }

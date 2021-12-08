@@ -53,6 +53,7 @@ export class IndexerInstance {
 
     this.networkIndexerService = new NetworkIndexerService(this.project);
     this.apiService = new ApiService(this.project);
+    this.storeService = new StoreService(this.sequelize, this.config);
     this.fetchService = new FetchService(
       this.project,
       this.config,
@@ -60,7 +61,6 @@ export class IndexerInstance {
       this.networkIndexerService,
       this.eventEmitter
     );
-    this.storeService = new StoreService(this.sequelize, this.config);
     this.sandboxService = new SandboxService(this.project, this.config, this.apiService, this.storeService);
     this.logger = getLogger(this.project.name);
   }
@@ -86,13 +86,8 @@ export class IndexerInstance {
   async indexBlock(blockContent: BlockContent): Promise<void> {
     const {block} = blockContent;
     const blockHeight = block.block.header.number.toNumber();
-    this.eventEmitter.emit(IndexerEvent.BlockProcessing, {
-      height: blockHeight,
-      timestamp: Date.now(),
-    });
     const tx = await this.sequelize.transaction();
     this.storeService.setTransaction(tx);
-
     try {
       const isUpgraded = block.specVersion !== this.prevSpecVersion;
       // if parentBlockHash injected, which means we need to check runtime upgrade
@@ -103,17 +98,17 @@ export class IndexerInstance {
       for (const ds of this.filteredDataSources) {
         const vm = this.sandboxService.getDatasourceProcessor(ds, apiAt);
         if (isRuntimeDatasource(ds)) {
-          await IndexerInstance.indexBlockForRuntimeDs(vm, ds.mapping.handlers, blockContent);
+          await IndexerInstance.indexBlockForRuntimeDatasource(vm, ds.mapping.handlers, blockContent);
         }
       }
-      this.indexer.nextBlockHeight = block.block.header.number.toNumber() + 1;
+      this.indexer.nextBlockHeight = blockHeight + 1;
       await this.indexer.save({transaction: tx});
     } catch (e) {
       await tx.rollback();
       throw e;
     }
     await tx.commit();
-    this.fetchService.latestProcessed(block.block.header.number.toNumber());
+    this.fetchService.latestProcessed(blockHeight);
     this.prevSpecVersion = block.specVersion;
     this.eventEmitter.emit(IndexerEvent.BlockLastProcessed, {
       height: blockHeight,
@@ -238,7 +233,7 @@ export class IndexerInstance {
     );
   }
 
-  private static async indexBlockForRuntimeDs(
+  private static async indexBlockForRuntimeDatasource(
     vm: IndexerSandbox,
     handlers: SubstrateRuntimeHandler[],
     {block, events, extrinsics}: BlockContent

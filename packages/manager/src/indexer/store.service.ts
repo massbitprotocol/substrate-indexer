@@ -6,11 +6,8 @@ import {camelCase, flatten, upperFirst} from 'lodash';
 import {QueryTypes, Sequelize, Transaction, Utils} from 'sequelize';
 import {Config} from '../configure/config';
 import {modelsTypeToModelAttributes} from '../utils/graphql';
-import {getLogger} from '../utils/logger';
 import {commentConstraintQuery, createUniqueIndexQuery, getFkConstraint, smartTags} from '../utils/sync-helper';
 import {MetadataFactory, MetadataRepo} from './entities/metadata.entity';
-
-const logger = getLogger('store');
 
 interface IndexField {
   entityName: string;
