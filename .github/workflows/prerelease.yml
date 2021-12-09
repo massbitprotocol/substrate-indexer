@@ -66,35 +66,35 @@ jobs:
         run: yarn workspaces foreach run build
 
       - name: Bump types & deploy
-#        if: steps.changed-types.outputs.changed == 'true'
+        if: steps.changed-types.outputs.changed == 'true'
         working-directory: packages/types
         run: echo "Changes exist in types" && yarn version prerelease && yarn npm publish --access public --tag dev
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Bump common & deploy
-        if: steps.changed-common.outputs.changed == 'true'
+#        if: steps.changed-common.outputs.changed == 'true'
         working-directory: packages/common
         run: echo "Changes exist in common" && yarn version prerelease && yarn npm publish --access public --tag dev
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Bump cli & deploy
-        if: steps.changed-cli.outputs.changed == 'true'
+#        if: steps.changed-cli.outputs.changed == 'true'
         working-directory: packages/cli
         run: echo "Changes exist in cli" && yarn version prerelease && yarn npm publish --access public --tag dev
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Bump node & deploy
-        if: steps.changed-node.outputs.changed == 'true'
+#        if: steps.changed-node.outputs.changed == 'true'
         working-directory: packages/node
         run: echo "Changes exist in node" && yarn version prerelease && yarn npm publish --access public --tag dev
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Bump query & deploy
-        if: steps.changed-query.outputs.changed == 'true'
+#        if: steps.changed-query.outputs.changed == 'true'
         working-directory: packages/query
         run: echo "Changes exist in query" && yarn version prerelease && yarn npm publish --access public --tag dev
         env:
