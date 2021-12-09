@@ -7,13 +7,12 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   rules:
-    - host: "34.87.84.132.nip.io"
-      http:
+    - http:
         paths:
           - pathType: Prefix
             path: "/indexers"
             backend:
               service:
-                name: indexer-manager-1
+                name: indexer-manager
                 port:
                   number: 8080
