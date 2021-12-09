@@ -79,26 +79,26 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Bump cli & deploy
+#      - name: Bump cli & deploy
 #        if: steps.changed-cli.outputs.changed == 'true'
-        working-directory: packages/cli
-        run: echo "Changes exist in cli" && yarn version prerelease && yarn npm publish --access public --tag dev
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Bump node & deploy
+#        working-directory: packages/cli
+#        run: echo "Changes exist in cli" && yarn version prerelease && yarn npm publish --access public --tag dev
+#        env:
+#          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+#
+#      - name: Bump node & deploy
 #        if: steps.changed-node.outputs.changed == 'true'
-        working-directory: packages/node
-        run: echo "Changes exist in node" && yarn version prerelease && yarn npm publish --access public --tag dev
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Bump query & deploy
+#        working-directory: packages/node
+#        run: echo "Changes exist in node" && yarn version prerelease && yarn npm publish --access public --tag dev
+#        env:
+#          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+#
+#      - name: Bump query & deploy
 #        if: steps.changed-query.outputs.changed == 'true'
-        working-directory: packages/query
-        run: echo "Changes exist in query" && yarn version prerelease && yarn npm publish --access public --tag dev
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+#        working-directory: packages/query
+#        run: echo "Changes exist in query" && yarn version prerelease && yarn npm publish --access public --tag dev
+#        env:
+#          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Commit changes
         uses: EndBug/add-and-commit@v5

@@ -1,7 +1,7 @@
 {
   "name": "@massbit/cli",
-  "description": "CLI for Massbit SubIndex",
-  "version": "0.2.0",
+  "description": "CLI for Massbit Substrate Indexer",
+  "version": "0.1.0",
   "bin": {
     "massbit": "./bin/run"
   },
