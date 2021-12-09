@@ -1,1 +1,1 @@
-# Massbit Substrate Indexer
+# Substrate Indexer
