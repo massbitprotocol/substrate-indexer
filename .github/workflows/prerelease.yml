@@ -50,9 +50,9 @@ jobs:
           paths: packages/cli
 
       - uses: marceloprado/has-changed-path@v1
-        id: changed-node
+        id: changed-manager
         with:
-          paths: packages/node
+          paths: packages/manager
 
       - uses: marceloprado/has-changed-path@v1
         id: changed-query
@@ -86,9 +86,9 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Bump manger & deploy
-        if: steps.changed-node.outputs.changed == 'true'
+        if: steps.changed-manager.outputs.changed == 'true'
         working-directory: packages/manager
-        run: echo "Changes exist in node" && yarn version prerelease && yarn npm publish --access public --tag dev
+        run: echo "Changes exist in manager" && yarn version prerelease && yarn npm publish --access public --tag dev
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
