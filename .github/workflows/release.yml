@@ -20,9 +20,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   Build-Publish:
-    name: Build-Publish
+    name: Build & release
     needs: pre-ci
-    if: "!startsWith(github.event.head_commit.message, '[SKIP CI]') && startsWith(github.event.head_commit.message, '[release]') && github.repository == 'massbitprotocol/substrate-indexer'"
+    if: "startsWith(github.event.head_commit.message, '[release]')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -65,7 +65,7 @@ jobs:
         run: yarn workspaces foreach run build
 
       - name: Publish Types
-        if: steps.changed-types.outputs.changed == 'true'
+#        if: steps.changed-types.outputs.changed == 'true'
         uses: ./.github/actions/create-release
         with:
           package-path: packages/types
@@ -73,7 +73,7 @@ jobs:
           npm-token: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish Common
-        if: steps.changed-common.outputs.changed == 'true'
+#        if: steps.changed-common.outputs.changed == 'true'
         uses: ./.github/actions/create-release
         with:
           package-path: packages/common
@@ -81,7 +81,7 @@ jobs:
           npm-token: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish CLI
-        if: steps.changed-cli.outputs.changed == 'true'
+#        if: steps.changed-cli.outputs.changed == 'true'
         uses: ./.github/actions/create-release
         with:
           package-path: packages/cli
@@ -89,7 +89,7 @@ jobs:
           npm-token: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish Manager
-        if: steps.changed-manager.outputs.changed == 'true'
+#        if: steps.changed-manager.outputs.changed == 'true'
         uses: ./.github/actions/create-release
         with:
           package-path: packages/manager
@@ -97,7 +97,7 @@ jobs:
           npm-token: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish Query
-        if: steps.changed-query.outputs.changed == 'true'
+#        if: steps.changed-query.outputs.changed == 'true'
         uses: ./.github/actions/create-release
         with:
           package-path: packages/query

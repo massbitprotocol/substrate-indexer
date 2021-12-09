@@ -22,7 +22,7 @@ jobs:
   bump-prerelease-publish:
     name: Bump prerelease & publish
     needs: pre-ci
-    if: "!startsWith(github.event.head_commit.message, '[SKIP CI]') && !startsWith(github.event.head_commit.message, '[release]') && github.repository == 'massbitprotocol/substrate-indexer'"
+    if: "!startsWith(github.event.head_commit.message, '[SKIP CI]') && !startsWith(github.event.head_commit.message, '[release]')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
