@@ -1,0 +1,5 @@
+undecided:
+  - "@massbit/cli"
+  - "@massbit/common"
+  - "@massbit/manager"
+  - "@massbit/types"
