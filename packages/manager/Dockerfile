@@ -1,10 +1,12 @@
+FROM node:14 as builder
+ARG RELEASE_VERSION
+ENTRYPOINT [""]
+RUN npm i -g --unsafe-perm @massbit/manager@${RELEASE_VERSION}
+
 FROM node:14-alpine
 ENV TZ utc
 
-#ARG RELEASE_VERSION
 RUN apk add --no-cache tini git
-ENTRYPOINT ["/sbin/tini", "--", "massbit-manager"]
+COPY --from=builder /usr/local/lib/node_modules /usr/local/lib/node_modules
 
-#RUN npm i -g @massbit/manager@${RELEASE_VERSION}
-RUN npm i -g @massbit/manager@0.4.0
-WORKDIR /workdir
+ENTRYPOINT ["/sbin/tini", "--", "/usr/local/lib/node_modules/@massbit/manager/bin/run"]
