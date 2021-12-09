@@ -87,18 +87,18 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Bump manger & deploy
-        if: steps.changed-node.outputs.changed == 'true'
+#        if: steps.changed-node.outputs.changed == 'true'
         working-directory: packages/node
         run: echo "Changes exist in node" && yarn version prerelease && yarn npm publish --access public --tag dev
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-#
-#      - name: Bump query & deploy
+
+      - name: Bump query & deploy
 #        if: steps.changed-query.outputs.changed == 'true'
-#        working-directory: packages/query
-#        run: echo "Changes exist in query" && yarn version prerelease && yarn npm publish --access public --tag dev
-#        env:
-#          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        working-directory: packages/query
+        run: echo "Changes exist in query" && yarn version prerelease && yarn npm publish --access public --tag dev
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Commit changes
         uses: EndBug/add-and-commit@v5
