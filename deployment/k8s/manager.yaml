@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: indexer-manager-1
+  labels:
+    app: indexer-manager
+    release: indexer-manager-1
+spec:
+  selector:
+    matchLabels:
+      release: indexer-manager-1
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        release: indexer-manager-1
+    spec:
+      volumes:
+        - name: project-dir
+          emptyDir:
+            medium: Memory
+      containers:
+        - name: indexer
+          imagePullPolicy: IfNotPresent
+          image: massbit/manager
+          env:
+            - name: DB_HOST
+              value: massbit-db-svc
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: postgres
+            - name: DB_PASS
+              value: postgres
+            - name: DB_DATABASE
+              value: postgres
+          volumeMounts:
+            - name: project-dir
+              mountPath: '/projects'
+          securityContext:
+            runAsUser: 1000
+      securityContext:
+        fsGroup: 1000
+      imagePullSecrets:
+        - name: regcred

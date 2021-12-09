@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: massbit-db
+  labels:
+    app: postgres
+    release: massbit-db
+spec:
+  serviceName: massbit-db-svc
+  selector:
+    matchLabels:
+      release: massbit-db
+  volumeClaimTemplates:
+    - metadata:
+        name: massbit-db-pvc
+        annotations:
+          volume.beta.kubernetes.io/storage-class: standard
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 20G
+  template:
+    metadata:
+      labels:
+        release: massbit-db
+    spec:
+      containers:
+        - name: db
+          imagePullPolicy: IfNotPresent
+          image: postgres:12-alpine
+          env:
+            - name: POSTGRES_PASSWORD
+              value: postgres
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - mountPath: /var/lib/postgresql
+              name: massbit-db-pvc
+      securityContext:
+        fsGroup: 1000
+      imagePullSecrets:
+        - name: regcred
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: massbit-db-svc
+spec:
+  clusterIP: None
+  ports:
+    - port: 5432
+  selector:
+    release: massbit-db
