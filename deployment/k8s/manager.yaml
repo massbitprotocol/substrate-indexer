@@ -21,8 +21,10 @@ spec:
             medium: Memory
       containers:
         - name: indexer
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           image: massbit/manager
+          ports:
+            - containerPort: 3000
           env:
             - name: DB_HOST
               value: massbit-db-svc
@@ -43,3 +45,16 @@ spec:
         fsGroup: 1000
       imagePullSecrets:
         - name: regcred
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: indexer-manager-svc
+spec:
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 3000
+  selector:
+    app: indexer-manager
+  type: ClusterIP

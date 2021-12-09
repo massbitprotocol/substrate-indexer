@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: massbit-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+    - host: "34.87.84.132.nip.io"
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/indexers"
+            backend:
+              service:
+                name: indexer-manager-1
+                port:
+                  number: 8080
