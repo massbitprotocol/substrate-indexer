@@ -1,10 +1,9 @@
-provider "google" {  
+provider "google" {
   credentials = file("google-token.json")
-  project = "massbit-indexer"  
-  region  = "europe-west3" 
+  project = "massbit-indexer"
+  region  = "europe-west3"
   zone    = "europe-west3-a"
 }
-
 
 resource "google_compute_instance" "default" {
   name         = "staging-substrate-indexer-v2"
@@ -14,7 +13,7 @@ resource "google_compute_instance" "default" {
   tags = ["indexer"]
 
   boot_disk {
-    initialize_params {      
+    initialize_params {
       image = "projects/ubuntu-os-cloud/global/images/ubuntu-2004-focal-v20210720"
       size = 100
     }

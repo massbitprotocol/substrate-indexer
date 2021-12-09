@@ -88,7 +88,7 @@ jobs:
 
       - name: Bump manger & deploy
 #        if: steps.changed-node.outputs.changed == 'true'
-        working-directory: packages/node
+        working-directory: packages/manager
         run: echo "Changes exist in node" && yarn version prerelease && yarn npm publish --access public --tag dev
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
