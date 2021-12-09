@@ -1,0 +1,22 @@
+# Composite action needed to access GitHub context
+name: 'Create Release'
+description: 'This will publish to NPM registry'
+inputs:
+  package-path: # id of input
+    description: 'package path to run action e.g. package/common'
+    required: true
+  repo-token:
+    description: 'token to create github release'
+    required: true
+  npm-token:
+    description: 'token to push to npm registry'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - working-directory: ${{ inputs.package-path }}
+      run: echo "Changes exist in ${{ inputs.package-path }}" && yarn npm publish --access public
+      env:
+        NPM_TOKEN: ${{ inputs.npm-token }}
+      shell: bash
