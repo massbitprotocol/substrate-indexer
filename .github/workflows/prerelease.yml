@@ -66,7 +66,7 @@ jobs:
         run: yarn workspaces foreach run build
 
       - name: Bump types & deploy
-        if: steps.changed-types.outputs.changed == 'true'
+#        if: steps.changed-types.outputs.changed == 'true'
         working-directory: packages/types
         run: echo "Changes exist in types" && yarn version prerelease && yarn npm publish --access public --tag dev
         env:
@@ -99,3 +99,10 @@ jobs:
         run: echo "Changes exist in query" && yarn version prerelease && yarn npm publish --access public --tag dev
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v5
+        with:
+          message: '[SKIP CI] Prerelease'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
