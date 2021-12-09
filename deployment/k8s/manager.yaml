@@ -45,15 +45,18 @@ spec:
       imagePullSecrets:
         - name: regcred
 ---
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  name: indexer-manager
-#spec:
-#  ports:
-#    - protocol: TCP
-#      port: 8080
-#      targetPort: 3000
-#  selector:
-#    app: indexer-manager
-#  type: ClusterIP
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: indexer-manager
+  name: indexer-manager
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 3000
+  selector:
+    app: indexer-manager
+  sessionAffinity: None
+  type: ClusterIP
