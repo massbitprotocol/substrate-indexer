@@ -5,7 +5,7 @@ on:
       isLatest:
         description: 'Add latest tag'
         default: 'true'
-        require: true
+        required: true
 
 jobs:
   manager-build-push-docker:
@@ -25,14 +25,13 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
-          username: onfinality
+          username: massbit
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      ## node
-      - name: Get updated node version
-        id: get-node-version
+      - name: Get updated manager version
+        id: get-manager-version
         run: |
-          sh .github/workflows/scripts/nodeVersion.sh
+          sh .github/workflows/scripts/managerVersion.sh
 
       - name: Build and push
         if: github.event.inputs.isLatest == 'false'
@@ -40,9 +39,9 @@ jobs:
         with:
           push: true
           platforms: arm64,amd64
-          file: ./packages/node/Dockerfile
-          tags: onfinality/subql-node:v${{ steps.get-node-version.outputs.NODE_VERSION }}
-          build-args: RELEASE_VERSION=${{ steps.get-node-version.outputs.NODE_VERSION }}
+          file: ./packages/manager/Dockerfile
+          tags: massbit/maanger:v${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
+          build-args: RELEASE_VERSION=${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
 
       - name: Build and push
         if: github.event.inputs.isLatest == 'true'
@@ -50,9 +49,9 @@ jobs:
         with:
           push: true
           platforms: arm64,amd64
-          file: ./packages/node/Dockerfile
-          tags: onfinality/subql-node:v${{ steps.get-node-version.outputs.NODE_VERSION }},onfinality/subql-node:latest
-          build-args: RELEASE_VERSION=${{ steps.get-node-version.outputs.NODE_VERSION }}
+          file: ./packages/manager/Dockerfile
+          tags: massbit/manager:v${{ steps.get-manager-version.outputs.MANAGER_VERSION }},massbit/manager:latest
+          build-args: RELEASE_VERSION=${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
