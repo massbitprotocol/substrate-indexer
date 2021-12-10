@@ -2,6 +2,11 @@ name: Build and Deploy to GKE
 on:
   workflow_dispatch:
 
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  GKE_CLUSTER: gke-cluster-dev
+  GKE_REGION: asia-southeast1
+
 jobs:
   setup-build-publish-deploy:
     name: Setup, Build, Publish, and Deploy
@@ -20,7 +25,7 @@ jobs:
       # Get the GKE credentials, so we can deploy to the cluster
       - name: Set up GKE credentials
         run: |-
-          gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
+          gcloud container clusters get-credentials "$GKE_CLUSTER" --region "$GKE_REGION"
 
       # Set up Kustomize
       - name: Set up Kustomize
