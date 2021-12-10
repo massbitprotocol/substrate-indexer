@@ -40,28 +40,28 @@ jobs:
         run: |
           sh .github/workflows/scripts/managerVersion.sh
 
-      - name: Build and push
-        if: github.event.inputs.isLatest == 'false'
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          platforms: arm64,amd64
-          file: ./packages/manager/Dockerfile
-          tags: massbit/manger:v${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
-          build-args: RELEASE_VERSION=${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
-
-      - name: Build and push
-        if: github.event.inputs.isLatest == 'true'
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          platforms: arm64,amd64
-          file: ./packages/manager/Dockerfile
-          tags: massbit/manager:v${{ steps.get-manager-version.outputs.MANAGER_VERSION }},massbit/manager:latest
-          build-args: RELEASE_VERSION=${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
-
-      - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+#      - name: Build and push
+#        if: github.event.inputs.isLatest == 'false'
+#        uses: docker/build-push-action@v2
+#        with:
+#          push: true
+#          platforms: arm64,amd64
+#          file: ./packages/manager/Dockerfile
+#          tags: massbit/manger:v${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
+#          build-args: RELEASE_VERSION=${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
+#
+#      - name: Build and push
+#        if: github.event.inputs.isLatest == 'true'
+#        uses: docker/build-push-action@v2
+#        with:
+#          push: true
+#          platforms: arm64,amd64
+#          file: ./packages/manager/Dockerfile
+#          tags: massbit/manager:v${{ steps.get-manager-version.outputs.MANAGER_VERSION }},massbit/manager:latest
+#          build-args: RELEASE_VERSION=${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
+#
+#      - name: Image digest
+#        run: echo ${{ steps.docker_build.outputs.digest }}
 
       # Setup gcloud CLI
       - uses: google-github-actions/setup-gcloud@94337306dda8180d967a56932ceb4ddcf01edae7
