@@ -20,8 +20,8 @@ spec:
             medium: Memory
       containers:
         - name: indexer
-          imagePullPolicy: Always
-          image: massbit/manager
+          imagePullPolicy: IfNotPresent
+          image: IMAGE@TAG
           ports:
             - containerPort: 3000
           env:
