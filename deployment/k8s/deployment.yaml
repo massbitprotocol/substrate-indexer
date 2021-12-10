@@ -44,19 +44,3 @@ spec:
         fsGroup: 1000
       imagePullSecrets:
         - name: regcred
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: indexer-manager
-  name: indexer-manager
-spec:
-  ports:
-    - port: 8080
-      protocol: TCP
-      targetPort: 3000
-  selector:
-    app: indexer-manager
-  sessionAffinity: None
-  type: ClusterIP
