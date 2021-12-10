@@ -1,4 +1,4 @@
-name: Build Indexer Manger Docker
+name: Build & deploy Indexer Manager
 on:
   workflow_dispatch:
     inputs:
@@ -35,55 +35,51 @@ jobs:
           username: massbit
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Get updated manager version
+      - name: Get updated version
         id: get-manager-version
         run: |
           sh .github/workflows/scripts/managerVersion.sh
 
-#      - name: Build and push
-#        if: github.event.inputs.isLatest == 'false'
-#        uses: docker/build-push-action@v2
-#        with:
-#          push: true
-#          platforms: arm64,amd64
-#          file: ./packages/manager/Dockerfile
-#          tags: massbit/manger:v${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
-#          build-args: RELEASE_VERSION=${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
-#
-#      - name: Build and push
-#        if: github.event.inputs.isLatest == 'true'
-#        uses: docker/build-push-action@v2
-#        with:
-#          push: true
-#          platforms: arm64,amd64
-#          file: ./packages/manager/Dockerfile
-#          tags: massbit/manager:v${{ steps.get-manager-version.outputs.MANAGER_VERSION }},massbit/manager:latest
-#          build-args: RELEASE_VERSION=${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
-#
-#      - name: Image digest
-#        run: echo ${{ steps.docker_build.outputs.digest }}
+      - name: Build and push
+        if: github.event.inputs.isLatest == 'false'
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          platforms: arm64,amd64
+          file: ./packages/manager/Dockerfile
+          tags: massbit/manger:v${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
+          build-args: RELEASE_VERSION=${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
 
-      # Setup gcloud CLI
+      - name: Build and push
+        if: github.event.inputs.isLatest == 'true'
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          platforms: arm64,amd64
+          file: ./packages/manager/Dockerfile
+          tags: massbit/manager:v${{ steps.get-manager-version.outputs.MANAGER_VERSION }},massbit/manager:latest
+          build-args: RELEASE_VERSION=${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+
       - uses: google-github-actions/setup-gcloud@94337306dda8180d967a56932ceb4ddcf01edae7
         with:
           service_account_key: ${{ secrets.GKE_SA_KEY }}
           project_id: ${{ secrets.GKE_PROJECT }}
 
-      # Get the GKE credentials, so we can deploy to the cluster
       - uses: google-github-actions/get-gke-credentials@fb08709ba27618c31c09e014e1d8364b02e5042e
         with:
           cluster_name: ${{ env.GKE_CLUSTER }}
           location: ${{ env.GKE_ZONE }}
           credentials: ${{ secrets.GKE_SA_KEY }}
 
-      # Set up Kustomize
       - name: Set up Kustomize
         run: |-
           cd deployment/k8s
           curl -sfLo kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v3.1.0/kustomize_3.1.0_linux_amd64
           chmod u+x ./kustomize
 
-      # Deploy the Docker image to the GKE cluster
       - name: Deploy
         run: |-
           cd deployment/k8s
