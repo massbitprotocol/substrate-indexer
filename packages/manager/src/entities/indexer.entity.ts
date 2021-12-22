@@ -26,6 +26,7 @@ interface IndexerCreationAttributes {
   networkGenesis?: string;
   status: string;
   error?: string;
+  userId: string;
 }
 
 export interface IndexerModel
@@ -92,6 +93,10 @@ export function IndexerFactory(sequelize: Sequelize): IndexerRepo {
         allowNull: false,
       },
       error: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      userId: {
         type: DataTypes.STRING,
         allowNull: true,
       },

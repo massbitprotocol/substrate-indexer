@@ -1,6 +1,7 @@
-import {Body, Controller, Get, HttpCode, HttpStatus, Inject, Param, Post} from '@nestjs/common';
+import {Body, Controller, Get, HttpCode, HttpStatus, Inject, Param, Post, Request, UseGuards} from '@nestjs/common';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {v4 as uuidv4} from 'uuid';
+import {JwtAuthGuard} from '../auth/jwt-auth.guard';
 import {CreateIndexerDto, CreateIndexerResponseDto, IndexerDto} from '../dto';
 import {IndexerRepo, IndexerStatus} from '../entities';
 import {IndexerEvent} from './events';
@@ -9,9 +10,10 @@ import {IndexerEvent} from './events';
 export class IndexerController {
   constructor(@Inject('Indexer') protected indexerRepo: IndexerRepo, private eventEmitter: EventEmitter2) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createIndexer(@Body() data: CreateIndexerDto): Promise<CreateIndexerResponseDto> {
+  async createIndexer(@Request() req, @Body() data: CreateIndexerDto): Promise<CreateIndexerResponseDto> {
     const {name} = data;
     const indexer = await this.indexerRepo.findOne({
       where: {name},
@@ -21,20 +23,26 @@ export class IndexerController {
       throw new Error(`Indexer with name ${name} is already existed`);
     }
     const id = uuidv4();
-    await this.indexerRepo.create({id, status: IndexerStatus.DRAFT, ...data});
+    await this.indexerRepo.create({id, userId: req.user.userId, status: IndexerStatus.DRAFT, ...data});
     return new CreateIndexerResponseDto({id});
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('/:id/deploy')
   @HttpCode(HttpStatus.OK)
-  async deployIndexer(@Param('id') id: string): Promise<void> {
+  async deployIndexer(@Request() req, @Param('id') id: string): Promise<void> {
     const indexer = await this.indexerRepo.findOne({
       where: {id},
-      attributes: {include: ['id']},
+      attributes: {include: ['id', 'userId', 'status']},
     });
     if (!indexer) {
       throw new Error(`Indexer not found`);
     }
+
+    if (indexer.userId !== req.user.userId) {
+      throw new Error(``);
+    }
+
     if (indexer.status !== IndexerStatus.DRAFT) {
       throw new Error('Indexer is already deployed');
     }

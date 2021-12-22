@@ -2216,6 +2216,8 @@ __metadata:
     "@nestjs/common": ^7.6.9
     "@nestjs/core": ^7.6.1
     "@nestjs/event-emitter": ^0.0.2
+    "@nestjs/jwt": ^8.0.0
+    "@nestjs/passport": ^8.0.1
     "@nestjs/platform-express": ^7.6.1
     "@nestjs/schedule": ^0.4.2
     "@nestjs/schematics": ^7.2.7
@@ -2227,6 +2229,8 @@ __metadata:
     "@types/lodash": ^4.14.170
     "@types/multer": ^1.4.7
     "@types/nodegit": ^0
+    "@types/passport": ^0
+    "@types/passport-jwt": ^3.0.6
     "@types/pino": ^6.3.8
     "@types/sequelize": ^4.28.9
     "@types/supertest": ^2.0.10
@@ -2244,6 +2248,8 @@ __metadata:
     node-worker-threads-pool: ^1.5.1
     nodemon: ^2.0.7
     parse-json: ^5.2.0
+    passport: ^0.5.2
+    passport-jwt: ^4.0.0
     pg: ^8.6.0
     pino: ^6.11.3
     piscina: ^3.1.0
@@ -2378,6 +2384,28 @@ __metadata:
     reflect-metadata: ^0.1.12
     rxjs: ^6.0.0
   checksum: 29289cdee5e6b07b781431fe78cff4a321573f66008e4f749fc8ae6407a46fd24143a92c977f493d6616899358d85f74ee964ba6f68b83b591342c04f3d08254
+  languageName: node
+  linkType: hard
+
+"@nestjs/jwt@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "@nestjs/jwt@npm:8.0.0"
+  dependencies:
+    "@types/jsonwebtoken": 8.5.4
+    jsonwebtoken: 8.5.1
+  peerDependencies:
+    "@nestjs/common": ^6.0.0 || ^7.0.0 || ^8.0.0
+  checksum: 48e171b94994d5c7eca2626c039229bcc4c46e6457812d887d4d808fe60fce178c1865a219091da97af845d836b743fae63c73f05c729171ec9c50ebef14aa9b
+  languageName: node
+  linkType: hard
+
+"@nestjs/passport@npm:^8.0.1":
+  version: 8.0.1
+  resolution: "@nestjs/passport@npm:8.0.1"
+  peerDependencies:
+    "@nestjs/common": ^6.0.0 || ^7.0.0 || ^8.0.0
+    passport: ^0.4.0
+  checksum: 46563e5ef96a01e006a9281774b6d8392039acfba21365bc3351c471426c325faee8242601d04cc553d7b3c3fcd6b015e9cd25108ae0f71be5c2d22d4962306e
   languageName: node
   linkType: hard
 
@@ -3453,12 +3481,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/jsonwebtoken@npm:^8.3.2":
+"@types/jsonwebtoken@npm:*, @types/jsonwebtoken@npm:^8.3.2":
   version: 8.5.6
   resolution: "@types/jsonwebtoken@npm:8.5.6"
   dependencies:
     "@types/node": "*"
   checksum: 11294f8e18342eeac660250052e1f515159596374e88463d6e5d5ad5044cfabbefb60dbfed96b6841674719f775af115c0b94a323eeeccb0578567269bfd1967
+  languageName: node
+  linkType: hard
+
+"@types/jsonwebtoken@npm:8.5.4":
+  version: 8.5.4
+  resolution: "@types/jsonwebtoken@npm:8.5.4"
+  dependencies:
+    "@types/node": "*"
+  checksum: 605ab698b007f04a1d1665b6af0dd31b0787c700c44dbca4474cebff6ae0e8435cc1166ae7d6895de3b6241f5a9ab62bea154ae5fdc7ac09cb13ab59dea4864d
   languageName: node
   linkType: hard
 
@@ -3628,6 +3665,45 @@ __metadata:
   version: 4.0.0
   resolution: "@types/parse-json@npm:4.0.0"
   checksum: 4a8f720afac47b474d3f2eece312340e72bc31bc9561cda37b596ce2ed218c0099765d302625bb67d659a8452a1f93d514f4863c11c7ebaf65430428687dc426
+  languageName: node
+  linkType: hard
+
+"@types/passport-jwt@npm:^3.0.6":
+  version: 3.0.6
+  resolution: "@types/passport-jwt@npm:3.0.6"
+  dependencies:
+    "@types/express": "*"
+    "@types/jsonwebtoken": "*"
+    "@types/passport-strategy": "*"
+  checksum: a993064eb35956eee75ec1a207ce3b762e51825e3ab01d7f60890f25381c96a2827f302ec32789624580d51c782e2d379b664d5f992d6c937ceeea860f3a3480
+  languageName: node
+  linkType: hard
+
+"@types/passport-strategy@npm:*":
+  version: 0.2.35
+  resolution: "@types/passport-strategy@npm:0.2.35"
+  dependencies:
+    "@types/express": "*"
+    "@types/passport": "*"
+  checksum: dc1137f9a98af5208f88b703e09ed6e32238ff3432cd245f9cf8027db11e499691d9c05f7bd7735f5899c221ca3807fda72386dbddbfe0eaf2bee65de49f3a89
+  languageName: node
+  linkType: hard
+
+"@types/passport@npm:*":
+  version: 1.0.7
+  resolution: "@types/passport@npm:1.0.7"
+  dependencies:
+    "@types/express": "*"
+  checksum: fc7405756935bae39f6ea63555e4b0c326854e3cd26f04bcefdaa21478498bd7f15acb96b865b9ae666b1cad55694648c7b2f878a3b2667b3129d2460b4176c4
+  languageName: node
+  linkType: hard
+
+"@types/passport@npm:^0":
+  version: 0.4.7
+  resolution: "@types/passport@npm:0.4.7"
+  dependencies:
+    "@types/express": "*"
+  checksum: 23009d2833528894a822b6ce8cdca185dd6ec4db311ff20eef80c638addaf9799b00a9a3a83abe221c3133c264c3094f6f5d977f73332b414ddce7a47098752c
   languageName: node
   linkType: hard
 
@@ -11160,7 +11236,7 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"jsonwebtoken@npm:^8.0.0, jsonwebtoken@npm:^8.5.1":
+"jsonwebtoken@npm:8.5.1, jsonwebtoken@npm:^8.0.0, jsonwebtoken@npm:^8.2.0, jsonwebtoken@npm:^8.5.1":
   version: 8.5.1
   resolution: "jsonwebtoken@npm:8.5.1"
   dependencies:
@@ -12971,6 +13047,33 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
+"passport-jwt@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "passport-jwt@npm:4.0.0"
+  dependencies:
+    jsonwebtoken: ^8.2.0
+    passport-strategy: ^1.0.0
+  checksum: 22243a66dc7315b9e31d95aa1bac39d4d2d2aac9f457cc9d396556974a5811f981392a080876ca15c25b93aa46a2354900dfbe56f52601aeb853be97eb255d34
+  languageName: node
+  linkType: hard
+
+"passport-strategy@npm:1.x.x, passport-strategy@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "passport-strategy@npm:1.0.0"
+  checksum: 4ad0b62fcb411df70484aef44a958bc545801170e27c46a8bc38776c370d9cc67df9a4a4046ac6146fbd95d6650e554468df72b282cde22e81a42369472e9cfc
+  languageName: node
+  linkType: hard
+
+"passport@npm:^0.5.2":
+  version: 0.5.2
+  resolution: "passport@npm:0.5.2"
+  dependencies:
+    passport-strategy: 1.x.x
+    pause: 0.0.1
+  checksum: dae0a8fed69a8c1da12ff699f4c078b702c70a82f360e7988d601b014ed364c43d0b805d16d5c93d0bb5563750ed7ef78a1eb87771aa742c6c79c34588a2648e
+  languageName: node
+  linkType: hard
+
 "password-prompt@npm:^1.1.2":
   version: 1.1.2
   resolution: "password-prompt@npm:1.1.2"
@@ -13050,6 +13153,13 @@ fsevents@~2.3.1:
   version: 4.0.0
   resolution: "path-type@npm:4.0.0"
   checksum: ef5835f2eb47e4d06004c7ec7bd51175c0455eaecd5ee99a9774bca5ef43242616e25b44ccc0ba86a0bf42b9f197550fcc0dfa7580e5ff9dca53c035e9bd86a9
+  languageName: node
+  linkType: hard
+
+"pause@npm:0.0.1":
+  version: 0.0.1
+  resolution: "pause@npm:0.0.1"
+  checksum: 94ff516a34a46c79f274f2747f3c5889f92542c8b82faff824d176d25ea2db4cfdbf7f6575494260357d9ab9dc22ff409849319438d4f6c08eb85a128d7db71f
   languageName: node
   linkType: hard
 
