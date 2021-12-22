@@ -29,6 +29,7 @@
     "app-module-path": "^2.2.0",
     "bull": "^3.29.3",
     "class-transformer": "^0.4.0",
+    "class-validator": "^0.13.2",
     "dayjs": "^1.10.5",
     "lodash": "^4.17.21",
     "merkle-tools": "^1.4.1",
