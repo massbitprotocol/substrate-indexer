@@ -4,6 +4,7 @@ import {v4 as uuidv4} from 'uuid';
 import {JwtAuthGuard} from '../auth/jwt-auth.guard';
 import {CreateIndexerDto, CreateIndexerResponseDto, IndexerDto} from '../dto';
 import {IndexerRepo, IndexerStatus} from '../entities';
+import {MassbitBadRequestException, MassbitForbiddenException, MassbitNotFoundException} from '../exception';
 import {IndexerEvent} from './events';
 
 @Controller('indexers')
@@ -20,7 +21,7 @@ export class IndexerController {
       attributes: {include: ['id']},
     });
     if (indexer) {
-      throw new Error(`Indexer with name ${name} is already existed`);
+      throw new MassbitBadRequestException(`Indexer with name ${name} is already existed`);
     }
     const id = uuidv4();
     await this.indexerRepo.create({id, userId: req.user.userId, status: IndexerStatus.DRAFT, ...data});
@@ -36,20 +37,19 @@ export class IndexerController {
       attributes: {include: ['id', 'userId', 'status']},
     });
     if (!indexer) {
-      throw new Error(`Indexer not found`);
+      throw new MassbitNotFoundException(`Indexer not found`);
     }
 
     if (indexer.userId !== req.user.userId) {
-      throw new Error(``);
+      throw new MassbitForbiddenException('');
     }
 
     if (indexer.status !== IndexerStatus.DRAFT) {
-      throw new Error('Indexer is already deployed');
+      throw new MassbitBadRequestException('Indexer is already deployed');
     }
 
     indexer.status = IndexerStatus.DEPLOYING;
     await indexer.save();
-
     this.eventEmitter.emit(IndexerEvent.IndexerDeployed, id);
   }
 

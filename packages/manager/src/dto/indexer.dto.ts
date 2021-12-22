@@ -1,7 +1,27 @@
+import {IsNotEmpty, IsString, MaxLength} from 'class-validator';
+
 export class CreateIndexerDto {
+  constructor(partial: Partial<CreateIndexerDto>) {
+    Object.assign(this, partial);
+  }
+
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(255)
   name: string;
+
+  @IsString()
+  @MaxLength(255)
   description: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(255)
   repository: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(255)
   imageUrl: string;
 }
 
