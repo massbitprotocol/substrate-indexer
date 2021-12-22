@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: indexer-manager
+  name: substrate-indexer-manager
   labels:
-    app: indexer-manager
+    app: substrate-indexer-manager
 spec:
   selector:
     matchLabels:
-      app: indexer-manager
+      app: substrate-indexer-manager
   replicas: 1
   template:
     metadata:
       labels:
-        app: indexer-manager
+        app: substrate-indexer-manager
     spec:
       volumes:
         - name: project-dir
@@ -26,15 +26,27 @@ spec:
             - containerPort: 3000
           env:
             - name: DB_HOST
-              value: massbit-db-svc
+              valueFrom:
+                secretKeyRef:
+                  name: substrate-indexer-secret
+                  key: DB_HOST
             - name: DB_PORT
               value: "5432"
             - name: DB_USER
-              value: postgres
+              valueFrom:
+                secretKeyRef:
+                  name: substrate-indexer-secret
+                  key: DB_USER
             - name: DB_PASS
-              value: postgres
+              valueFrom:
+                secretKeyRef:
+                  name: substrate-indexer-secret
+                  key: DB_PASS
             - name: DB_DATABASE
-              value: postgres
+              valueFrom:
+                secretKeyRef:
+                  name: substrate-indexer-secret
+                  key: DB_DATABASE
           volumeMounts:
             - name: project-dir
               mountPath: '/projects'
