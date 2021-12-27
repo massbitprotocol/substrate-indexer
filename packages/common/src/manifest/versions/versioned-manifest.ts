@@ -1,6 +1,5 @@
 import {Datasource} from '@massbit/types';
 import {plainToClass} from 'class-transformer';
-import {validateSync} from 'class-validator';
 import {IManifest} from '../types';
 import {ManifestV0_0_1} from './v0_0_1';
 import {ManifestV0_0_2} from './v0_0_2';
@@ -39,12 +38,12 @@ export class VersionedManifest implements IManifest {
     return this._manifest;
   }
 
+  get isV0_0_1(): boolean {
+    return this.specVersion === '0.0.1';
+  }
+
   validate(): void {
-    const errors = validateSync(this._manifest, {whitelist: true, forbidNonWhitelisted: true});
-    if (errors?.length) {
-      const errorMessages = errors.map((e) => e.toString()).join('\n');
-      throw new Error(`failed to parse project.yaml.\n${errorMessages}`);
-    }
+    this._manifest.validate();
   }
 
   get name(): string {

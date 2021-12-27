@@ -5,6 +5,7 @@ export interface IManifest {
   description: string;
   repository: string;
   dataSources: Datasource[];
+  validate(): void;
 }
 
 export interface INetworkConfig {

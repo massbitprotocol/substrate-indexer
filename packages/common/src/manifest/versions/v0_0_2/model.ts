@@ -6,7 +6,7 @@ import {
   SubstrateRuntimeHandler,
 } from '@massbit/types';
 import {Type} from 'class-transformer';
-import {Equals, IsArray, IsObject, IsOptional, IsString, ValidateNested} from 'class-validator';
+import {Equals, IsArray, IsObject, IsOptional, IsString, ValidateNested, validateSync} from 'class-validator';
 import {CustomDataSourceBase, Mapping, RuntimeDataSource} from '../../models';
 import {BaseManifest} from '../base';
 import {IManifestV0_0_2, IRuntimeDataSourceV0_0_2, SubstrateMappingV0_0_2} from './types';
@@ -75,4 +75,13 @@ export class ManifestV0_0_2 extends BaseManifest implements IManifestV0_0_2 {
     keepDiscriminatorProperty: true,
   })
   dataSources: (IRuntimeDataSourceV0_0_2 | SubstrateCustomDatasource)[];
+
+  validate(): void {
+    // const errors = validateSync(this.deployment, {whitelist: true, forbidNonWhitelisted: true});
+    // if (errors?.length) {
+    //   // TODO: print error details
+    //   const errorMessages = errors.map((e) => e.toString()).join('\n');
+    //   throw new Error(`failed to parse project.yaml.\n${errorMessages}`);
+    // }
+  }
 }

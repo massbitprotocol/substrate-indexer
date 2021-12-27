@@ -2226,6 +2226,7 @@ __metadata:
     "@types/app-module-path": ^2.2.0
     "@types/express": ^4.17.12
     "@types/jest": ^26.0.23
+    "@types/js-yaml": ^4.0.1
     "@types/lodash": ^4.14.170
     "@types/multer": ^1.4.7
     "@types/nodegit": ^0
@@ -2239,15 +2240,18 @@ __metadata:
     "@types/yargs": ^16.0.4
     "@willsoto/nestjs-prometheus": ^3.0.0
     app-module-path: ^2.2.0
+    axios: ^0.24.0
     bull: ^3.29.3
     class-transformer: ^0.4.0
     class-validator: ^0.13.2
     dayjs: ^1.10.5
     dotenv: ^10.0.0
+    js-yaml: ^4.1.0
     lodash: ^4.17.21
     merkle-tools: ^1.4.1
     node-worker-threads-pool: ^1.5.1
     nodemon: ^2.0.7
+    package-json-type: ^1.0.3
     parse-json: ^5.2.0
     passport: ^0.5.2
     passport-jwt: ^4.0.0
@@ -12970,6 +12974,13 @@ fsevents@~2.3.1:
     ip: ^1.1.5
     netmask: ^2.0.1
   checksum: 09352e4d68fccbbc8e0bff966569b351a2861917d63bc9bc8f9332ce018f297d406b8ad75ad3786b0eab60334aa9984f0c52ba2c97ac076a048a1fc5826aa83e
+  languageName: node
+  linkType: hard
+
+"package-json-type@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "package-json-type@npm:1.0.3"
+  checksum: 12befaf486279f14ade1954486bc8889d3c0a8f527864e9c318cb15f70f0aad2eba1485e6a51d353f0994cc2d81ec304ce0269685fe5a7a8cf6ebb2fb0b7fdf1
   languageName: node
   linkType: hard
 
