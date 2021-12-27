@@ -1,6 +1,6 @@
 import {SubstrateMapping, SubstrateRuntimeHandler} from '@massbit/types';
 import {Type} from 'class-transformer';
-import {Equals, IsArray, IsObject, IsOptional, IsString, ValidateNested} from 'class-validator';
+import {Equals, IsArray, IsObject, IsOptional, IsString, ValidateNested, validateSync} from 'class-validator';
 import {RuntimeDataSource, ChainTypes} from '../../models';
 import {INetworkConfig} from '../../types';
 import {BaseManifest} from '../base';
@@ -35,4 +35,12 @@ export class ManifestV0_0_1 extends BaseManifest implements IManifestV0_0_1 {
   @ValidateNested()
   @Type(() => RuntimeDataSourceV0_0_1)
   dataSources: IRuntimeDataSourceV0_0_1[];
+
+  validate(): void {
+    const errors = validateSync(this, {whitelist: true, forbidNonWhitelisted: true});
+    if (errors?.length) {
+      const errorMessages = errors.map((e) => e.toString()).join('\n');
+      throw new Error(`failed to parse project.yaml.\n${errorMessages}`);
+    }
+  }
 }

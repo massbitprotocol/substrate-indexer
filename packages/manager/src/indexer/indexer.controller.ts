@@ -5,6 +5,7 @@ import {JwtAuthGuard} from '../auth/jwt-auth.guard';
 import {CreateIndexerDto, CreateIndexerResponseDto, IndexerDto} from '../dto';
 import {IndexerRepo, IndexerStatus} from '../entities';
 import {MassbitBadRequestException, MassbitForbiddenException, MassbitNotFoundException} from '../exception';
+import {Validator} from '../validator';
 import {IndexerEvent} from './events';
 
 @Controller('indexers')
@@ -22,6 +23,13 @@ export class IndexerController {
     });
     if (indexer) {
       throw new MassbitBadRequestException(`Indexer with name ${name} is already existed`);
+    }
+    const validator = new Validator(data.repository);
+    const reports = await validator.getValidationReports();
+    for (const report of reports) {
+      if (!report.valid) {
+        throw new MassbitBadRequestException(report.description);
+      }
     }
     const id = uuidv4();
     await this.indexerRepo.create({id, userId: req.user.userId, status: IndexerStatus.DRAFT, ...data});
