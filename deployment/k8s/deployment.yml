@@ -47,6 +47,11 @@ spec:
                 secretKeyRef:
                   name: substrate-indexer-secret
                   key: DB_DATABASE
+            - name: JWT_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: substrate-indexer-secret
+                  key: JWT_PUBLIC_KEY
           volumeMounts:
             - name: project-dir
               mountPath: '/projects'
