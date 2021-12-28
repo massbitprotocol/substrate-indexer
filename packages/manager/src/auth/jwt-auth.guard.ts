@@ -10,7 +10,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
   handleRequest(err, user, info) {
     if (err || !user) {
-      throw err || new MassbitUnauthorizedException('');
+      throw err || new MassbitUnauthorizedException('UnAuthorized');
     }
     return user;
   }

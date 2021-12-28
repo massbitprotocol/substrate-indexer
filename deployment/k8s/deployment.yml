@@ -56,3 +56,18 @@ spec:
         fsGroup: 1000
       imagePullSecrets:
         - name: regcred
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: substrate-indexer-manager
+  name: substrate-indexer-manager
+spec:
+  ports:
+    - port: 8081
+      protocol: TCP
+      targetPort: 3000
+  selector:
+    app: substrate-indexer-manager
+  type: ClusterIP
