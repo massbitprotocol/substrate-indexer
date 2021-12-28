@@ -5,10 +5,12 @@ import {ExtractJwt, Strategy} from 'passport-jwt';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
+    const publicKey = Buffer.from(process.env.JWT_PUBLIC_KEY as string, 'base64').toString();
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET_KEY,
+      secretOrKey: publicKey,
+      algorithms: ['RS256'],
     });
   }
 
