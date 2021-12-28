@@ -1,6 +1,6 @@
 {
   "name": "@massbit/manager",
-  "version": "0.2.2-1",
+  "version": "0.2.2-2",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "rm -rf dist && tsc -b",
