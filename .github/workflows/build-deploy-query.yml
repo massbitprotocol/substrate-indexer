@@ -1,4 +1,4 @@
-name: Build & deploy Indexer Manager
+name: Build & deploy GraphQL Query
 on:
   workflow_dispatch:
     inputs:
@@ -11,11 +11,11 @@ env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
   GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
   GKE_ZONE:  ${{ secrets.GKE_ZONE }}
-  DEPLOYMENT_NAME: substrate-indexer-manager
-  IMAGE: massbit/manager
+  DEPLOYMENT_NAME: substrate-query
+  IMAGE: massbit/query
 
 jobs:
-  manager-build-push-docker:
+  query-build-push-docker:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -36,9 +36,9 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Get updated version
-        id: get-manager-version
+        id: get-query-version
         run: |
-          sh .github/workflows/scripts/managerVersion.sh
+          sh .github/workflows/scripts/queryVersion.sh
 
       - name: Build and push
         if: github.event.inputs.isLatest == 'false'
@@ -46,9 +46,9 @@ jobs:
         with:
           push: true
           platforms: arm64,amd64
-          file: ./packages/manager/Dockerfile
-          tags: massbit/manger:v${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
-          build-args: RELEASE_VERSION=${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
+          file: ./packages/query/Dockerfile
+          tags: massbit/manger:v${{ steps.get-query-version.outputs.QUERY_VERSION }}
+          build-args: RELEASE_VERSION=${{ steps.get-query-version.outputs.QUERY_VERSION }}
 
       - name: Build and push
         if: github.event.inputs.isLatest == 'true'
@@ -56,9 +56,9 @@ jobs:
         with:
           push: true
           platforms: arm64,amd64
-          file: ./packages/manager/Dockerfile
-          tags: massbit/manager:v${{ steps.get-manager-version.outputs.MANAGER_VERSION }},massbit/manager:latest
-          build-args: RELEASE_VERSION=${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
+          file: ./packages/query/Dockerfile
+          tags: massbit/query:v${{ steps.get-query-version.outputs.QUERY_VERSION }},massbit/query:latest
+          build-args: RELEASE_VERSION=${{ steps.get-query-version.outputs.QUERY_VERSION }}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
@@ -83,7 +83,7 @@ jobs:
       - name: Deploy
         run: |-
           cd deployment/k8s
-          ./kustomize edit set image MANAGER_IMAGE:MANAGER_TAG=$IMAGE:v${{ steps.get-manager-version.outputs.MANAGER_VERSION }}
+          ./kustomize edit set image QUERY_IMAGE:QUERY_TAG=$IMAGE:v${{ steps.get-query-version.outputs.QUERY_VERSION }}
           ./kustomize build . | kubectl apply -f -
           kubectl rollout status deployment/$DEPLOYMENT_NAME
           kubectl get services -o wide
