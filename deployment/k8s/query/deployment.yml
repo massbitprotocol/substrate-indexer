@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: substrate-query
+  labels:
+    app: substrate-query
+spec:
+  selector:
+    matchLabels:
+      app: substrate-query
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: substrate-query
+    spec:
+      containers:
+        - name: indexer
+          imagePullPolicy: IfNotPresent
+          image: IMAGE:TAG
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: substrate-indexer-secret
+                  key: DB_HOST
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: substrate-indexer-secret
+                  key: DB_USER
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: substrate-indexer-secret
+                  key: DB_PASS
+            - name: DB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: substrate-indexer-secret
+                  key: DB_DATABASE
+          securityContext:
+            runAsUser: 1000
+      securityContext:
+        fsGroup: 1000
+      imagePullSecrets:
+        - name: regcred
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: substrate-query
+  name: substrate-query
+spec:
+  ports:
+    - port: 8082
+      protocol: TCP
+      targetPort: 3000
+  selector:
+    app: substrate-query-secret
+  type: ClusterIP
