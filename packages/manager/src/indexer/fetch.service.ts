@@ -1,4 +1,4 @@
-import {isRuntimeDataSourceV0_0_2, delay, Project, RuntimeDataSourceV0_0_1} from '@massbit/common';
+import {delay, Project, RuntimeDataSourceV0_0_1} from '@massbit/common';
 import {SubstrateCallFilter, SubstrateEventFilter, SubstrateHandlerKind, SubstrateHandlerFilter} from '@massbit/types';
 import {OnApplicationShutdown} from '@nestjs/common';
 import {EventEmitter2} from '@nestjs/event-emitter';
@@ -99,7 +99,6 @@ export class FetchService implements OnApplicationShutdown {
 
     const dataSources = this.project.dataSources.filter(
       (ds) =>
-        isRuntimeDataSourceV0_0_2(ds) ||
         !(ds as RuntimeDataSourceV0_0_1).filter?.specName ||
         (ds as RuntimeDataSourceV0_0_1).filter.specName === this.api.runtimeVersion.specName.toString()
     );

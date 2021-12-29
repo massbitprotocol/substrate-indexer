@@ -1,16 +1,7 @@
-import path from 'path';
 import {Datasource} from '@massbit/types';
 import {RegisteredTypes} from '@polkadot/types/types';
 import {pick} from 'lodash';
-import {
-  INetworkConfig,
-  loadFromJsonOrYaml,
-  loadProjectManifest,
-  manifestIsV0_0_1,
-  manifestIsV0_0_2,
-  VersionedManifest,
-  parseChainTypes,
-} from '../manifest';
+import {INetworkConfig, loadProjectManifest, manifestIsV0_0_1, VersionedManifest} from '../manifest';
 import {prepareProjectDir} from '../utils';
 
 export class Project {
@@ -48,17 +39,6 @@ export class Project {
       };
     }
 
-    if (manifestIsV0_0_2(impl)) {
-      const network = {
-        ...impl.network,
-        ...this.networkOverrides,
-      };
-      if (!network.endpoint) {
-        throw new Error(`Network endpoint must be provided for network. genesisHash="${network.genesisHash}"`);
-      }
-      return network;
-    }
-
     throw new Error(`unsupported specVersion: ${this._manifest.specVersion}`);
   }
 
@@ -82,14 +62,6 @@ export class Project {
     const impl = this._manifest.asImpl;
     if (manifestIsV0_0_1(impl)) {
       return pick<RegisteredTypes>(impl.network, ['types', 'typesAlias', 'typesBundle', 'typesChain', 'typesSpec']);
-    }
-
-    if (manifestIsV0_0_2(impl)) {
-      if (!impl.network.chainType) {
-        return;
-      }
-      const rawChainTypes = loadFromJsonOrYaml(path.join(this._path, impl.network.chainType.file));
-      return parseChainTypes(rawChainTypes);
     }
   }
 }

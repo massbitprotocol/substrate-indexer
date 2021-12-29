@@ -2,13 +2,11 @@ import {Datasource} from '@massbit/types';
 import {plainToClass} from 'class-transformer';
 import {IManifest} from '../types';
 import {ManifestV0_0_1} from './v0_0_1';
-import {ManifestV0_0_2} from './v0_0_2';
 
 export type ManifestVersioned = {specVersion: string};
 
 const SUPPORTED_VERSIONS = {
   '0.0.1': ManifestV0_0_1,
-  '0.0.2': ManifestV0_0_2,
 };
 
 type Versions = keyof typeof SUPPORTED_VERSIONS;
@@ -17,10 +15,6 @@ type Manifest = InstanceType<typeof SUPPORTED_VERSIONS[Versions]>;
 
 export function manifestIsV0_0_1(manifest: IManifest): manifest is ManifestV0_0_1 {
   return manifest.specVersion === '0.0.1';
-}
-
-export function manifestIsV0_0_2(manifest: IManifest): manifest is ManifestV0_0_2 {
-  return manifest.specVersion === '0.0.2';
 }
 
 export class VersionedManifest implements IManifest {
@@ -58,7 +52,6 @@ export class VersionedManifest implements IManifest {
     if (manifestIsV0_0_1(this._manifest)) {
       return this._manifest.schema;
     }
-    return this._manifest.schema.file;
   }
 
   get specVersion(): string {

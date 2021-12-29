@@ -1,5 +1,5 @@
 import path from 'path';
-import {isRuntimeDataSourceV0_0_2, levelFilter, timeout, getProjectEntry, Project} from '@massbit/common';
+import {levelFilter, timeout, getProjectEntry, Project} from '@massbit/common';
 import {Store, Datasource} from '@massbit/types';
 import {ApiPromise} from '@polkadot/api';
 import {merge} from 'lodash';
@@ -109,7 +109,7 @@ export class SandboxService {
   }
 
   getDatasourceProcessor(ds: Datasource, api: ApiAt): IndexerSandbox {
-    const entry = this.getDataSourceEntry(ds);
+    const entry = this.getDataSourceEntry();
     let processor = this.processorCache[entry];
     if (!processor) {
       processor = new IndexerSandbox(
@@ -126,11 +126,7 @@ export class SandboxService {
     return processor;
   }
 
-  private getDataSourceEntry(ds: Datasource): string {
-    if (isRuntimeDataSourceV0_0_2(ds)) {
-      return ds.mapping.file;
-    } else {
-      return getProjectEntry(this.project.path);
-    }
+  private getDataSourceEntry(): string {
+    return getProjectEntry(this.project.path);
   }
 }

@@ -1,10 +1,6 @@
 import {
-  CustomDataSourceAsset,
-  FileReference,
   SubstrateBlockFilter,
   SubstrateCallFilter,
-  SubstrateCustomDatasource,
-  SubstrateCustomHandler,
   DatasourceKind,
   SubstrateEventFilter,
   SubstrateHandler,
@@ -39,6 +35,7 @@ export class EventFilter extends BlockFilter implements SubstrateEventFilter {
   @IsOptional()
   @IsString()
   module?: string;
+
   @IsOptional()
   @IsString()
   method?: string;
@@ -101,16 +98,6 @@ export class EventHandler {
   handler: string;
 }
 
-export class CustomHandler implements SubstrateCustomHandler {
-  @IsString()
-  kind: string;
-  @IsString()
-  handler: string;
-  @IsObject()
-  @IsOptional()
-  filter?: Record<string, unknown>;
-}
-
 export class Mapping implements SubstrateMapping {
   @Transform((handlers: SubstrateHandler[]) => {
     return handlers.map((handler) => {
@@ -129,15 +116,6 @@ export class Mapping implements SubstrateMapping {
   @IsArray()
   @ValidateNested()
   handlers: SubstrateHandler[];
-}
-
-export class CustomMapping implements SubstrateMapping<SubstrateCustomHandler> {
-  @IsArray()
-  @Type(() => CustomHandler)
-  @ValidateNested()
-  handlers: CustomHandler[];
-  @IsString()
-  file: string;
 }
 
 export class SubstrateNetworkFilterImpl implements SubstrateNetworkFilter {
@@ -161,34 +139,4 @@ export class RuntimeDataSource<M extends SubstrateMapping<SubstrateRuntimeHandle
   @ValidateNested()
   @Type(() => SubstrateNetworkFilterImpl)
   filter?: SubstrateNetworkFilter;
-}
-
-export class FileReferenceImpl implements FileReference {
-  @IsString()
-  file: string;
-}
-
-export class CustomDataSourceBase<
-  K extends string,
-  T extends SubstrateNetworkFilter,
-  M extends SubstrateMapping = SubstrateMapping<SubstrateCustomHandler>
-> implements SubstrateCustomDatasource<K, T, M>
-{
-  @IsString()
-  kind: K;
-  @Type(() => CustomMapping)
-  @ValidateNested()
-  mapping: M;
-  @IsOptional()
-  @IsInt()
-  startBlock?: number;
-  @Type(() => FileReferenceImpl)
-  @ValidateNested({each: true})
-  assets: {[p: string]: CustomDataSourceAsset};
-  @Type(() => FileReferenceImpl)
-  @IsObject()
-  processor: FileReference;
-  @IsOptional()
-  @IsObject()
-  filter?: T;
 }
