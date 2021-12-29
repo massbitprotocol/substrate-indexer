@@ -76,14 +76,14 @@ jobs:
 
       - name: Set up Kustomize
         run: |-
-          cd deployment/k8s
+          cd deployment/k8s/query
           curl -sfLo kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v3.1.0/kustomize_3.1.0_linux_amd64
           chmod u+x ./kustomize
 
       - name: Deploy
         run: |-
-          cd deployment/k8s
-          ./kustomize edit set image QUERY_IMAGE:QUERY_TAG=$IMAGE:v${{ steps.get-query-version.outputs.QUERY_VERSION }}
+          cd deployment/k8s/query
+          ./kustomize edit set image IMAGE:TAG=$IMAGE:v${{ steps.get-query-version.outputs.QUERY_VERSION }}
           ./kustomize build . | kubectl apply -f -
           kubectl rollout status deployment/$DEPLOYMENT_NAME
           kubectl get services -o wide
