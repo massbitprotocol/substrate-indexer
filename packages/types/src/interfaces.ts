@@ -4,11 +4,6 @@ export interface Entity {
   id: string;
 }
 
-export type FunctionPropertyNames<T> = {
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  [K in keyof T]: T[K] extends Function ? K : never;
-}[keyof T];
-
 export interface Store {
   get(entity: string, id: string): Promise<Entity | null>;
   getByField(entity: string, field: string, value): Promise<Entity[]>;

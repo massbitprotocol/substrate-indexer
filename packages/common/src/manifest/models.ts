@@ -51,15 +51,19 @@ export class ChainTypes implements RegisteredTypes {
   @IsObject()
   @IsOptional()
   types?: RegistryTypes;
+
   @IsObject()
   @IsOptional()
   typesAlias?: Record<string, OverrideModuleType>;
+
   @IsObject()
   @IsOptional()
   typesBundle?: OverrideBundleType;
+
   @IsObject()
   @IsOptional()
   typesChain?: Record<string, RegistryTypes>;
+
   @IsObject()
   @IsOptional()
   typesSpec?: Record<string, RegistryTypes>;
@@ -70,8 +74,10 @@ export class BlockHandler {
   @ValidateNested()
   @Type(() => BlockFilter)
   filter?: SubstrateBlockFilter;
+
   @IsEnum(SubstrateHandlerKind, {groups: [SubstrateHandlerKind.Block]})
   kind: SubstrateHandlerKind.Block;
+
   @IsString()
   handler: string;
 }
@@ -81,8 +87,10 @@ export class CallHandler {
   @ValidateNested()
   @Type(() => CallFilter)
   filter?: SubstrateCallFilter;
+
   @IsEnum(SubstrateHandlerKind, {groups: [SubstrateHandlerKind.Call]})
   kind: SubstrateHandlerKind.Call;
+
   @IsString()
   handler: string;
 }
@@ -92,8 +100,10 @@ export class EventHandler {
   @ValidateNested()
   @Type(() => EventFilter)
   filter?: SubstrateEventFilter;
+
   @IsEnum(SubstrateHandlerKind, {groups: [SubstrateHandlerKind.Event]})
   kind: SubstrateHandlerKind.Event;
+
   @IsString()
   handler: string;
 }
@@ -109,7 +119,7 @@ export class Mapping implements SubstrateMapping {
         case SubstrateHandlerKind.Block:
           return plainToClass(BlockHandler, handler);
         default:
-          throw new Error(`handler ${(handler as any).kind} not supported`);
+          throw new Error(`Handler ${(handler as any).kind} not supported`);
       }
     });
   })
@@ -129,12 +139,15 @@ export class RuntimeDataSource<M extends SubstrateMapping<SubstrateRuntimeHandle
 {
   @IsEnum(DatasourceKind, {groups: [DatasourceKind.Runtime]})
   kind: DatasourceKind.Runtime;
+
   @Type(() => Mapping)
   @ValidateNested()
   mapping: M;
+
   @IsOptional()
   @IsInt()
   startBlock?: number;
+
   @IsOptional()
   @ValidateNested()
   @Type(() => SubstrateNetworkFilterImpl)

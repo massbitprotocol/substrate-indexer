@@ -3,7 +3,7 @@ import {plainToClass} from 'class-transformer';
 import {IManifest} from '../types';
 import {ManifestV0_0_1} from './v0_0_1';
 
-export type ManifestVersioned = {specVersion: string};
+export type VersionedManifest = {specVersion: string};
 
 const SUPPORTED_VERSIONS = {
   '0.0.1': ManifestV0_0_1,
@@ -11,56 +11,48 @@ const SUPPORTED_VERSIONS = {
 
 type Versions = keyof typeof SUPPORTED_VERSIONS;
 
-type Manifest = InstanceType<typeof SUPPORTED_VERSIONS[Versions]>;
+type ManifestImpls = InstanceType<typeof SUPPORTED_VERSIONS[Versions]>;
 
-export function isManifestV0_0_1(manifest: IManifest): manifest is ManifestV0_0_1 {
-  return manifest.specVersion === '0.0.1';
-}
+export class Manifest implements IManifest {
+  private readonly _impl: ManifestImpls;
 
-export class VersionedManifest implements IManifest {
-  private readonly _manifest: Manifest;
-
-  constructor(manifest: ManifestVersioned) {
+  constructor(manifest: VersionedManifest) {
     const klass = SUPPORTED_VERSIONS[manifest.specVersion as Versions];
     if (!klass) {
-      throw new Error('specVersion not supported for this manifest');
+      throw new Error("Manifest's specVersion is not supported");
     }
-    this._manifest = plainToClass<Manifest, ManifestVersioned>(klass, manifest);
+    this._impl = plainToClass<ManifestImpls, VersionedManifest>(klass, manifest);
   }
 
-  get asImpl(): IManifest {
-    return this._manifest;
-  }
-
-  get isV0_0_1(): boolean {
-    return this.specVersion === '0.0.1';
+  get asImpl(): ManifestImpls {
+    return this._impl;
   }
 
   validate(): void {
-    this._manifest.validate();
+    this._impl.validate();
   }
 
   get name(): string {
-    return this._manifest.name;
+    return this._impl.name;
   }
 
   get dataSources(): Datasource[] {
-    return this._manifest.dataSources;
+    return this._impl.dataSources;
   }
 
   get schema(): string {
-    return this._manifest.schema;
+    return this._impl.schema;
   }
 
   get specVersion(): string {
-    return this._manifest.specVersion;
+    return this._impl.specVersion;
   }
 
   get description(): string {
-    return this._manifest.description;
+    return this._impl.description;
   }
 
   get repository(): string {
-    return this._manifest.repository;
+    return this._impl.repository;
   }
 }

@@ -1,6 +1,18 @@
 import {RegistryTypes} from '@polkadot/types/types';
 import {SubstrateBlock, SubstrateEvent, SubstrateExtrinsic} from './interfaces';
 
+export interface Manifest {
+  specVersion: string;
+  description: string;
+  repository: string;
+  schema: string;
+  network: {
+    endpoint: string;
+    customTypes?: RegistryTypes;
+  };
+  dataSources: Datasource[];
+}
+
 export enum DatasourceKind {
   Runtime = 'substrate/Runtime',
 }
@@ -16,18 +28,6 @@ export type RuntimeHandlerInputMap = {
   [SubstrateHandlerKind.Call]: SubstrateExtrinsic;
   [SubstrateHandlerKind.Event]: SubstrateEvent;
 };
-
-export interface Manifest {
-  specVersion: string;
-  description: string;
-  repository: string;
-  schema: string;
-  network: {
-    endpoint: string;
-    customTypes?: RegistryTypes;
-  };
-  dataSources: Datasource[];
-}
 
 export type SpecVersionRange = [number, number];
 
@@ -78,7 +78,7 @@ export interface SubstrateNetworkFilter {
   specName?: string;
 }
 
-interface SubstrateDatasource<M extends SubstrateMapping, F extends SubstrateNetworkFilter = SubstrateNetworkFilter> {
+interface ISubstrateDatasource<M extends SubstrateMapping, F extends SubstrateNetworkFilter = SubstrateNetworkFilter> {
   name?: string;
   kind: string;
   filter?: F;
@@ -88,7 +88,7 @@ interface SubstrateDatasource<M extends SubstrateMapping, F extends SubstrateNet
 
 export interface SubstrateRuntimeDatasource<
   M extends SubstrateMapping<SubstrateRuntimeHandler> = SubstrateMapping<SubstrateRuntimeHandler>
-> extends SubstrateDatasource<M> {
+> extends ISubstrateDatasource<M> {
   kind: DatasourceKind.Runtime;
 }
 
