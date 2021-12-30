@@ -1,4 +1,4 @@
-import {delay, Project, RuntimeDataSourceV0_0_1} from '@massbit/common';
+import {delay, Project, IRuntimeDataSourceV0_0_1, BlockedQueue} from '@massbit/common';
 import {SubstrateCallFilter, SubstrateEventFilter, SubstrateHandlerKind, SubstrateHandlerFilter} from '@massbit/types';
 import {OnApplicationShutdown} from '@nestjs/common';
 import {EventEmitter2} from '@nestjs/event-emitter';
@@ -10,7 +10,6 @@ import {Config} from '../configure/config';
 import {getLogger} from '../utils/logger';
 import * as SubstrateUtil from '../utils/substrate';
 import {ApiService} from './api.service';
-import {BlockedQueue} from './blocked-queue';
 import {IndexerEvent} from './events';
 import {NetworkIndexerQueryEntry, NetworkIndexer, NetworkIndexerService} from './network-indexer.service';
 import {BlockContent} from './types';
@@ -99,8 +98,8 @@ export class FetchService implements OnApplicationShutdown {
 
     const dataSources = this.project.dataSources.filter(
       (ds) =>
-        !(ds as RuntimeDataSourceV0_0_1).filter?.specName ||
-        (ds as RuntimeDataSourceV0_0_1).filter.specName === this.api.runtimeVersion.specName.toString()
+        !(ds as IRuntimeDataSourceV0_0_1).filter?.specName ||
+        (ds as IRuntimeDataSourceV0_0_1).filter.specName === this.api.runtimeVersion.specName.toString()
     );
     for (const ds of dataSources) {
       for (const handler of ds.mapping.handlers) {
@@ -242,7 +241,7 @@ export class FetchService implements OnApplicationShutdown {
             if (batchBlocks.length === 0) {
               this.setLatestBufferedHeight(Math.min(queryEndBlock - 1, networkIndexer._metadata.lastProcessedHeight));
             } else {
-              this.blockNumberBuffer.putAll(batchBlocks);
+              await this.blockNumberBuffer.putAll(batchBlocks);
               this.setLatestBufferedHeight(batchBlocks[batchBlocks.length - 1]);
             }
             this.eventEmitter.emit(IndexerEvent.BlocknumberQueueSize, {
@@ -256,7 +255,7 @@ export class FetchService implements OnApplicationShutdown {
       }
       // the original method: fill next batch size of blocks
       const endHeight = this.nextEndBlockHeight(startBlockHeight);
-      this.blockNumberBuffer.putAll(range(startBlockHeight, endHeight + 1));
+      await this.blockNumberBuffer.putAll(range(startBlockHeight, endHeight + 1));
       this.setLatestBufferedHeight(endHeight);
     }
   }

@@ -6,9 +6,7 @@ export type MassbitExceptionInformation = {
   data?: unknown;
 };
 
-export type MassbitExceptionResponse = MassbitExceptionInformation & {
-  traceId?: string;
-};
+export type MassbitExceptionResponse = MassbitExceptionInformation;
 
 export class MassbitException extends HttpException {
   private readonly customInformation: MassbitExceptionInformation;
@@ -22,10 +20,9 @@ export class MassbitException extends HttpException {
     };
   }
 
-  prepareResponse(traceId?: string): MassbitExceptionResponse {
+  prepareResponse(): MassbitExceptionResponse {
     return {
       ...this.customInformation,
-      traceId,
     };
   }
 }
@@ -33,6 +30,7 @@ export class MassbitException extends HttpException {
 type DataError = {
   [key: string]: {[key: string]: string} | null;
 };
+
 export class MassbitBadRequestException extends MassbitException {
   constructor(message: string, data?: unknown) {
     super(HttpStatus.BAD_REQUEST, message, data);
@@ -44,7 +42,6 @@ export class MassbitBadRequestException extends MassbitException {
       errs.forEach((error) => {
         const property = parentProperty ? `${parentProperty}.${error.property}` : error.property;
         if (error.constraints) {
-          // eslint-disable-next-line no-param-reassign
           result[property] = error.constraints;
         } else if (error.children?.length) {
           parseErrors(error.children, result, property);

@@ -7,6 +7,5 @@ import {IndexerController} from './indexer.controller';
   imports: [DbModule.forFeature(['Indexer'])],
   providers: [IndexerManager],
   controllers: [IndexerController],
-  exports: [],
 })
 export class IndexerModule {}

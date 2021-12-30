@@ -12,11 +12,10 @@ const NOT_SUPPORT = (name: string) => () => {
 
 export class ApiService implements OnApplicationShutdown {
   private readonly project: Project;
-
-  networkMeta: NetworkMetadata;
   private api: ApiPromise;
   private currentBlockHash: string;
   private currentRuntimeVersion: RuntimeVersion;
+  networkMeta: NetworkMetadata;
 
   constructor(project: Project) {
     this.project = project;
@@ -30,6 +29,7 @@ export class ApiService implements OnApplicationShutdown {
     const {chainTypes, network} = this.project;
     let provider: WsProvider | HttpProvider;
     let throwOnConnect = false;
+
     if (network.endpoint.startsWith('ws')) {
       provider = new WsProvider(network.endpoint);
     } else if (network.endpoint.startsWith('http')) {

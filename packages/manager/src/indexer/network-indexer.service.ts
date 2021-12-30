@@ -129,7 +129,7 @@ export class NetworkIndexerService implements OnApplicationShutdown {
     batchSize: number,
     conditions: NetworkIndexerQueryEntry[]
   ): Promise<NetworkIndexer> {
-    const {query, variables} = this.generateQuery(startBlock, queryEndBlock, batchSize, conditions);
+    const {query, variables} = NetworkIndexerService.generateQuery(startBlock, queryEndBlock, batchSize, conditions);
     try {
       const resp = await this.client.query({
         query: gql(query),
@@ -167,7 +167,7 @@ export class NetworkIndexerService implements OnApplicationShutdown {
     }
   }
 
-  private generateQuery(
+  private static generateQuery(
     startBlock: number,
     queryEndBlock: number,
     batchSize: number,

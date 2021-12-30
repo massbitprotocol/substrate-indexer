@@ -13,7 +13,7 @@ type Versions = keyof typeof SUPPORTED_VERSIONS;
 
 type Manifest = InstanceType<typeof SUPPORTED_VERSIONS[Versions]>;
 
-export function manifestIsV0_0_1(manifest: IManifest): manifest is ManifestV0_0_1 {
+export function isManifestV0_0_1(manifest: IManifest): manifest is ManifestV0_0_1 {
   return manifest.specVersion === '0.0.1';
 }
 
@@ -49,9 +49,7 @@ export class VersionedManifest implements IManifest {
   }
 
   get schema(): string {
-    if (manifestIsV0_0_1(this._manifest)) {
-      return this._manifest.schema;
-    }
+    return this._manifest.schema;
   }
 
   get specVersion(): string {

@@ -49,7 +49,7 @@ export class IndexerManager {
       logger.info(`start indexer ${project.name}`);
       const instance = new IndexerInstance(
         project,
-        indexer,
+        id,
         this.sequelize,
         this.config,
         this.indexerRepo,

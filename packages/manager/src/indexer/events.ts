@@ -6,7 +6,6 @@ export enum IndexerEvent {
   BlockLastProcessed = 'block_processed_height',
   BlockQueueSize = 'block_queue_size',
   BlocknumberQueueSize = 'blocknumber_queue_size',
-  NetworkMetadata = 'network_metadata',
 }
 
 export interface ProcessBlockPayload {
@@ -16,12 +15,4 @@ export interface ProcessBlockPayload {
 
 export interface TargetBlockPayload {
   height: number;
-}
-
-export interface BestBlockPayload {
-  height: number;
-}
-
-export interface EventPayload<T> {
-  value: T;
 }
