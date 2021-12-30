@@ -7,6 +7,7 @@ export interface ContextData {
   pkg: IPackageJson;
   manifest?: Manifest;
 }
+
 export interface Context {
   data: ContextData;
   reader: Reader;

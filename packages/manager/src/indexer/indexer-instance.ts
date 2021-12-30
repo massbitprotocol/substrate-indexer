@@ -2,6 +2,7 @@ import path from 'path';
 import {buildSchema, getAllEntitiesRelations, isRuntimeDatasource, Project} from '@massbit/common';
 import {Datasource, SubstrateHandlerKind, SubstrateRuntimeHandler} from '@massbit/types';
 import {EventEmitter2} from '@nestjs/event-emitter';
+import {SchedulerRegistry} from '@nestjs/schedule';
 import {ApiPromise} from '@polkadot/api';
 import Pino from 'pino';
 import {QueryTypes, Sequelize} from 'sequelize';
@@ -11,7 +12,6 @@ import {getLogger} from '../utils/logger';
 import * as SubstrateUtil from '../utils/substrate';
 import {ApiService} from './api.service';
 import {MetadataFactory, MetadataRepo} from './entities/metadata.entity';
-import {IndexerEvent} from './events';
 import {FetchService} from './fetch.service';
 import {NetworkIndexerService} from './network-indexer.service';
 import {IndexerSandbox, SandboxService} from './sandbox.service';
@@ -38,12 +38,13 @@ export class IndexerInstance {
   protected metadataRepo: MetadataRepo;
 
   constructor(
-    project: Project,
     indexerId: string,
+    project: Project,
     sequelize: Sequelize,
     config: Config,
     indexerRepo: IndexerRepo,
-    eventEmitter: EventEmitter2
+    eventEmitter: EventEmitter2,
+    schedulerRegistry: SchedulerRegistry
   ) {
     this.project = project;
     this.indexerId = indexerId;
@@ -55,11 +56,13 @@ export class IndexerInstance {
     this.networkIndexerService = new NetworkIndexerService(this.project);
     this.apiService = new ApiService(this.project);
     this.fetchService = new FetchService(
+      indexerId,
       this.project,
       this.config,
       this.apiService,
       this.networkIndexerService,
-      this.eventEmitter
+      this.eventEmitter,
+      schedulerRegistry
     );
     this.storeService = new StoreService(this.sequelize, this.config);
     this.sandboxService = new SandboxService(this.project, this.config, this.apiService, this.storeService);
@@ -76,7 +79,7 @@ export class IndexerInstance {
     await this.initDbSchema(dbSchema);
     this.metadataRepo = await this.ensureMetadata(dbSchema);
 
-    await this.indexerRepo.update({status: IndexerStatus.DEPLOYED}, {where: {id: this.indexerId}});
+    await this.indexerRepo.update({status: IndexerStatus.RUNNING}, {where: {id: this.indexerId}});
 
     let startHeight;
     const lastProcessedHeight = await this.metadataRepo.findOne({
@@ -102,14 +105,8 @@ export class IndexerInstance {
 
   async indexBlock(blockContent: BlockContent): Promise<void> {
     const {block} = blockContent;
-    const blockHeight = block.block.header.number.toNumber();
-    this.eventEmitter.emit(IndexerEvent.BlockProcessing, {
-      height: blockHeight,
-      timestamp: Date.now(),
-    });
     const tx = await this.sequelize.transaction();
     this.storeService.setTransaction(tx);
-
     try {
       const isUpgraded = block.specVersion !== this.prevSpecVersion;
       // if parentBlockHash injected, which means we need to check runtime upgrade
@@ -125,13 +122,22 @@ export class IndexerInstance {
         }
       }
 
-      await this.metadataRepo.upsert(
-        {
-          key: 'lastProcessedHeight',
-          value: block.block.header.number.toNumber(),
-        },
-        {transaction: tx}
-      );
+      await Promise.all([
+        await this.metadataRepo.upsert(
+          {
+            key: 'lastProcessedHeight',
+            value: block.block.header.number.toNumber(),
+          },
+          {transaction: tx}
+        ),
+        await this.metadataRepo.upsert(
+          {
+            key: 'lastProcessedTimestamp',
+            value: Date.now(),
+          },
+          {transaction: tx}
+        ),
+      ]);
     } catch (e) {
       await tx.rollback();
       throw e;
@@ -139,10 +145,6 @@ export class IndexerInstance {
     await tx.commit();
     this.fetchService.latestProcessed(block.block.header.number.toNumber());
     this.prevSpecVersion = block.specVersion;
-    this.eventEmitter.emit(IndexerEvent.BlockLastProcessed, {
-      height: blockHeight,
-      timestamp: Date.now(),
-    });
   }
 
   private getStartBlockFromDataSources() {
@@ -156,19 +158,14 @@ export class IndexerInstance {
 
   private async ensureMetadata(dbSchema: string): Promise<MetadataRepo> {
     const metadataRepo = MetadataFactory(this.sequelize, dbSchema);
-
     const indexer = await this.indexerRepo.findOne({where: {id: this.indexerId}});
-
     const keys = ['lastProcessedHeight', 'blockOffset', 'chain', 'specName', 'genesisHash'] as const;
-
     const entries = await metadataRepo.findAll({
       where: {
         key: keys,
       },
     });
-
     const {chain, specName} = this.apiService.networkMeta;
-
     const metadata = entries.reduce((arr, curr) => {
       arr[curr.key] = curr.value;
       return arr;
@@ -178,7 +175,7 @@ export class IndexerInstance {
     // if blockOffset is changed, will require re-index.
     if (!metadata.blockOffset) {
       const offsetValue = (this.getStartBlockFromDataSources() - 1).toString();
-      await this.storeService.setMetadata('blockOffset', offsetValue);
+      await metadataRepo.upsert({key: 'blockOffset', value: offsetValue});
     }
 
     if (!metadata.genesisHash) {
@@ -253,10 +250,7 @@ export class IndexerInstance {
     }
     dataSources = dataSources.filter((ds) => ds.startBlock <= processedHeight);
     if (dataSources.length === 0) {
-      throw new Error(
-        `Your start block is greater than the current indexed block height in your database. Either change your startBlock (project.yaml) to <= ${processedHeight}
-        or delete your database and start again from the currently specified startBlock`
-      );
+      throw new Error(`Your start block is greater than the current indexed block height in your database`);
     }
     return dataSources;
   }
@@ -296,5 +290,10 @@ export class IndexerInstance {
         default:
       }
     }
+  }
+
+  async stop(): Promise<void> {
+    this.fetchService.stop();
+    await this.indexerRepo.update({status: IndexerStatus.STOPPED}, {where: {id: this.indexerId}});
   }
 }

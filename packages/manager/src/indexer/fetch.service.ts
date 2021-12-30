@@ -2,7 +2,7 @@ import {delay, Project, IRuntimeDataSourceV0_0_1, BlockedQueue} from '@massbit/c
 import {SubstrateCallFilter, SubstrateEventFilter, SubstrateHandlerKind, SubstrateHandlerFilter} from '@massbit/types';
 import {OnApplicationShutdown} from '@nestjs/common';
 import {EventEmitter2} from '@nestjs/event-emitter';
-import {Interval} from '@nestjs/schedule';
+import {SchedulerRegistry} from '@nestjs/schedule';
 import {ApiPromise} from '@polkadot/api';
 import {isUndefined, range, sortBy, uniqBy} from 'lodash';
 import Pino from 'pino';
@@ -10,7 +10,6 @@ import {Config} from '../configure/config';
 import {getLogger} from '../utils/logger';
 import * as SubstrateUtil from '../utils/substrate';
 import {ApiService} from './api.service';
-import {IndexerEvent} from './events';
 import {NetworkIndexerQueryEntry, NetworkIndexer, NetworkIndexerService} from './network-indexer.service';
 import {BlockContent} from './types';
 
@@ -44,13 +43,13 @@ function callFilterToQueryEntry(filter: SubstrateCallFilter): NetworkIndexerQuer
 }
 
 export class FetchService implements OnApplicationShutdown {
+  private readonly indexerId: string;
   private latestBestHeight: number;
   private latestFinalizedHeight: number;
   private latestProcessedHeight: number;
   private latestBufferedHeight: number;
   private blockBuffer: BlockedQueue<BlockContent>;
   private blockNumberBuffer: BlockedQueue<number>;
-  private isShutdown = false;
   private parentSpecVersion: number;
   private useNetworkIndexer: boolean;
   private networkIndexerQueryEntries?: NetworkIndexerQueryEntry[];
@@ -60,40 +59,50 @@ export class FetchService implements OnApplicationShutdown {
   private networkIndexerService: NetworkIndexerService;
   private eventEmitter: EventEmitter2;
   private logger: Pino.Logger;
+  private schedulerRegistry: SchedulerRegistry;
+  private stopper: boolean;
 
   constructor(
+    indexerId: string,
     project: Project,
     config: Config,
     apiService: ApiService,
     networkIndexerService: NetworkIndexerService,
-    eventEmitter: EventEmitter2
+    eventEmitter: EventEmitter2,
+    schedulerRegistry: SchedulerRegistry
   ) {
-    this.config = config;
+    this.indexerId = indexerId;
     this.project = project;
+    this.config = config;
     this.eventEmitter = eventEmitter;
+    this.schedulerRegistry = schedulerRegistry;
     this.apiService = apiService;
     this.networkIndexerService = networkIndexerService;
     this.blockBuffer = new BlockedQueue<BlockContent>(this.config.batchSize * 3);
     this.blockNumberBuffer = new BlockedQueue<number>(this.config.batchSize * 3);
     this.logger = getLogger(project.manifest.name);
+    this.stopper = false;
+
+    this.addGetFinalizedBlockHeadInterval();
+    this.addGetBestBlockHeadInterval();
   }
 
   async init(): Promise<void> {
-    this.networkIndexerQueryEntries = this.getDictionaryQueryEntries();
+    this.networkIndexerQueryEntries = this.getNetworkIndexerQueryEntries();
     this.useNetworkIndexer = !!this.networkIndexerQueryEntries?.length && !!this.project.network.networkIndexer;
     await this.getFinalizedBlockHead();
     await this.getBestBlockHead();
   }
 
   onApplicationShutdown(): void {
-    this.isShutdown = true;
+    this.stopper = true;
   }
 
   get api(): ApiPromise {
     return this.apiService.getApi();
   }
 
-  getDictionaryQueryEntries(): NetworkIndexerQueryEntry[] {
+  getNetworkIndexerQueryEntries(): NetworkIndexerQueryEntry[] {
     const queryEntries: NetworkIndexerQueryEntry[] = [];
 
     const dataSources = this.project.dataSources.filter(
@@ -138,13 +147,9 @@ export class FetchService implements OnApplicationShutdown {
   }
 
   register(next: (value: BlockContent) => Promise<void>): () => void {
-    let stopper = false;
     void (async () => {
-      while (!stopper) {
+      while (!this.stopper) {
         const block = await this.blockBuffer.take();
-        this.eventEmitter.emit(IndexerEvent.BlockQueueSize, {
-          value: this.blockBuffer.size,
-        });
         let success = false;
         while (!success) {
           try {
@@ -153,7 +158,7 @@ export class FetchService implements OnApplicationShutdown {
           } catch (e) {
             this.logger.error(
               e,
-              `failed to index block at height ${block.block.block.header.number.toString()} ${
+              `index block at height ${block.block.block.header.number.toString()} ${
                 e.handler ? `${e.handler}(${e.handlerArgs ?? ''})` : ''
               }`
             );
@@ -161,13 +166,12 @@ export class FetchService implements OnApplicationShutdown {
         }
       }
     })();
-    return () => (stopper = true);
+    return () => (this.stopper = true);
   }
 
-  @Interval(BLOCK_TIME_VARIANCE * 1000)
   async getFinalizedBlockHead(): Promise<void> {
     if (!this.api) {
-      this.logger.debug(`Skip fetch finalized block until API is ready`);
+      this.logger.debug(`skip fetch finalized block until API is ready`);
       return;
     }
     try {
@@ -176,16 +180,12 @@ export class FetchService implements OnApplicationShutdown {
       const currentFinalizedHeight = finalizedBlock.block.header.number.toNumber();
       if (this.latestFinalizedHeight !== currentFinalizedHeight) {
         this.latestFinalizedHeight = currentFinalizedHeight;
-        this.eventEmitter.emit(IndexerEvent.BlockTarget, {
-          height: this.latestFinalizedHeight,
-        });
       }
     } catch (e) {
       this.logger.error(e, `get finalized block`);
     }
   }
 
-  @Interval(BLOCK_TIME_VARIANCE * 1000)
   async getBestBlockHead(): Promise<void> {
     if (!this.api) {
       this.logger.debug(`skip fetch best block until API is ready`);
@@ -196,9 +196,6 @@ export class FetchService implements OnApplicationShutdown {
       const currentBestHeight = bestHeader.number.toNumber();
       if (this.latestBestHeight !== currentBestHeight) {
         this.latestBestHeight = currentBestHeight;
-        this.eventEmitter.emit(IndexerEvent.BlockBest, {
-          height: this.latestBestHeight,
-        });
       }
     } catch (e) {
       this.logger.error(e, `get best block`);
@@ -221,7 +218,7 @@ export class FetchService implements OnApplicationShutdown {
 
     let startBlockHeight: number;
 
-    while (!this.isShutdown) {
+    while (!this.stopper) {
       startBlockHeight = this.latestBufferedHeight ? this.latestBufferedHeight + 1 : initBlockHeight;
       if (this.blockNumberBuffer.freeSize < this.config.batchSize || startBlockHeight > this.latestFinalizedHeight) {
         await delay(1);
@@ -244,9 +241,6 @@ export class FetchService implements OnApplicationShutdown {
               await this.blockNumberBuffer.putAll(batchBlocks);
               this.setLatestBufferedHeight(batchBlocks[batchBlocks.length - 1]);
             }
-            this.eventEmitter.emit(IndexerEvent.BlocknumberQueueSize, {
-              value: this.blockNumberBuffer.size,
-            });
             continue; // skip nextBlockRange() way
           }
         } catch (e) {
@@ -261,7 +255,7 @@ export class FetchService implements OnApplicationShutdown {
   }
 
   async fillBlockBuffer(): Promise<void> {
-    while (!this.isShutdown) {
+    while (!this.stopper) {
       const takeCount = Math.min(this.blockBuffer.freeSize, this.config.batchSize);
 
       if (this.blockNumberBuffer.size === 0 || takeCount === 0) {
@@ -277,14 +271,11 @@ export class FetchService implements OnApplicationShutdown {
         metadataChanged ? undefined : this.parentSpecVersion
       );
       this.logger.info(
-        `fetch block in range [${bufferBlocks[0]},${bufferBlocks[bufferBlocks.length - 1]}], total ${
+        `index block in range [${bufferBlocks[0]},${bufferBlocks[bufferBlocks.length - 1]}], total ${
           bufferBlocks.length
         } blocks`
       );
-      this.blockBuffer.putAll(blocks);
-      this.eventEmitter.emit(IndexerEvent.BlockQueueSize, {
-        value: this.blockBuffer.size,
-      });
+      await this.blockBuffer.putAll(blocks);
     }
   }
 
@@ -324,8 +315,26 @@ export class FetchService implements OnApplicationShutdown {
 
   private setLatestBufferedHeight(height: number): void {
     this.latestBufferedHeight = height;
-    this.eventEmitter.emit(IndexerEvent.BlocknumberQueueSize, {
-      value: this.blockNumberBuffer.size,
-    });
+  }
+
+  private addGetFinalizedBlockHeadInterval(): void {
+    const interval = setInterval(() => {
+      void this.getFinalizedBlockHead();
+    }, BLOCK_TIME_VARIANCE * 1000);
+    this.schedulerRegistry.addInterval(`${this.indexerId}_getFinalizedBlockHead`, interval);
+  }
+
+  private addGetBestBlockHeadInterval(): void {
+    const interval = setInterval(() => {
+      void this.getBestBlockHead();
+    }, BLOCK_TIME_VARIANCE * 1000);
+    this.schedulerRegistry.addInterval(`${this.indexerId}_getBestBlockHead`, interval);
+  }
+
+  stop(): void {
+    this.stopper = true;
+    this.schedulerRegistry.deleteInterval(`${this.indexerId}_getFinalizedBlockHead`);
+    this.schedulerRegistry.deleteInterval(`${this.indexerId}_getBestBlockHead`);
+    this.logger.info('indexer stopped');
   }
 }

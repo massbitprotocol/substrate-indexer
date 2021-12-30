@@ -13,6 +13,6 @@ export class ReaderFactory {
     if (githubMatch) {
       return new GithubReader(githubMatch[1]);
     }
-    throw new Error(`unknown location: ${location}`);
+    throw new Error(`Unknown location: ${location}`);
   }
 }
