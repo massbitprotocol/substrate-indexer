@@ -1,6 +1,17 @@
-import {ApiPromise} from '@polkadot/api';
 import {RegistryTypes} from '@polkadot/types/types';
 import {SubstrateBlock, SubstrateEvent, SubstrateExtrinsic} from './interfaces';
+
+export interface Manifest {
+  specVersion: string;
+  description: string;
+  repository: string;
+  schema: string;
+  network: {
+    endpoint: string;
+    customTypes?: RegistryTypes;
+  };
+  dataSources: Datasource[];
+}
 
 export enum DatasourceKind {
   Runtime = 'substrate/Runtime',
@@ -18,33 +29,15 @@ export type RuntimeHandlerInputMap = {
   [SubstrateHandlerKind.Event]: SubstrateEvent;
 };
 
-type RuntimeFilterMap = {
-  [SubstrateHandlerKind.Block]: SubstrateNetworkFilter;
-  [SubstrateHandlerKind.Call]: SubstrateCallFilter;
-  [SubstrateHandlerKind.Event]: SubstrateEventFilter;
-};
-
-export interface Manifest {
-  specVersion: string;
-  description: string;
-  repository: string;
-  schema: string;
-  network: {
-    endpoint: string;
-    customTypes?: RegistryTypes;
-  };
-  dataSources: Datasource[];
-}
-
 export type SpecVersionRange = [number, number];
 
-interface SubstrateBaseHandlerFilter {
+interface SubstrateBaseFilter {
   specVersion?: SpecVersionRange;
 }
 
-export type SubstrateBlockFilter = SubstrateBaseHandlerFilter;
+export type SubstrateBlockFilter = SubstrateBaseFilter;
 
-export interface SubstrateEventFilter extends SubstrateBaseHandlerFilter {
+export interface SubstrateEventFilter extends SubstrateBaseFilter {
   module?: string;
   method?: string;
 }
@@ -52,6 +45,8 @@ export interface SubstrateEventFilter extends SubstrateBaseHandlerFilter {
 export interface SubstrateCallFilter extends SubstrateEventFilter {
   success?: boolean;
 }
+
+export type SubstrateHandlerFilter = SubstrateBlockFilter | SubstrateCallFilter | SubstrateEventFilter;
 
 export interface SubstrateBlockHandler {
   handler: string;
@@ -71,17 +66,9 @@ export interface SubstrateEventHandler {
   filter?: SubstrateEventFilter;
 }
 
-export interface SubstrateCustomHandler<K extends string = string, F = Record<string, unknown>> {
-  handler: string;
-  kind: K;
-  filter?: F;
-}
-
 export type SubstrateRuntimeHandler = SubstrateBlockHandler | SubstrateCallHandler | SubstrateEventHandler;
 
-export type SubstrateHandler = SubstrateRuntimeHandler | SubstrateCustomHandler<string, unknown>;
-
-export type SubstrateHandlerFilter = SubstrateBlockFilter | SubstrateCallFilter | SubstrateEventFilter;
+export type SubstrateHandler = SubstrateRuntimeHandler;
 
 export interface SubstrateMapping<T extends SubstrateHandler = SubstrateHandler> {
   handlers: T[];
@@ -105,39 +92,4 @@ export interface SubstrateRuntimeDatasource<
   kind: DatasourceKind.Runtime;
 }
 
-export interface FileReference {
-  file: string;
-}
-
-export type CustomDataSourceAsset = FileReference;
-
-export interface SubstrateCustomDatasource<
-  K extends string = string,
-  T extends SubstrateNetworkFilter = SubstrateNetworkFilter,
-  M extends SubstrateMapping = SubstrateMapping<SubstrateCustomHandler>
-> extends ISubstrateDatasource<M, T> {
-  kind: K;
-  assets: {[key: string]: CustomDataSourceAsset};
-  processor: FileReference;
-}
-
-export interface HandlerInputTransformer<T extends SubstrateHandlerKind, U> {
-  (original: RuntimeHandlerInputMap[T], ds: SubstrateCustomDatasource): U;
-}
-
-export interface SubstrateDatasourceProcessor<K extends string, F extends SubstrateNetworkFilter> {
-  kind: K;
-  validate(ds: SubstrateCustomDatasource<K, F>): void;
-  dsFilterProcessor(ds: SubstrateCustomDatasource<K, F>, api: ApiPromise): boolean;
-  handlerProcessors: {[kind: string]: SecondLayerHandlerProcessor<SubstrateHandlerKind, unknown, unknown>};
-}
-
-// only allow one custom handler for each baseHandler kind
-export interface SecondLayerHandlerProcessor<K extends SubstrateHandlerKind, F, E> {
-  baseHandlerKind: K;
-  baseFilter: RuntimeFilterMap[K] | RuntimeFilterMap[K][];
-  transformer: HandlerInputTransformer<K, E>;
-  filterProcessor: (filter: F, input: E, ds: SubstrateCustomDatasource<string, SubstrateNetworkFilter>) => boolean;
-}
-
-export type Datasource = SubstrateRuntimeDatasource | SubstrateCustomDatasource;
+export type Datasource = SubstrateRuntimeDatasource;

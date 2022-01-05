@@ -3,7 +3,8 @@ import {BuildOptions, DataTypes, Model, Sequelize} from 'sequelize';
 export enum IndexerStatus {
   DRAFT = 'DRAFT',
   DEPLOYING = 'DEPLOYING',
-  DEPLOYED = 'DEPLOYED',
+  RUNNING = 'RUNNING',
+  STOPPED = 'STOPPED',
   FAILED = 'FAILED',
 }
 

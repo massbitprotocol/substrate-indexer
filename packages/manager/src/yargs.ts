@@ -6,12 +6,12 @@ export function getYargsOption() {
   return yargs(hideBin(process.argv)).options({
     'batch-size': {
       demandOption: false,
-      describe: 'Batch size of blocks to fetch in one round',
+      describe: 'Batch size of blocks to fetch',
       type: 'number',
     },
     timeout: {
       demandOption: false,
-      describe: 'Timeout for indexer sandbox to execute the mapping functions',
+      describe: 'Timeout for sandbox to execute the mapping functions',
       type: 'number',
     },
     debug: {
@@ -39,7 +39,7 @@ export function getYargsOption() {
     },
     'timestamp-field': {
       demandOption: false,
-      describe: 'Enable/disable created_at and updated_at in schema',
+      describe: 'Enable/disable created_at and updated_at in model',
       type: 'boolean',
       default: true,
     },

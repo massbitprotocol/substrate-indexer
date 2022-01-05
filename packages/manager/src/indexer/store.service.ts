@@ -6,11 +6,8 @@ import {camelCase, flatten, upperFirst} from 'lodash';
 import {QueryTypes, Sequelize, Transaction, Utils} from 'sequelize';
 import {Config} from '../configure/config';
 import {modelsTypeToModelAttributes} from '../utils/graphql';
-import {getLogger} from '../utils/logger';
 import {commentConstraintQuery, createUniqueIndexQuery, getFkConstraint, smartTags} from '../utils/sync-helper';
 import {MetadataFactory, MetadataRepo} from './entities/metadata.entity';
-
-const logger = getLogger('store');
 
 interface IndexField {
   entityName: string;
@@ -23,17 +20,17 @@ interface IndexField {
 export class StoreService {
   private tx?: Transaction;
   private modelIndexedFields: IndexField[];
-  private schema: string;
+  private dbSchema: string;
   private modelsRelations: GraphQLModelsRelationsEnums;
   private metaDataRepo: MetadataRepo;
 
   constructor(private sequelize: Sequelize, private config: Config) {}
 
-  async init(modelsRelations: GraphQLModelsRelationsEnums, schema: string): Promise<void> {
-    this.schema = schema;
+  async init(modelsRelations: GraphQLModelsRelationsEnums, dbSchema: string): Promise<void> {
+    this.dbSchema = dbSchema;
     this.modelsRelations = modelsRelations;
-    await this.syncSchema(this.schema);
-    this.modelIndexedFields = await this.getAllIndexFields(this.schema);
+    await this.syncSchema(this.dbSchema);
+    this.modelIndexedFields = await this.getAllIndexFields(this.dbSchema);
   }
 
   async syncSchema(schema: string): Promise<void> {

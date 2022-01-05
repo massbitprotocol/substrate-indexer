@@ -59,7 +59,7 @@ export function modelsTypeToModelAttributes(
           const setValue = u8aToBuffer(hexToU8a(val));
           this.setDataValue(field.name, setValue);
         } else {
-          throw new Error(`input for Bytes type is only support unprefixed hex`);
+          throw new Error(`Input for Bytes type is only support unprefixed hex`);
         }
       };
     }

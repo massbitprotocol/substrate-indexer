@@ -20,7 +20,7 @@ async function establishConnection(sequelize: Sequelize, numRetries: number): Pr
   try {
     await sequelize.authenticate();
   } catch (error) {
-    logger.error(error, 'Unable to connect to the database');
+    logger.error(error, 'connect to the database');
     if (numRetries > 0) {
       await delay(3);
       void (await establishConnection(sequelize, numRetries - 1));
@@ -45,7 +45,6 @@ const sequelizeFactory = (option: SequelizeOption) => async () => {
 export class DbModule {
   static forRoot(option: DbOption): DynamicModule {
     const {argv} = getYargsOption();
-    const logger = getLogger('db');
     return {
       module: DbModule,
       providers: [

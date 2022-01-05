@@ -48,12 +48,10 @@ export function getAllEnums(_schema: GraphQLSchema | string): GraphQLEnumType[] 
 // eslint-disable-next-line complexity
 export function getAllEntitiesRelations(_schema: GraphQLSchema | string): GraphQLModelsRelationsEnums {
   const schema = typeof _schema === 'string' ? buildSchema(_schema) : _schema;
-
   const entities = Object.values(schema.getTypeMap())
     .filter((node) => node.astNode?.directives?.find(({name: {value}}) => value === DirectiveName.Entity))
     .filter(isObjectType);
   const entityNameSet = entities.map((entity) => entity.name);
-
   const jsonObjects = getAllJsonObjects(schema);
 
   const enums = new Map(
@@ -66,7 +64,6 @@ export function getAllEntitiesRelations(_schema: GraphQLSchema | string): GraphQ
   );
 
   const modelRelations = {models: [], relations: [], enums: [...enums.values()]} as GraphQLModelsRelationsEnums;
-
   const derivedFromDirective = schema.getDirective('derivedFrom');
   const indexDirective = schema.getDirective('index');
 
@@ -154,7 +151,7 @@ export function getAllEntitiesRelations(_schema: GraphQLSchema | string): GraphQ
             }
           }
         } else {
-          throw new Error(`index can not be added on field ${field.name}`);
+          throw new Error(`Index can not be added on field ${field.name}`);
         }
       }
     }
@@ -223,7 +220,7 @@ export function setJsonObjectType(
   return graphQLJsonObject;
 }
 
-// Get the type, ready to be convert to string
+// Get the type, ready to be converted to string
 function extractType(type: GraphQLOutputType): string {
   if (isUnionType(type)) {
     throw new Error(`Not support Union type`);

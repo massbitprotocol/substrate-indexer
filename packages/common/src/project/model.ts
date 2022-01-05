@@ -1,21 +1,12 @@
-import path from 'path';
 import {Datasource} from '@massbit/types';
 import {RegisteredTypes} from '@polkadot/types/types';
 import {pick} from 'lodash';
-import {
-  INetworkConfig,
-  loadFromJsonOrYaml,
-  loadProjectManifest,
-  manifestIsV0_0_1,
-  manifestIsV0_0_2,
-  VersionedManifest,
-  parseChainTypes,
-} from '../manifest';
+import {INetworkConfig, loadProjectManifest, Manifest} from '../manifest';
 import {prepareProjectDir} from '../utils';
 
 export class Project {
   private readonly _path: string;
-  private readonly _manifest: VersionedManifest;
+  private readonly _manifest: Manifest;
 
   static async create(path: string, networkOverrides?: Partial<INetworkConfig>): Promise<Project> {
     const projectPath = await prepareProjectDir(path);
@@ -23,7 +14,7 @@ export class Project {
     return new Project(projectManifest, projectPath, networkOverrides);
   }
 
-  constructor(manifest: VersionedManifest, path: string, private networkOverrides?: Partial<INetworkConfig>) {
+  constructor(manifest: Manifest, path: string, private networkOverrides?: Partial<INetworkConfig>) {
     this._manifest = manifest;
     this._path = path;
 
@@ -34,32 +25,16 @@ export class Project {
     });
   }
 
-  get manifest(): VersionedManifest {
+  get manifest(): Manifest {
     return this._manifest;
   }
 
   get network(): Partial<INetworkConfig> {
     const impl = this._manifest.asImpl;
-
-    if (manifestIsV0_0_1(impl)) {
-      return {
-        ...impl.network,
-        ...this.networkOverrides,
-      };
-    }
-
-    if (manifestIsV0_0_2(impl)) {
-      const network = {
-        ...impl.network,
-        ...this.networkOverrides,
-      };
-      if (!network.endpoint) {
-        throw new Error(`Network endpoint must be provided for network. genesisHash="${network.genesisHash}"`);
-      }
-      return network;
-    }
-
-    throw new Error(`unsupported specVersion: ${this._manifest.specVersion}`);
+    return {
+      ...impl.network,
+      ...this.networkOverrides,
+    };
   }
 
   get path(): string {
@@ -80,16 +55,6 @@ export class Project {
 
   get chainTypes(): RegisteredTypes | undefined {
     const impl = this._manifest.asImpl;
-    if (manifestIsV0_0_1(impl)) {
-      return pick<RegisteredTypes>(impl.network, ['types', 'typesAlias', 'typesBundle', 'typesChain', 'typesSpec']);
-    }
-
-    if (manifestIsV0_0_2(impl)) {
-      if (!impl.network.chainType) {
-        return;
-      }
-      const rawChainTypes = loadFromJsonOrYaml(path.join(this._path, impl.network.chainType.file));
-      return parseChainTypes(rawChainTypes);
-    }
+    return pick<RegisteredTypes>(impl.network, ['types', 'typesAlias', 'typesBundle', 'typesChain', 'typesSpec']);
   }
 }

@@ -5,7 +5,6 @@ export interface IConfig {
   readonly batchSize: number;
   readonly timeout: number;
   readonly debug: boolean;
-  readonly preferRange: boolean;
   readonly networkEndpoint?: string;
   readonly networkIndexer?: string;
   readonly outputFmt?: 'json';
@@ -50,10 +49,6 @@ export class Config implements IConfig {
 
   get debug(): boolean {
     return this._config.debug;
-  }
-
-  get preferRange(): boolean {
-    return this._config.preferRange;
   }
 
   get outputFmt(): 'json' | undefined {

@@ -1,4 +1,4 @@
-import {ManifestVersioned, VersionedManifest} from '@massbit/common';
+import {VersionedManifest, Manifest} from '@massbit/common';
 import {Context} from './context';
 import {Reader, ReaderFactory} from './reader';
 import {baseRules, Rule, RuleType} from './rules/rule';
@@ -37,16 +37,14 @@ export class Validator {
       skipped: false,
     });
 
-    const manifest = new VersionedManifest(rawManifest as ManifestVersioned);
+    const manifest = new Manifest(rawManifest as VersionedManifest);
 
-    if (manifest.isV0_0_1) {
-      reports.push({
-        name: 'package-json-file',
-        description: 'A valid `package.json` file must exist in the root directory of the project',
-        valid: !!pkg,
-        skipped: false,
-      });
-    }
+    reports.push({
+      name: 'package-json-file',
+      description: 'A valid `package.json` file must exist in the root directory of the project',
+      valid: !!pkg,
+      skipped: false,
+    });
 
     const ctx: Context = {
       data: {

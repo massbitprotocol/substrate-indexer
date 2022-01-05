@@ -1,4 +1,4 @@
-import {delay} from '@massbit/common';
+import {delay} from '@massbit/common/utils';
 
 export class BlockedQueue<T> {
   private _queue: T[] = [];
@@ -16,16 +16,16 @@ export class BlockedQueue<T> {
     return this._maxSize - this._queue.length;
   }
 
-  put(item: T): void {
-    if (this._queue.length >= this._maxSize) {
-      throw new Error('BlockedQueue exceed max size');
+  async put(item: T): Promise<void> {
+    while (this._queue.length >= this._maxSize) {
+      await delay(0.1);
     }
     this._queue.push(item);
   }
 
-  putAll(items: T[]): void {
-    if (this._queue.length + items.length > this._maxSize) {
-      throw new Error('BlockedQueue exceed max size');
+  async putAll(items: T[]): Promise<void> {
+    while (this._queue.length + items.length > this._maxSize) {
+      await delay(0.1);
     }
     this._queue.push(...items);
   }

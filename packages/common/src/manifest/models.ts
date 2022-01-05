@@ -1,10 +1,6 @@
 import {
-  CustomDataSourceAsset,
-  FileReference,
   SubstrateBlockFilter,
   SubstrateCallFilter,
-  SubstrateCustomDatasource,
-  SubstrateCustomHandler,
   DatasourceKind,
   SubstrateEventFilter,
   SubstrateHandler,
@@ -39,6 +35,7 @@ export class EventFilter extends BlockFilter implements SubstrateEventFilter {
   @IsOptional()
   @IsString()
   module?: string;
+
   @IsOptional()
   @IsString()
   method?: string;
@@ -54,15 +51,19 @@ export class ChainTypes implements RegisteredTypes {
   @IsObject()
   @IsOptional()
   types?: RegistryTypes;
+
   @IsObject()
   @IsOptional()
   typesAlias?: Record<string, OverrideModuleType>;
+
   @IsObject()
   @IsOptional()
   typesBundle?: OverrideBundleType;
+
   @IsObject()
   @IsOptional()
   typesChain?: Record<string, RegistryTypes>;
+
   @IsObject()
   @IsOptional()
   typesSpec?: Record<string, RegistryTypes>;
@@ -73,8 +74,10 @@ export class BlockHandler {
   @ValidateNested()
   @Type(() => BlockFilter)
   filter?: SubstrateBlockFilter;
+
   @IsEnum(SubstrateHandlerKind, {groups: [SubstrateHandlerKind.Block]})
   kind: SubstrateHandlerKind.Block;
+
   @IsString()
   handler: string;
 }
@@ -84,8 +87,10 @@ export class CallHandler {
   @ValidateNested()
   @Type(() => CallFilter)
   filter?: SubstrateCallFilter;
+
   @IsEnum(SubstrateHandlerKind, {groups: [SubstrateHandlerKind.Call]})
   kind: SubstrateHandlerKind.Call;
+
   @IsString()
   handler: string;
 }
@@ -95,20 +100,12 @@ export class EventHandler {
   @ValidateNested()
   @Type(() => EventFilter)
   filter?: SubstrateEventFilter;
+
   @IsEnum(SubstrateHandlerKind, {groups: [SubstrateHandlerKind.Event]})
   kind: SubstrateHandlerKind.Event;
-  @IsString()
-  handler: string;
-}
 
-export class CustomHandler implements SubstrateCustomHandler {
-  @IsString()
-  kind: string;
   @IsString()
   handler: string;
-  @IsObject()
-  @IsOptional()
-  filter?: Record<string, unknown>;
 }
 
 export class Mapping implements SubstrateMapping {
@@ -122,22 +119,13 @@ export class Mapping implements SubstrateMapping {
         case SubstrateHandlerKind.Block:
           return plainToClass(BlockHandler, handler);
         default:
-          throw new Error(`handler ${(handler as any).kind} not supported`);
+          throw new Error(`Handler ${(handler as any).kind} not supported`);
       }
     });
   })
   @IsArray()
   @ValidateNested()
   handlers: SubstrateHandler[];
-}
-
-export class CustomMapping implements SubstrateMapping<SubstrateCustomHandler> {
-  @IsArray()
-  @Type(() => CustomHandler)
-  @ValidateNested()
-  handlers: CustomHandler[];
-  @IsString()
-  file: string;
 }
 
 export class SubstrateNetworkFilterImpl implements SubstrateNetworkFilter {
@@ -151,44 +139,17 @@ export class RuntimeDataSource<M extends SubstrateMapping<SubstrateRuntimeHandle
 {
   @IsEnum(DatasourceKind, {groups: [DatasourceKind.Runtime]})
   kind: DatasourceKind.Runtime;
+
   @Type(() => Mapping)
   @ValidateNested()
   mapping: M;
+
   @IsOptional()
   @IsInt()
   startBlock?: number;
+
   @IsOptional()
   @ValidateNested()
   @Type(() => SubstrateNetworkFilterImpl)
   filter?: SubstrateNetworkFilter;
-}
-
-export class FileReferenceImpl implements FileReference {
-  @IsString()
-  file: string;
-}
-
-export class CustomDataSourceBase<
-  K extends string,
-  T extends SubstrateNetworkFilter,
-  M extends SubstrateMapping = SubstrateMapping<SubstrateCustomHandler>
-> implements SubstrateCustomDatasource<K, T, M>
-{
-  @IsString()
-  kind: K;
-  @Type(() => CustomMapping)
-  @ValidateNested()
-  mapping: M;
-  @IsOptional()
-  @IsInt()
-  startBlock?: number;
-  @Type(() => FileReferenceImpl)
-  @ValidateNested({each: true})
-  assets: {[p: string]: CustomDataSourceAsset};
-  @Type(() => FileReferenceImpl)
-  @IsObject()
-  processor: FileReference;
-  @IsOptional()
-  @IsObject()
-  filter?: T;
 }

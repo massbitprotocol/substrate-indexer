@@ -1,4 +1,16 @@
-import {Body, Controller, Get, HttpCode, HttpStatus, Inject, Param, Post, Request, UseGuards} from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  Param,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import {EventEmitter2} from '@nestjs/event-emitter';
 import {v4 as uuidv4} from 'uuid';
 import {JwtAuthGuard} from '../auth/jwt-auth.guard';
@@ -32,7 +44,7 @@ export class IndexerController {
       }
     }
     const id = uuidv4();
-    await this.indexerRepo.create({id, userId: req.user.userId, status: IndexerStatus.DRAFT, ...data});
+    await this.indexerRepo.create({...data, id, userId: req.user.userId, status: IndexerStatus.DRAFT});
     return new CreateIndexerResponseDto({id});
   }
 
@@ -61,10 +73,56 @@ export class IndexerController {
     this.eventEmitter.emit(IndexerEvent.IndexerDeployed, id);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Post('/:id/stop')
+  @HttpCode(HttpStatus.OK)
+  async stopIndexer(@Request() req, @Param('id') id: string): Promise<void> {
+    const indexer = await this.indexerRepo.findOne({
+      where: {id},
+      attributes: {include: ['id', 'userId', 'status']},
+    });
+    if (!indexer) {
+      throw new MassbitNotFoundException(`Indexer not found`);
+    }
+
+    if (indexer.userId !== req.user.userId) {
+      throw new MassbitForbiddenException('');
+    }
+
+    if (indexer.status !== IndexerStatus.RUNNING) {
+      throw new MassbitBadRequestException('Invalid indexer status');
+    }
+
+    this.eventEmitter.emit(IndexerEvent.IndexerStopped, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('/:id')
+  @HttpCode(HttpStatus.OK)
+  async deleteIndexer(@Request() req, @Param('id') id: string): Promise<void> {
+    const indexer = await this.indexerRepo.findOne({
+      where: {id},
+      attributes: {include: ['id', 'userId', 'status']},
+    });
+    if (!indexer) {
+      throw new MassbitNotFoundException(`Indexer not found`);
+    }
+
+    if (indexer.userId !== req.user.userId) {
+      throw new MassbitForbiddenException('');
+    }
+
+    if (indexer.status !== IndexerStatus.DRAFT) {
+      throw new MassbitBadRequestException('Invalid indexer status');
+    }
+
+    await this.indexerRepo.destroy({where: {id}});
+  }
+
   @Get()
   @HttpCode(HttpStatus.OK)
   async getIndexerList(): Promise<IndexerDto[]> {
-    const indexers = await this.indexerRepo.findAll();
+    const indexers = await this.indexerRepo.findAll({order: [['created_at', 'DESC']]});
     return indexers.map(({description, id, imageUrl, name, repository}) => {
       return new IndexerDto({id, name, description, repository, imageUrl});
     });

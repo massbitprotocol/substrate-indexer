@@ -1,7 +1,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import {SubstrateRuntimeHandler, SubstrateCustomHandler, SubstrateHandler, SubstrateHandlerKind} from '@massbit/types';
+import {SubstrateRuntimeHandler, SubstrateHandler, SubstrateHandlerKind} from '@massbit/types';
 import tar from 'tar';
 
 export async function prepareProjectDir(projectPath: string): Promise<string> {
@@ -10,7 +10,6 @@ export async function prepareProjectDir(projectPath: string): Promise<string> {
     const sep = path.sep;
     const tmpDir = os.tmpdir();
     const tempPath = fs.mkdtempSync(`${tmpDir}${sep}`);
-    // Will promote errors if incorrect format/extension
     await tar.x({file: projectPath, cwd: tempPath});
     return tempPath.concat('/package');
   } else if (stats.isDirectory()) {
@@ -35,16 +34,10 @@ export function getProjectEntry(root: string): string {
 
     return projectEntryCache[pkgPath];
   } catch (err) {
-    throw new Error(`can not find package.json within directory ${this.option.root}`);
+    throw new Error(`Cannot find package.json within directory ${this.option.root}`);
   }
 }
 
 export function isBaseHandler(handler: SubstrateHandler): handler is SubstrateRuntimeHandler {
   return Object.values<string>(SubstrateHandlerKind).includes(handler.kind);
-}
-
-export function isCustomHandler<K extends string, F>(
-  handler: SubstrateHandler
-): handler is SubstrateCustomHandler<K, F> {
-  return !isBaseHandler(handler);
 }
