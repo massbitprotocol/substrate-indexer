@@ -2,7 +2,6 @@ import { delay } from '@massbit/common';
 import { DynamicModule, Global } from '@nestjs/common';
 import { Sequelize } from 'sequelize';
 import { Options as SequelizeOption } from 'sequelize/types';
-import * as entities from '../entities';
 import { getLogger } from '../utils/logger';
 import { getYargsOption } from '../yargs';
 
@@ -37,11 +36,6 @@ const sequelizeFactory = (option: SequelizeOption) => async () => {
   const sequelize = new Sequelize(option);
   const numRetries = 5;
   await establishConnection(sequelize, numRetries);
-  for (const factoryFn of Object.keys(entities).filter((k) =>
-    /Factory$/.exec(k),
-  )) {
-    entities[factoryFn](sequelize);
-  }
   const { migrate } = getYargsOption().argv;
   await sequelize.sync({ alter: migrate });
   return sequelize;

@@ -10,30 +10,31 @@ import {
   SubstrateHandlerKind,
   SubstrateRuntimeHandler,
 } from '@massbit/types';
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApiPromise } from '@polkadot/api';
-import { QueryTypes, Sequelize } from 'sequelize';
+import { Sequelize } from 'sequelize';
 import { Config } from '../configure/config';
-import { IndexerModel, IndexerRepo } from '../entities';
 import { getLogger } from '../utils/logger';
 import * as SubstrateUtil from '../utils/substrate';
 import { ApiService } from './api.service';
-import { MetadataFactory } from './entities/metadata.entity';
+import { MetadataFactory, MetadataRepo } from './entities/metadata.entity';
 import { IndexerEvent } from './events';
 import { FetchService } from './fetch.service';
 import { IndexerSandbox, SandboxService } from './sandbox.service';
 import { StoreService } from './store.service';
 import { BlockContent } from './types';
 
-const logger = getLogger('indexer');
+const DEFAULT_DB_SCHEMA = 'public';
+
+const logger = getLogger('chain-reader');
 
 @Injectable()
 export class IndexerManager {
   private api: ApiPromise;
-  private indexerState: IndexerModel;
   private prevSpecVersion?: number;
   private filteredDataSources: Datasource[];
+  protected metadataRepo: MetadataRepo;
 
   constructor(
     private apiService: ApiService,
@@ -43,7 +44,6 @@ export class IndexerManager {
     private project: Project,
     private config: Config,
     private sandboxService: SandboxService,
-    @Inject('Indexer') protected indexerRepo: IndexerRepo,
     private eventEmitter: EventEmitter2,
   ) {}
 
@@ -74,9 +74,14 @@ export class IndexerManager {
           );
         }
       }
-      this.indexerState.nextBlockHeight =
-        block.block.header.number.toNumber() + 1;
-      await this.indexerState.save({ transaction: tx });
+
+      await this.metadataRepo.upsert(
+        {
+          key: 'lastProcessedHeight',
+          value: block.block.header.number.toNumber(),
+        },
+        { transaction: tx },
+      );
     } catch (e) {
       await tx.rollback();
       throw e;
@@ -93,16 +98,27 @@ export class IndexerManager {
   async start(): Promise<void> {
     await this.fetchService.init();
     this.api = this.apiService.getApi();
-    this.indexerState = await this.createIndexer(this.config.indexerName);
-    await this.initDbSchema();
-    await this.ensureMetadata(this.indexerState.dbSchema);
-    void this.fetchService
-      .startLoop(this.indexerState.nextBlockHeight)
-      .catch((err) => {
-        logger.error(err, 'failed to fetch block');
-        process.exit(1);
-      });
-    this.filteredDataSources = this.filterDataSources();
+    const schema = this.config.localMode
+      ? DEFAULT_DB_SCHEMA
+      : this.config.dbSchema;
+    await this.initDbSchema(schema);
+    this.metadataRepo = await this.ensureMetadata(schema);
+
+    let startHeight;
+    const lastProcessedHeight = await this.metadataRepo.findOne({
+      where: { key: 'lastProcessedHeight' },
+    });
+    if (lastProcessedHeight !== null && lastProcessedHeight.value !== null) {
+      startHeight = Number(lastProcessedHeight.value) + 1;
+    } else {
+      startHeight = this.getStartBlockFromDataSources();
+    }
+
+    void this.fetchService.startLoop(startHeight).catch((err) => {
+      logger.error(err, 'failed to fetch block');
+      process.exit(1);
+    });
+    this.filteredDataSources = this.filterDataSources(startHeight);
     this.fetchService.register((block) => this.indexBlock(block));
   }
 
@@ -120,16 +136,21 @@ export class IndexerManager {
     }
   }
 
-  private async ensureMetadata(schema: string) {
+  private async ensureMetadata(schema: string): Promise<MetadataRepo> {
     const metadataRepo = MetadataFactory(this.sequelize, schema);
-    const { chain, genesisHash, specName } = this.apiService.networkMeta;
 
     this.eventEmitter.emit(
       IndexerEvent.NetworkMetadata,
       this.apiService.networkMeta,
     );
 
-    const keys = ['blockOffset', 'chain', 'specName', 'genesisHash'] as const;
+    const keys = [
+      'lastProcessedHeight',
+      'blockOffset',
+      'chain',
+      'specName',
+      'genesisHash',
+    ] as const;
     const entries = await metadataRepo.findAll({
       where: {
         key: keys,
@@ -141,11 +162,17 @@ export class IndexerManager {
       return arr;
     }, {} as { [key in typeof keys[number]]: string | boolean | number });
 
-    // blockOffset and genesisHash should only been create once, never update
+    const { chain, genesisHash, specName } = this.apiService.networkMeta;
+
+    // blockOffset and genesisHash should only been created once, never update
     // if blockOffset is changed, will require re-index.
     if (!keyValue.blockOffset) {
       const offsetValue = (this.getStartBlockFromDataSources() - 1).toString();
       await this.storeService.setMetadata('blockOffset', offsetValue);
+    }
+
+    if (!keyValue.genesisHash) {
+      await metadataRepo.upsert({ key: 'genesisHash', value: genesisHash });
     }
 
     if (!keyValue.genesisHash) {
@@ -159,46 +186,11 @@ export class IndexerManager {
     if (keyValue.specName !== specName) {
       await this.storeService.setMetadata('specName', specName);
     }
+
+    return metadataRepo;
   }
 
-  private async createIndexer(name: string): Promise<IndexerModel> {
-    let indexer = await this.indexerRepo.findOne({
-      where: { name: this.config.indexerName },
-    });
-    const { chain, genesisHash } = this.apiService.networkMeta;
-    if (!indexer) {
-      const suffix = await this.nextIndexerSchemaSuffix();
-      const projectSchema = `indexer_${suffix}`;
-      const schemas = await this.sequelize.showAllSchemas(undefined);
-      if (!(schemas as unknown as string[]).includes(projectSchema)) {
-        await this.sequelize.createSchema(projectSchema, undefined);
-      }
-
-      indexer = await this.indexerRepo.create({
-        name,
-        dbSchema: projectSchema,
-        hash: '0x',
-        nextBlockHeight: this.getStartBlockFromDataSources(),
-        network: chain,
-        networkGenesis: genesisHash,
-      });
-    } else {
-      if (!indexer.networkGenesis || !indexer.network) {
-        indexer.network = chain;
-        indexer.networkGenesis = genesisHash;
-        await indexer.save();
-      } else if (indexer.networkGenesis !== genesisHash) {
-        logger.error(
-          `Not same network: genesisHash different. expected="${indexer.networkGenesis}"" actual="${genesisHash}"`,
-        );
-        process.exit(1);
-      }
-    }
-    return indexer;
-  }
-
-  private async initDbSchema(): Promise<void> {
-    const schema = this.indexerState.dbSchema;
+  private async initDbSchema(schema: string): Promise<void> {
     const graphqlSchema = buildSchema(
       path.join(this.project.path, this.project.schema),
     );
@@ -206,32 +198,7 @@ export class IndexerManager {
     await this.storeService.init(modelsRelations, schema);
   }
 
-  private async nextIndexerSchemaSuffix(): Promise<number> {
-    const seqExists = await this.sequelize.query(
-      `SELECT 1
-       FROM information_schema.sequences
-       where sequence_schema = 'public'
-         and sequence_name = 'indexer_schema_seq'`,
-      {
-        type: QueryTypes.SELECT,
-      },
-    );
-    if (!seqExists.length) {
-      await this.sequelize.query(
-        `CREATE SEQUENCE indexer_schema_seq as integer START 1;`,
-        { type: QueryTypes.RAW },
-      );
-    }
-    const [{ nextval }] = await this.sequelize.query(
-      `SELECT nextval('indexer_schema_seq')`,
-      {
-        type: QueryTypes.SELECT,
-      },
-    );
-    return Number(nextval);
-  }
-
-  private filterDataSources(): Datasource[] {
+  private filterDataSources(processedHeight: number): Datasource[] {
     let filteredDs = this.getDataSourcesForSpecName();
     if (filteredDs.length === 0) {
       logger.error(
@@ -240,12 +207,10 @@ export class IndexerManager {
       process.exit(1);
     }
 
-    filteredDs = filteredDs.filter(
-      (ds) => ds.startBlock <= this.indexerState.nextBlockHeight,
-    );
+    filteredDs = filteredDs.filter((ds) => ds.startBlock <= processedHeight);
     if (filteredDs.length === 0) {
       logger.error(
-        `Your start block is greater than the current indexed block height in your database. Either change your startBlock (project.yaml) to <= ${this.indexerState.nextBlockHeight} or delete your database and start again from the currently specified startBlock`,
+        `Your start block is greater than the current indexed block height in your database. Either change your startBlock (project.yaml) to <= ${processedHeight} or delete your database and start again from the currently specified startBlock`,
       );
       process.exit(1);
     }

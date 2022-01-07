@@ -1,6 +1,5 @@
 import path from 'path';
 import {
-  isRuntimeDataSourceV0_0_2,
   levelFilter,
   Project,
   timeout,
@@ -126,10 +125,6 @@ export class SandboxService {
   }
 
   private getDataSourceEntry(ds: Datasource): string {
-    if (isRuntimeDataSourceV0_0_2(ds)) {
-      return ds.mapping.file;
-    } else {
-      return getProjectEntry(this.project.path);
-    }
+    return getProjectEntry(this.project.path);
   }
 }
