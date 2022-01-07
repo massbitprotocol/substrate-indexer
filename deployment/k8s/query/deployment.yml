@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: substrate-query
+  name: substrate-indexer-query
   labels:
-    app: substrate-query
+    app: substrate-indexer-query
 spec:
   selector:
     matchLabels:
-      app: substrate-query
+      app: substrate-indexer-query
   replicas: 1
   template:
     metadata:
       labels:
-        app: substrate-query
+        app: substrate-indexer-query
     spec:
       containers:
         - name: indexer
@@ -21,6 +21,8 @@ spec:
           ports:
             - containerPort: 3000
           env:
+            - name: PORT
+              value: "3000"
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
@@ -54,13 +56,13 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: substrate-query
-  name: substrate-query
+    app: substrate-indexer-query
+  name: substrate-indexer-query
 spec:
   ports:
     - port: 8082
       protocol: TCP
       targetPort: 3000
   selector:
-    app: substrate-query-secret
+    app: substrate-indexer-query
   type: ClusterIP

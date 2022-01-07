@@ -7,5 +7,5 @@ void (async () => {
     logger: new NestLogger(),
     cors: true,
   });
-  await app.listen(process.env.PORT ?? 3001);
+  await app.listen(process.env.PORT ?? 3000);
 })();
