@@ -11,7 +11,7 @@ env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
   GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
   GKE_ZONE:  ${{ secrets.GKE_ZONE }}
-  DEPLOYMENT_NAME: substrate-query
+  DEPLOYMENT_NAME: substrate-indexer-query
   IMAGE: massbit/query
 
 jobs:
