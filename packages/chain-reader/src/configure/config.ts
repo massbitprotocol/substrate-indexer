@@ -6,8 +6,10 @@ import { LevelWithSilent } from 'pino';
 
 export interface IConfig {
   readonly indexer: string;
-  readonly indexerName: string;
+  readonly indexerName?: string;
+  readonly dbSchema?: string;
   readonly batchSize: number;
+  readonly localMode: boolean;
   readonly timeout: number;
   readonly debug: boolean;
   readonly networkEndpoint?: string;
@@ -17,8 +19,8 @@ export interface IConfig {
   readonly timestampField: boolean;
 }
 
-export type MinConfig = Partial<Omit<IConfig, 'indexerName' | 'indexer'>> &
-  Pick<IConfig, 'indexerName' | 'indexer'>;
+export type MinConfig = Partial<Omit<IConfig, 'indexer'>> &
+  Pick<IConfig, 'indexer'>;
 
 const DEFAULT_CONFIG = {
   localMode: false,
@@ -46,6 +48,10 @@ export class Config implements IConfig {
   get indexerName(): string {
     assert(this._config.indexer);
     return this._config.indexerName ?? last(this.indexer.split(path.sep));
+  }
+
+  get localMode(): boolean {
+    return this._config.localMode;
   }
 
   get batchSize(): number {
@@ -78,6 +84,10 @@ export class Config implements IConfig {
 
   get timestampField(): boolean {
     return this._config.timestampField;
+  }
+
+  get dbSchema(): string {
+    return this._config.dbSchema ?? this.indexerName;
   }
 
   merge(config: Partial<IConfig>): this {

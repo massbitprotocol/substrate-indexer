@@ -1,4 +1,4 @@
-import { Project, delay } from '@massbit/common';
+import { Project, delay, BlockedQueue } from '@massbit/common';
 import { Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Interval } from '@nestjs/schedule';
@@ -8,7 +8,6 @@ import { Config } from '../configure/config';
 import { getLogger } from '../utils/logger';
 import * as SubstrateUtil from '../utils/substrate';
 import { ApiService } from './api.service';
-import { BlockedQueue } from './blocked-queue';
 import { IndexerEvent } from './events';
 import { BlockContent } from './types';
 

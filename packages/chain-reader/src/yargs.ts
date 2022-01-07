@@ -5,6 +5,7 @@ import yargs from 'yargs/yargs';
 export function getYargsOption() {
   return yargs(hideBin(process.argv)).options({
     indexer: {
+      alias: 'f',
       demandOption: false,
       describe: 'Local path of the indexer project',
       type: 'string',
@@ -13,6 +14,11 @@ export function getYargsOption() {
       demandOption: false,
       describe: 'Name of the indexer',
       type: 'string',
+    },
+    local: {
+      type: 'boolean',
+      demandOption: false,
+      describe: 'Use local mode',
     },
     'network-endpoint': {
       demandOption: false,
